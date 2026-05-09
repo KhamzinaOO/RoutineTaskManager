@@ -1,6 +1,6 @@
 package com.example.routinetaskmanager.core.model
 
-data class DropdownMenuItem(
+data class DropdownMenuItemUi(
     val id : Int,
     val name : String
 )

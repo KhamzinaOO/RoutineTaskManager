@@ -1,28 +1,24 @@
 package com.example.routinetaskmanager.core.ui
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,27 +32,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
-import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
-import java.util.Calendar
 import java.util.Locale
 
 @Composable
 fun TimePicker(
-    startTime : String,
-    endTime : String,
-    onStartTimeClick : () -> Unit,
-    onEndTimeClick : () -> Unit,
-    isCheckboxChecked : Boolean,
-    onCheckChange : (Boolean) -> Unit
-){
-    Row(
+    startTime: String,
+    endTime: String,
+    onStartTimeClick: () -> Unit,
+    onEndTimeClick: () -> Unit,
+    isCheckboxChecked: Boolean,
+    onCheckChange: (Boolean) -> Unit
+) {
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        itemVerticalAlignment = Alignment.CenterVertically
     ) {
-        if(!isCheckboxChecked){
+        if (!isCheckboxChecked) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -72,9 +67,10 @@ fun TimePicker(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
+
                 Icon(
                     Icons.AutoMirrored.Default.ArrowForward,
-                    "Arrow Forward",
+                    contentDescription = "Arrow Forward",
                     tint = MaterialTheme.colorScheme.secondary
                 )
 
@@ -91,21 +87,22 @@ fun TimePicker(
                 }
             }
         }
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "All day",
-            style = MaterialTheme.typography.bodyLarge
-        )
 
-        Checkbox(
-            checked = isCheckboxChecked,
-            onCheckedChange = onCheckChange,
-            modifier = Modifier.scale(0.8f)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "All day",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Checkbox(
+                checked = isCheckboxChecked,
+                onCheckedChange = onCheckChange,
+                modifier = Modifier.scale(0.8f)
+            )
+        }
     }
 }
 
@@ -198,15 +195,16 @@ private fun DateTimeBlock(
 
 @Composable
 fun DaysOfWeekPicker(
-    selectedDays : List<DayOfWeek>,
+    modifier: Modifier,
+    selectedDays : Set<DayOfWeek>,
     onDaySelected : (DayOfWeek) -> Unit
 ){
-    Row(
-        modifier = Modifier.fillMaxWidth(),
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        DayOfWeek.entries.forEach { dayOfWeek ->
+        items(DayOfWeek.entries){ dayOfWeek ->
             val strDay = dayOfWeek.getDisplayName(
                 TextStyle.NARROW_STANDALONE,
                 Locale.getDefault()
@@ -267,7 +265,7 @@ fun SelectedTimeBox(
         }
 
         CommonIconButton(
-            icon = painterResource(R.drawable.clear),
+            icon = painterResource(R.drawable.ic_clear),
             contentDescription = "clear",
             tint = MaterialTheme.colorScheme.primary,
             onClick = onClearClick,

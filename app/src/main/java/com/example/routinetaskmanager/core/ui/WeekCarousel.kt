@@ -1,29 +1,26 @@
 package com.example.routinetaskmanager.core.ui
 
-import android.icu.util.Calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,57 +33,109 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
-fun LocalDate.startOfWeek(): LocalDate {
-    return this.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-}
+private const val WEEK_CAROUSEL_START_PAGE = 1000
+private const val WEEK_CAROUSEL_PAGE_COUNT = 2000
 
-fun LocalDate.weekAround() : List<LocalDate>{
+val LocalDateSaver = Saver<LocalDate, Long>(
+    save = { it.toEpochDay() },
+    restore = { LocalDate.ofEpochDay(it) }
+)
+
+fun LocalDate.startOfWeek(): LocalDate =
+    with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+fun LocalDate.daysOfWeekFromMonday(): List<LocalDate> {
     val start = startOfWeek()
     return (0..6).map { start.plusDays(it.toLong()) }
 }
 
+fun pageToWeekDate(
+    page: Int,
+    startPage: Int,
+    today: LocalDate
+): LocalDate {
+    val weekOffset = page - startPage
+    return if (weekOffset == 0) {
+        today
+    } else {
+        today.plusWeeks(weekOffset.toLong()).startOfWeek()
+    }
+}
+
 @Composable
 fun WeekCarousel(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDaySelected: (LocalDate) -> Unit
 ) {
-    val locale = Locale.getDefault()
+    val locale = remember { Locale.getDefault() }
     val today = remember { LocalDate.now() }
 
-    val startPage = 1000
-    val pagerState = rememberPagerState(initialPage = startPage) { 2000 }
+    val pagerState = rememberPagerState(
+        initialPage = WEEK_CAROUSEL_START_PAGE
+    ) { WEEK_CAROUSEL_PAGE_COUNT }
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = modifier.wrapContentSize()
-    ) { page ->
-        val weekOffset = page - startPage
-        var selectedWeekDate by remember {
-            mutableStateOf(if (weekOffset != 0) today.plusWeeks(weekOffset.toLong()).startOfWeek() else today)
-        }
-        val weekToShow = selectedWeekDate.weekAround()
-        WeekRow(
-            week = weekToShow,
-            isSelected = { it == selectedWeekDate },
-            locale = locale,
-            onClick = {
-                selectedWeekDate = it
-            }
+    var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) {
+        mutableStateOf(today)
+    }
+
+    LaunchedEffect(pagerState.currentPage) {
+        val weekBaseDate = pageToWeekDate(
+            page = pagerState.currentPage,
+            startPage = WEEK_CAROUSEL_START_PAGE,
+            today = today
         )
+
+        selectedDate = if (pagerState.currentPage == WEEK_CAROUSEL_START_PAGE) {
+            today
+        } else {
+            weekBaseDate
+        }
+    }
+
+    LaunchedEffect(selectedDate) {
+        onDaySelected(selectedDate)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.tertiary)
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.wrapContentSize()
+        ) { page ->
+            val weekBaseDate = pageToWeekDate(
+                page = page,
+                startPage = WEEK_CAROUSEL_START_PAGE,
+                today = today
+            )
+
+            val weekToShow = weekBaseDate.daysOfWeekFromMonday()
+
+            WeekRow(
+                week = weekToShow,
+                isSelected = { it == selectedDate },
+                locale = locale,
+                onClick = { clickedDate ->
+                    selectedDate = clickedDate
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun WeekRow(
-    week : List<LocalDate>,
-    isSelected : (LocalDate) -> Boolean,
-    locale : Locale,
+    week: List<LocalDate>,
+    isSelected: (LocalDate) -> Boolean,
+    locale: Locale,
     onClick: (LocalDate) -> Unit
-){
+) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.tertiary),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -94,7 +143,10 @@ fun WeekRow(
             DayOfWeekBox(
                 isSelected = isSelected(day),
                 date = day.format(DateTimeFormatter.ofPattern("d")),
-                dayOfWeek = day.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT_STANDALONE, locale),
+                dayOfWeek = day.dayOfWeek.getDisplayName(
+                    java.time.format.TextStyle.SHORT_STANDALONE,
+                    locale
+                ),
                 onClick = { onClick(day) }
             )
         }
@@ -103,15 +155,15 @@ fun WeekRow(
 
 @Composable
 fun DayOfWeekBox(
-    isSelected : Boolean,
-    date : String,
-    dayOfWeek : String,
-    onClick : () -> Unit
-){
+    isSelected: Boolean,
+    date: String,
+    dayOfWeek: String,
+    onClick: () -> Unit
+) {
     val selectedTextColor = MaterialTheme.colorScheme.tertiary
-    val selectedContainerColor = MaterialTheme.colorScheme.primary
+    val selectedContainerColor = MaterialTheme.colorScheme.onTertiary
 
-    val unselectedTextColor = MaterialTheme.colorScheme.primary
+    val unselectedTextColor = MaterialTheme.colorScheme.onTertiary
     val unselectedContainerColor = Color.Transparent
 
     Box(
@@ -121,10 +173,8 @@ fun DayOfWeekBox(
             .background(
                 if (isSelected) selectedContainerColor else unselectedContainerColor
             )
-            .clickable(
-                onClick = onClick
-            )
-    ){
+            .clickable(onClick = onClick)
+    ) {
         Column(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.Center,
@@ -133,12 +183,12 @@ fun DayOfWeekBox(
             Text(
                 text = date,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if(isSelected) selectedTextColor else unselectedTextColor
+                color = if (isSelected) selectedTextColor else unselectedTextColor
             )
             Text(
                 text = dayOfWeek,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if(isSelected) selectedTextColor else unselectedTextColor
+                color = if (isSelected) selectedTextColor else unselectedTextColor
             )
         }
     }
