@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.ui
+package com.example.routinetaskmanager.featureReminder
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,9 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 
 @Composable
 fun WorkSessionButton(
@@ -53,7 +56,7 @@ fun WorkSessionButton(
         } else {
             "$remindersCount reminders in today's session"
         },
-        icon = if (isActive) Icons.Default.Clear else Icons.Default.PlayArrow,
+        icon = if (isActive) painterResource(R.drawable.ic_pause) else painterResource(R.drawable.ic_play_arrow),
         iconDescription = if (isActive) "stop" else "play",
         colors = if (isActive) {
             CardDefaults.cardColors(
@@ -78,7 +81,7 @@ fun WorkSessionButtonContainer(
     topText: String,
     topTextStyle: TextStyle,
     bottomText: String,
-    icon: ImageVector,
+    icon: Painter,
     iconDescription: String,
     colors: CardColors,
     onClick: () -> Unit
@@ -130,7 +133,7 @@ fun WorkSessionButtonContainer(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = icon,
                     contentDescription = iconDescription,
                     tint = colors.containerColor
                 )
