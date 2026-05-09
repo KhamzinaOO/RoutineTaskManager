@@ -7,12 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,11 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.ui.CommonIconButton
-import com.example.routinetaskmanager.core.ui.InstructionsTextField
+import com.example.routinetaskmanager.featureReminder.InstructionsTextField
 import com.example.routinetaskmanager.featureTask.model.CheckboxFiledValue
 
 @Composable
@@ -42,7 +42,8 @@ fun InfoInstructionsTextField(
     onCheckChange: (Boolean) -> Unit,
     onAddCheckboxClick: () -> Unit,
     onCheckboxIconClick : () -> Unit,
-    onDeleteClick: (CheckboxFiledValue) -> Unit
+    onDeleteClick: (CheckboxFiledValue) -> Unit,
+    onTakePictureClick : () -> Unit
 ){
 
     InstructionsTextField(
@@ -63,12 +64,13 @@ fun InfoInstructionsTextField(
         },
         additionalBottomIcon = {
             CommonIconButton(
-                icon = painterResource(R.drawable.check_box),
+                icon = painterResource(R.drawable.ic_check_box),
                 contentDescription = "Checkbox",
                 tint = MaterialTheme.colorScheme.primary,
-                onClick = {}
+                onClick = onCheckboxIconClick
             )
-        }
+        },
+        onTakePictureClick = onTakePictureClick
     )
 }
 
@@ -96,7 +98,7 @@ fun CheckboxInstructions(
                 )
 
                 TextField(
-                    modifier = Modifier,
+                    modifier = Modifier.weight(1f),
                     value = value.text,
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -106,20 +108,14 @@ fun CheckboxInstructions(
                         onValueChange(value.copy(text = newValue))
                     }
                 )
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(
-                            onClick = { onDeleteClick(value) }
-                        )
-                        .size(50.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.Clear,
-                        "Delete"
-                    )
-                }
+
+                CommonIconButton(
+                    icon = Icons.Default.Delete,
+                    color = Color.Transparent,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    onClick = { onDeleteClick(value) }
+                )
             }
         }
 
