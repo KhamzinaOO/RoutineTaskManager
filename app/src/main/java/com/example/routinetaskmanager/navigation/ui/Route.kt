@@ -30,6 +30,8 @@ data object Tasks : TopRoute {
     override val icon = R.drawable.ic_calendar
 }
 
+data object AllReminders : Route
+
 @Serializable
 data class CreateReminder(
     val reminderId : Int? = null

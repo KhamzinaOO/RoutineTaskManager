@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.ui.CommonIconButton
 import com.example.routinetaskmanager.core.ui.SegmentedButton
-import com.example.routinetaskmanager.featureReminder.ReminderCard
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderCard
 import com.example.routinetaskmanager.featureTask.ui.TaskCard
 import com.example.routinetaskmanager.featureTask.ui.TaskCardUi
 

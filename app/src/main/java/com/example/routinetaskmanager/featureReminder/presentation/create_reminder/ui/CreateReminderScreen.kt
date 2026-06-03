@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder
+package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,11 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.model.DropdownMenuItemUi
@@ -19,36 +16,37 @@ import com.example.routinetaskmanager.core.ui.CommonDropdownMenuLarge
 import com.example.routinetaskmanager.core.ui.CommonTextFiled
 import com.example.routinetaskmanager.core.ui.NotificationSegmentedButton
 import com.example.routinetaskmanager.core.ui.TitleText
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderIntent
+import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderUiState
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
 
 @Composable
 fun CreateReminderScreen(
-    onBackClick: () -> Unit
+    uiState : CreateReminderUiState,
+    onIntent : (CreateReminderIntent) -> Unit
 ) {
-    var repeatType by remember {
-        mutableStateOf(ReminderRepeatType.ON_SCHEDULE_PERIOD)
-    }
-    var afterAnotherState by remember {
-        mutableStateOf(AfterAnotherRepeatUi())
-    }
-    var onSchedulePeriodState by remember {
-        mutableStateOf(OnSchedulePeriodRepeatUi())
-    }
-    var onScheduleCertainState by remember {
-        mutableStateOf(OnScheduleCertainRepeatUi())
-    }
-    var duringSessionState by remember {
-        mutableStateOf(DuringSessionPeriodRepeatUi())
-    }
+
+    val repeatType = uiState.repeatType
+
+    val afterAnotherState = uiState.afterAnotherState
+
+    val onSchedulePeriodState = uiState.onSchedulePeriodState
+
+    val onScheduleCertainState = uiState.onScheduleCertainState
+
+    val duringSessionState = uiState.duringSessionState
 
     AppChromeEffect(
         chrome = AppChrome(
             topBar = {
                 CommonTopAppBarWithArrowBack(
                     title = "Create new reminder",
-                    onBackClick = onBackClick
+                    onBackClick = { onIntent(CreateReminderIntent.BackClicked) }
                 )
             }
         )
@@ -65,17 +63,23 @@ fun CreateReminderScreen(
         )
         CommonTextFiled(
             placeholder = "Enter a reminder name",
-            value = "Enter a reminder name",
-            onValueChange = {}
+            value = uiState.name,
+            onValueChange = { value ->
+                onIntent(CreateReminderIntent.NameChanged(value))
+            }
         )
         TitleText(
             text = "Instructions"
         )
         InstructionsTextField(
             placeholder = "Instructions",
-            value = "Instructions",
-            onValueChange = {},
-            onTakePictureClick = {}
+            value = uiState.instructions,
+            onValueChange = { value ->
+                onIntent(CreateReminderIntent.InstructionsChanged(value))
+            },
+            onTakePictureClick = {
+                onIntent(CreateReminderIntent.TakePictureClicked)
+            }
         )
         TitleText(
             text = "Repeat type"
@@ -83,9 +87,10 @@ fun CreateReminderScreen(
         CommonDropdownMenuLarge(
             selectedId = repeatType.ordinal,
             onDismiss = { id ->
-                repeatType = ReminderRepeatType.values().getOrElse(id) {
+                val selected = ReminderRepeatType.entries.toTypedArray().getOrElse(id) {
                     ReminderRepeatType.ON_SCHEDULE_PERIOD
                 }
+                onIntent(CreateReminderIntent.RepeatTypeChanged(selected))
             },
             values = repeatTypeDropdownValues(),
             icon = Icons.Default.Search,
@@ -99,7 +104,13 @@ fun CreateReminderScreen(
             ReminderRepeatType.ON_SCHEDULE_PERIOD -> {
                 OnSchedulePeriodRepeatCard(
                     state = onSchedulePeriodState,
-                    onStateChange = { onSchedulePeriodState = it },
+                    onStateChange = {
+                        onIntent(
+                            CreateReminderIntent.OnSchedulePeriodStateChanged(
+                                it
+                            )
+                        )
+                    },
                     dropdownValues = repeatUnitDropdownValues(),
                     onStartClick = {},
                     onEndClick = {}
@@ -109,14 +120,26 @@ fun CreateReminderScreen(
             ReminderRepeatType.ON_SCHEDULE_CERTAIN -> {
                 OnScheduleCertainRepeatCard(
                     state = onScheduleCertainState,
-                    onStateChange = { onScheduleCertainState = it }
+                    onStateChange = {
+                        onIntent(
+                            CreateReminderIntent.OnScheduleCertainStateChanged(
+                                it
+                            )
+                        )
+                    }
                 )
             }
 
             ReminderRepeatType.DURING_SESSION_PERIOD -> {
                 DuringSessionPeriodRepeatCard(
                     state = duringSessionState,
-                    onStateChange = { duringSessionState = it },
+                    onStateChange = {
+                        onIntent(
+                            CreateReminderIntent.DuringSessionStateChanged(
+                                it
+                            )
+                        )
+                    },
                     dropdownValues = repeatUnitDropdownValues()
                 )
             }
@@ -124,7 +147,13 @@ fun CreateReminderScreen(
             ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> {
                 AfterAnotherRepeatCard(
                     state = afterAnotherState,
-                    onStateChange = { afterAnotherState = it },
+                    onStateChange = {
+                        onIntent(
+                            CreateReminderIntent.AfterAnotherStateChanged(
+                                it
+                            )
+                        )
+                    },
                     dropdownValues = repeatUnitDropdownValues()
                 )
             }
@@ -133,7 +162,15 @@ fun CreateReminderScreen(
         TitleText(
             text = "Notification sound"
         )
+
         NotificationSegmentedButton { }
+
+        Button(
+            onClick = {
+                onIntent(CreateReminderIntent.SaveClicked)
+            }
+        ) {
+        }
     }
 }
 

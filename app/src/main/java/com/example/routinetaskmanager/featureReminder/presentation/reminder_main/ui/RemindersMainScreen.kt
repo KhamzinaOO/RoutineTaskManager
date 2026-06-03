@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder
+package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,29 +21,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.ui.WeekCarousel
 import com.example.routinetaskmanager.core.utills.formatTime
-import com.example.routinetaskmanager.featureHome.ReminderCardUi
 import com.example.routinetaskmanager.featureHome.ScheduleRow
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderCard
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainIntent
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainUiState
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonCalendarAppBar
 import com.example.routinetaskmanager.navigation.ui.CommonFloatingButton
-import com.example.routinetaskmanager.navigation.ui.Home
-import com.example.routinetaskmanager.navigation.ui.Reminders
 import kotlinx.coroutines.delay
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.Locale
-import java.util.logging.Formatter
 
 @Composable
 fun RemindersMainScreen(
-    onFloatingButtonClick : () -> Unit
+    uiState : ReminderMainUiState,
+    onIntent : (ReminderMainIntent) -> Unit
 ){
+    val reminders = uiState.reminders
 
     AppChromeEffect(
         chrome = AppChrome(
@@ -51,16 +51,22 @@ fun RemindersMainScreen(
                 CommonCalendarAppBar(
                     title = LocalDate.now().month.getDisplayName(
                         TextStyle.FULL_STANDALONE,
-                        Locale.getDefault()
+                        LocalLocale.current.platformLocale
                     ),
-                    onMenuButtonClick = {},
-                    onSearchButtonClick = {},
-                    onCalendarButtonClick = {}
+                    onMenuButtonClick = {
+                        onIntent(ReminderMainIntent.MenuButtonClick)
+                    },
+                    onSearchButtonClick = {
+                        onIntent(ReminderMainIntent.SearchButtonClick)
+                    },
+                    onCalendarButtonClick = {
+                        onIntent(ReminderMainIntent.CalendarButtonClick)
+                    }
                 )
             },
             fab = {
                 CommonFloatingButton {
-                    onFloatingButtonClick()
+                    onIntent(ReminderMainIntent.AddFABClick)
                 }
             }
         )
@@ -102,13 +108,6 @@ fun RemindersMainScreen(
             )
         }
 
-        val reminders = listOf(
-            ReminderCardUi(time = "11:00", status = true, text = "Use eye drops"),
-            ReminderCardUi(time = "12:00", status = true, text = "Use eye drops"),
-            ReminderCardUi(time = "13:00", status = false, text = "Use eye drops"),
-            ReminderCardUi(time = "14:00", status = false, text = "Use eye drops"),
-        )
-
         Box(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -128,12 +127,12 @@ fun RemindersMainScreen(
                 ) {
                     items(reminders) { reminder ->
                         ScheduleRow(
-                            time = reminder.time,
-                            isDone = reminder.status,
+                            time = "ndy",
+                            isDone = false,
                             content = {
                                 ReminderCard(
                                     modifier = Modifier.padding(vertical = 4.dp),
-                                    text = reminder.text
+                                    text = reminder.name
                                 )
                             }
                         )

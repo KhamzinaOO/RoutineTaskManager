@@ -1,5 +1,8 @@
 package com.example.routinetaskmanager.di
 
 val appModules = listOf(
-    featureHomeModule
+    featureHomeModule,
+    reminderRepositoryModule,
+    featureReminderModule,
+    databaseModule
 )

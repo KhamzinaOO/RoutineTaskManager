@@ -20,19 +20,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.utills.formatTime
-import com.example.routinetaskmanager.featureReminder.NextReminderCard
-import com.example.routinetaskmanager.featureReminder.WorkSessionButton
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.NextReminderCard
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
 import com.example.routinetaskmanager.featureTask.ui.TaskCardUi
 import com.example.routinetaskmanager.featureWidgets.AmountTracker
 import com.example.routinetaskmanager.featureWidgets.TimerTracker
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
-import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
