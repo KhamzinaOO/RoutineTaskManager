@@ -5,11 +5,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -24,7 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.routinetaskmanager.featureHome.HomeScreen
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
@@ -32,10 +32,11 @@ import com.example.routinetaskmanager.featureReminder.presentation.create_remind
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.navigation.ReminderMainRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerItem
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerScaffold
-import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersMainScreen
 import kotlinx.coroutines.launch
 
 private val topRoutes = listOf(Home, Widgets, Reminders, Tasks)
+
+private val bottomBranches = listOf(Home, Widgets, Reminders, Tasks, AllReminders)
 
 data class AppChrome(
     val topBar: (@Composable () -> Unit)? = null,
@@ -109,7 +110,7 @@ fun AppNavigation() {
                 appScaffoldState.chrome.fab?.invoke()
             },
             bottomBar = {
-                if (currentRoute in topRoutes) {
+                if (currentRoute in bottomBranches) {
                     BottomNavigationBar(
                         items = topRoutes,
                         selectedItem = branches.currentTop,
@@ -131,6 +132,10 @@ fun AppNavigation() {
                 NavDisplay(
                     backStack = branches.backStack,
                     onBack = { branches.pop() },
+                    entryDecorators = listOf(
+                        rememberSaveableStateHolderNavEntryDecorator(),
+                        rememberViewModelStoreNavEntryDecorator()
+                    ),
                     entryProvider = entryProvider {
                         entry<Home> {
                             HomeScreen()
@@ -157,8 +162,14 @@ fun AppNavigation() {
                             ) {
                                 ReminderMainRoute(
                                     onTopBarIconClick = {
-                                        scope.launch {
-                                            drawerState.open()
+                                        if (!drawerState.isOpen){
+                                            scope.launch {
+                                                drawerState.open()
+                                            }
+                                        }else{
+                                            scope.launch {
+                                                drawerState.close()
+                                            }
                                         }
                                     }
                                 )
@@ -181,6 +192,28 @@ fun AppNavigation() {
                                 AllRemindersRoute(
                                     onReminderClick = { reminderId ->
                                         branches.push(ReminderInfo(reminderId))
+                                    },
+                                    onMenuClick = {
+                                        if (!drawerState.isOpen) {
+                                            scope.launch {
+                                                drawerState.open()
+                                            }
+                                        } else {
+                                            scope.launch {
+                                                drawerState.close()
+                                            }
+                                        }
+                                    },
+                                    onFABClicked = {
+                                        branches.push(CreateReminder())
+                                    },
+                                    onEditClick = {
+                                        branches.push(route = CreateReminder(it))
+                                    },
+                                    showSnackBar = {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(it)
+                                        }
                                     }
                                 )
                             }

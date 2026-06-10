@@ -85,9 +85,9 @@ fun CreateReminderScreen(
             text = "Repeat type"
         )
         CommonDropdownMenuLarge(
-            selectedId = repeatType.ordinal,
-            onDismiss = { id ->
-                val selected = ReminderRepeatType.entries.toTypedArray().getOrElse(id) {
+            selectedId = uiState.repeatType.ordinal,
+            onItemClick = { item ->
+                val selected = ReminderRepeatType.entries.toTypedArray().getOrElse(item.id) {
                     ReminderRepeatType.ON_SCHEDULE_PERIOD
                 }
                 onIntent(CreateReminderIntent.RepeatTypeChanged(selected))

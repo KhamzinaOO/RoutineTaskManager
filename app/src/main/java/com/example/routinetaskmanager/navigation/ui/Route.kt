@@ -34,9 +34,9 @@ data object AllReminders : Route
 
 @Serializable
 data class CreateReminder(
-    val reminderId : Int? = null
+    val reminderId : Long? = null
 ) : Route
 @Serializable
 data class ReminderInfo(
-    val reminderId : Int? = null
+    val reminderId : Long? = null
 ): Route

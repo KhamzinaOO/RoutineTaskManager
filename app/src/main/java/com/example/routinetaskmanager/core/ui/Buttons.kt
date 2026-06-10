@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.core.ui
 
 import android.graphics.drawable.Icon
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -120,7 +121,8 @@ fun CommonOutlinedButton(
         onClick = onClick,
         enabled = enabled,
         colors = colors,
-        contentPadding = contentPadding
+        contentPadding = contentPadding,
+        border = BorderStroke(width = 1.dp, MaterialTheme.colorScheme.onTertiary)
     ) {
         Text(
             text = text

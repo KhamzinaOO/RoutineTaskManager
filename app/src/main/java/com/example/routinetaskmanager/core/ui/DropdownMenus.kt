@@ -2,15 +2,17 @@ package com.example.routinetaskmanager.core.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -20,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,52 +33,117 @@ import com.example.routinetaskmanager.core.model.DropdownMenuItemUi
 
 @Composable
 fun CommonDropdownMenu(
-    onDismiss: (Int) -> Unit,
-    values: List<DropdownMenuItemUi>?,
-    selectedId: Int = values?.firstOrNull()?.id ?: 0
+    values: List<DropdownMenuItemUi>,
+    selectedId: Int?,
+    onItemClick: (DropdownMenuItemUi) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
-    var isDropdownActive by remember { mutableStateOf(false) }
-    var currentSelectedId by remember(selectedId, values) {
-        mutableIntStateOf(selectedId)
-    }
-    val selectedName = values
-        ?.firstOrNull { it.id == currentSelectedId }
-        ?.name
-        ?: values?.firstOrNull()?.name
+    CommonDropdownMenuBase(
+        values = values,
+        selectedId = selectedId,
+        onItemClick = onItemClick,
+        modifier = modifier,
+        enabled = enabled,
+        height = 34.dp,
+        fillMaxWidth = false,
+        leadingIcon = null,
+        leadingIconContentDescription = null,
+        buttonColors = ButtonDefaults.buttonColors()
+    )
+}
 
-    Column {
+@Composable
+fun CommonDropdownMenuLarge(
+    values: List<DropdownMenuItemUi>,
+    selectedId: Int?,
+    onItemClick: (DropdownMenuItemUi) -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    contentDescription: String? = null,
+    enabled: Boolean = true
+) {
+    CommonDropdownMenuBase(
+        values = values,
+        selectedId = selectedId,
+        onItemClick = onItemClick,
+        modifier = modifier.fillMaxWidth(),
+        enabled = enabled,
+        height = 48.dp,
+        fillMaxWidth = true,
+        leadingIcon = icon,
+        leadingIconContentDescription = contentDescription,
+        buttonColors = ButtonDefaults.buttonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    )
+}
+
+@Composable
+private fun CommonDropdownMenuBase(
+    values: List<DropdownMenuItemUi>,
+    selectedId: Int?,
+    onItemClick: (DropdownMenuItemUi) -> Unit,
+    modifier: Modifier,
+    enabled: Boolean,
+    height: androidx.compose.ui.unit.Dp,
+    fillMaxWidth: Boolean,
+    leadingIcon: ImageVector?,
+    leadingIconContentDescription: String?,
+    buttonColors: androidx.compose.material3.ButtonColors
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    val selectedItem = values.firstOrNull { it.id == selectedId }
+    val isEnabled = enabled && values.isNotEmpty()
+
+    Box(modifier = modifier) {
         Button(
-            modifier = Modifier.height(34.dp),
-            shape = RoundedCornerShape(32.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-            onClick = { isDropdownActive = true }
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                selectedName?.let { Text(text = it) }
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = "down"
+            modifier = Modifier
+                .then(
+                    if (fillMaxWidth) Modifier.fillMaxWidth()
+                    else Modifier.widthIn(min = 72.dp)
                 )
-            }
+                .height(height),
+            enabled = isEnabled,
+            shape = RoundedCornerShape(32.dp),
+            colors = buttonColors,
+            contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
+            onClick = { expanded = true }
+        ) {
+            DropdownButtonContent(
+                text = selectedItem?.name.orEmpty(),
+                fillMaxWidth = fillMaxWidth,
+                leadingIcon = leadingIcon,
+                leadingIconContentDescription = leadingIconContentDescription
+            )
         }
 
         DropdownMenu(
-            expanded = isDropdownActive,
+            expanded = expanded,
             onDismissRequest = {
-                isDropdownActive = false
-                onDismiss(currentSelectedId)
+                expanded = false
             }
         ) {
-            values?.forEach { item ->
+            values.forEach { item ->
+                val selected = item.id == selectedId
+
                 DropdownMenuItem(
-                    text = { Text(text = item.name) },
+                    text = {
+                        Text(text = item.name)
+                    },
+                    trailingIcon = {
+                        if (selected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null
+                            )
+                        }
+                    },
                     onClick = {
-                        currentSelectedId = item.id
-                        isDropdownActive = false
-                        onDismiss(item.id)
+                        expanded = false
+                        onItemClick(item)
                     }
                 )
             }
@@ -86,77 +152,50 @@ fun CommonDropdownMenu(
 }
 
 @Composable
-fun CommonDropdownMenuLarge(
-    onDismiss: (Int) -> Unit,
-    values: List<DropdownMenuItemUi>?,
-    icon: ImageVector? = null,
-    contentDescription: String? = null,
-    selectedId: Int = values?.firstOrNull()?.id ?: 0
+private fun DropdownButtonContent(
+    text: String,
+    fillMaxWidth: Boolean,
+    leadingIcon: ImageVector?,
+    leadingIconContentDescription: String?
 ) {
-    var isDropdownActive by remember { mutableStateOf(false) }
-    var currentSelectedId by remember(selectedId, values) {
-        mutableIntStateOf(selectedId)
-    }
-    val selectedName = values
-        ?.firstOrNull { it.id == currentSelectedId }
-        ?.name
-        ?: values?.firstOrNull()?.name
-
-    Column {
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            shape = RoundedCornerShape(32.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
-            onClick = { isDropdownActive = true }
+    if (fillMaxWidth) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    if (icon != null) {
-                        Icon(
-                            icon,
-                            contentDescription = contentDescription
-                        )
-                    } else {
-                        Box(modifier = Modifier.size(24.dp))
-                    }
-                    selectedName?.let { Text(text = it) }
+                if (leadingIcon != null) {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = leadingIconContentDescription
+                    )
+                } else {
+                    Spacer(modifier = Modifier.size(24.dp))
                 }
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = "down"
-                )
-            }
-        }
 
-        DropdownMenu(
-            expanded = isDropdownActive,
-            onDismissRequest = {
-                isDropdownActive = false
-                onDismiss(currentSelectedId)
+                Text(text = text)
             }
+
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
+        }
+    } else {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            values?.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(text = item.name) },
-                    onClick = {
-                        currentSelectedId = item.id
-                        isDropdownActive = false
-                        onDismiss(item.id)
-                    }
-                )
-            }
+            Text(text = text)
+
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = null
+            )
         }
     }
 }

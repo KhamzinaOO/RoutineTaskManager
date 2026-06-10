@@ -459,8 +459,8 @@ private fun IntervalRow(
 
         CommonDropdownMenu(
             selectedId = interval.selectedUnitId,
-            onDismiss = { unitId ->
-                onIntervalChange(interval.copy(selectedUnitId = unitId))
+            onItemClick = { unit ->
+                onIntervalChange(interval.copy(selectedUnitId = unit.id))
             },
             values = dropdownValues
         )
