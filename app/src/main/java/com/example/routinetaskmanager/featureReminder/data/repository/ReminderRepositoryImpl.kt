@@ -7,6 +7,7 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEntity
 import com.example.routinetaskmanager.featureReminder.data.mapper.ReminderRepeatRuleJsonMapper
 import com.example.routinetaskmanager.featureReminder.data.mapper.toDomain
+import com.example.routinetaskmanager.featureReminder.data.mapper.toEntity
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
@@ -114,27 +115,9 @@ class ReminderRepositoryImpl(
     }
 
     override suspend fun updateReminder(
-        reminderId: Long,
-        name: String,
-        instructionsText: String?,
-        repeatRule: ReminderRepeatRule,
-        notificationMode: NotificationMode
+        reminder: Reminder
     ) {
-        val oldReminder = reminderDao.getReminderById(reminderId)
-            ?: return
-
-        val updatedReminder = oldReminder.copy(
-            name = name.trim(),
-            instructionsText = instructionsText
-                ?.trim()
-                ?.takeIf { it.isNotBlank() },
-            repeatType = repeatRule.toRepeatType(),
-            repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(repeatRule),
-            notificationMode = notificationMode.name,
-            updatedAt = System.currentTimeMillis()
-        )
-
-        reminderDao.updateReminder(updatedReminder)
+        reminderDao.updateReminder(reminder.toEntity())
     }
 
     override suspend fun deleteReminder(
@@ -188,5 +171,35 @@ class ReminderRepositoryImpl(
         imageStorage.deleteImage(image.imagePath)
 
         reminderDao.deleteImageById(imageId)
+    }
+
+    override suspend fun setReminderEnabled(
+        reminderId: Long,
+        enabled: Boolean
+    ) {
+        reminderDao.updateReminderEnabled(
+            reminderId = reminderId,
+            enabled = enabled
+        )
+    }
+
+    override suspend fun setNotificationEnabled(
+        reminderId: Long,
+        enabled: Boolean
+    ) {
+        reminderDao.updateNotificationEnabled(
+            reminderId = reminderId,
+            enabled = enabled
+        )
+    }
+
+    override suspend fun updateNotificationMode(
+        reminderId: Long,
+        notificationMode: NotificationMode
+    ) {
+        reminderDao.updateNotificationMode(
+            reminderId = reminderId,
+            notificationMode = notificationMode.name
+        )
     }
 }

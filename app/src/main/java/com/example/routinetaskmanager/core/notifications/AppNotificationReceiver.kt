@@ -6,10 +6,12 @@ import android.content.Intent
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+
 class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
     private val appNotificationManager: AppNotificationManager by inject()
-    private val notificationRouter: NotificationRouter by inject()
+    private val notificationTriggerRouter: NotificationTriggerRouter by inject()
+    private val scheduledNotificationDao: ScheduledNotificationDao by inject()
 
     override fun onReceive(
         context: Context,
@@ -36,26 +38,40 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             return
         }
 
-        val title = intent.getStringExtra(
-            AppNotificationConstants.EXTRA_TITLE
-        ) ?: "Reminder"
-
-        val text = intent.getStringExtra(
-            AppNotificationConstants.EXTRA_TEXT
+        val scheduledAtMillis = intent.getLongExtra(
+            AppNotificationConstants.EXTRA_SCHEDULED_AT,
+            -1L
         )
 
-        appNotificationManager.showNotification(
-            targetType = targetType,
-            targetId = targetId,
-            title = title,
-            text = text
+        if (scheduledAtMillis == -1L) {
+            return
+        }
+
+        val requestCode = intent.getIntExtra(
+            AppNotificationConstants.EXTRA_REQUEST_CODE,
+            Int.MIN_VALUE
         )
 
         goAsync {
-            notificationRouter.onNotificationTriggered(
+            val payload = notificationTriggerRouter.buildPayloadOrNull(
                 targetType = targetType,
-                targetId = targetId
+                targetId = targetId,
+                scheduledAtMillis = scheduledAtMillis
             )
+
+            if (payload != null) {
+                appNotificationManager.showNotification(payload)
+
+                notificationTriggerRouter.onNotificationShown(
+                    targetType = targetType,
+                    targetId = targetId,
+                    scheduledAtMillis = scheduledAtMillis
+                )
+            }
+
+            if (requestCode != Int.MIN_VALUE) {
+                scheduledNotificationDao.deleteByRequestCode(requestCode)
+            }
         }
     }
 }

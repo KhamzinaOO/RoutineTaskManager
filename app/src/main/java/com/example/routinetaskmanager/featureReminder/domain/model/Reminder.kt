@@ -8,5 +8,7 @@ data class Reminder(
     val notificationMode: NotificationMode,
     val images: List<ReminderImage> = emptyList(),
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isEnabled: Boolean = true,
+    val notificationEnabled: Boolean = true,
 )

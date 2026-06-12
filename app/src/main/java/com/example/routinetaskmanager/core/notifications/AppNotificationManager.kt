@@ -11,31 +11,21 @@ class AppNotificationManager(
     private val context: Context,
     private val notificationFactory: AppNotificationFactory
 ) {
-    private val systemNotificationManager : NotificationManager =
+
+    private val systemNotificationManager: NotificationManager =
         context.getSystemService(NotificationManager::class.java)
 
     fun showNotification(
-        targetType: NotificationTargetType,
-        targetId : Long,
-        title : String,
-        text : String?
-    ){
-        if(!canShowNotifications()){
+        payload: NotificationPayload
+    ) {
+        if (!canShowNotifications()) {
             return
         }
 
-        val notification = notificationFactory.createNotification(
-            targetType,
-            targetId,
-            title,
-            text
-        )
+        val notification = notificationFactory.createNotification(payload)
 
         systemNotificationManager.notify(
-            buildNotificationId(
-                targetType,
-                targetId
-            ),
+            buildNotificationId(payload),
             notification
         )
     }
@@ -43,21 +33,12 @@ class AppNotificationManager(
     fun cancelNotification(
         targetType: NotificationTargetType,
         targetId: Long
-    ){
+    ) {
         systemNotificationManager.cancel(
-            buildNotificationId(
-                targetType,
-                targetId
-            )
+            "notification-${targetType.name}-$targetId".hashCode()
         )
     }
 
-    private fun buildNotificationId(
-        targetType: NotificationTargetType,
-        targetId: Long
-    ): Int {
-        return "notification-${targetType.name}-$targetId".hashCode()
-    }
     private fun canShowNotifications(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return true
@@ -69,5 +50,17 @@ class AppNotificationManager(
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    private fun buildNotificationId(
+        payload: NotificationPayload
+    ): Int {
+        return when (payload.targetType) {
+            NotificationTargetType.REMINDER -> {
+                "notification-REMINDER-${payload.targetId}".hashCode()
+            }
 
+            NotificationTargetType.TASK -> {
+                "notification-TASK-${payload.targetId}".hashCode()
+            }
+        }
+    }
 }

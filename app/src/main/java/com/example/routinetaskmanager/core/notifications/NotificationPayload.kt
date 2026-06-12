@@ -5,5 +5,6 @@ data class NotificationPayload(
     val targetId : Long,
     val title : String,
     val text : String?,
-    val scheduledAtMillis : Long
+    val scheduledAtMillis : Long,
+    val channelId: String
 )

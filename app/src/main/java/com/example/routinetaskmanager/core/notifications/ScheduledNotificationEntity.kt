@@ -9,15 +9,17 @@ import androidx.room.PrimaryKey
     indices = [
         Index("targetType"),
         Index("targetId"),
-        Index("scheduledAtMillis")
+        Index("scheduledAtMillis"),
+        Index(value = ["occurrenceKey"], unique = true)
     ]
 )
 data class ScheduledNotificationEntity (
     @PrimaryKey
     val requestCode : Int,
-    val targetType: NotificationTargetType,
+    val targetType: String,
     val targetId : Long,
     val scheduledAtMillis : Long,
-    val title : String,
-    val text : String?
+    val occurrenceKey: String,
+    val channelId: String,
+    val createdAtMillis: Long = System.currentTimeMillis()
 )

@@ -27,11 +27,7 @@ interface ReminderRepository {
     ): Long
 
     suspend fun updateReminder(
-        reminderId: Long,
-        name: String,
-        instructionsText: String?,
-        repeatRule: ReminderRepeatRule,
-        notificationMode: NotificationMode
+        reminder : Reminder
     )
 
     suspend fun deleteReminder(
@@ -46,4 +42,9 @@ interface ReminderRepository {
     suspend fun deleteImage(
         imageId: Long
     )
+
+
+    suspend fun setReminderEnabled(reminderId: Long, enabled: Boolean)
+    suspend fun setNotificationEnabled(reminderId: Long, enabled: Boolean)
+    suspend fun updateNotificationMode(reminderId: Long, notificationMode: NotificationMode)
 }

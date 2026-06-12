@@ -6,7 +6,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import com.example.routinetaskmanager.featureReminder.domain.useCase.CreateReminderUseCase
+import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.parseHourMinuteOrNull
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toRepeatRule
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 class CreateReminderViewModel(
-    private val createReminderUseCase: CreateReminderUseCase,
+    private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
     private val reminderRepository: ReminderRepository
 ) : ViewModel() {
 
@@ -152,6 +152,7 @@ class CreateReminderViewModel(
     private fun saveReminder() {
         val state = _uiState.value
 
+        if (state.isSaving) return
 //        val validationError = validateState(state)
 //        if (validationError != null) {
 //            _uiState.update {
@@ -169,7 +170,7 @@ class CreateReminderViewModel(
             }
 
             runCatching {
-                createReminderUseCase.invoke(
+                reminderRepository.createReminder(
                     name = state.name.trim(),
                     instructionsText = state.instructions
                         .trim()
@@ -178,6 +179,7 @@ class CreateReminderViewModel(
                     notificationMode = state.notificationMode,
                     imageUris = state.imageUris
                 )
+                rescheduleRemindersUseCase.invoke()
             }.onSuccess {
                 _uiState.update {
                     it.copy(isSaving = false)

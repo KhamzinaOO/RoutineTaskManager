@@ -6,34 +6,38 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 
-class AndroidAppAlarmScheduler (
-    private val context : Context
+class AndroidAppAlarmScheduler(
+    private val context: Context
 ) : AppAlarmScheduler {
 
     private val alarmManager: AlarmManager =
         context.getSystemService(AlarmManager::class.java)
 
     override fun schedule(
-        payload: NotificationPayload,
+        targetType: NotificationTargetType,
+        targetId: Long,
+        scheduledAtMillis: Long,
         requestCode: Int
     ) {
-        if (payload.scheduledAtMillis <= System.currentTimeMillis()) {
+        if (scheduledAtMillis <= System.currentTimeMillis()) {
             return
         }
 
         val pendingIntent = createPendingIntent(
-            payload = payload,
+            targetType = targetType,
+            targetId = targetId,
+            scheduledAtMillis = scheduledAtMillis,
             requestCode = requestCode
         )
 
         if (canScheduleExactAlarms()) {
             scheduleExact(
-                triggerAtMillis = payload.scheduledAtMillis,
+                triggerAtMillis = scheduledAtMillis,
                 pendingIntent = pendingIntent
             )
         } else {
             scheduleInexact(
-                triggerAtMillis = payload.scheduledAtMillis,
+                triggerAtMillis = scheduledAtMillis,
                 pendingIntent = pendingIntent
             )
         }
@@ -58,7 +62,9 @@ class AndroidAppAlarmScheduler (
     }
 
     private fun createPendingIntent(
-        payload: NotificationPayload,
+        targetType: NotificationTargetType,
+        targetId: Long,
+        scheduledAtMillis: Long,
         requestCode: Int
     ): PendingIntent {
         val intent = Intent(
@@ -69,27 +75,22 @@ class AndroidAppAlarmScheduler (
 
             putExtra(
                 AppNotificationConstants.EXTRA_TARGET_TYPE,
-                payload.targetType.name
+                targetType.name
             )
 
             putExtra(
                 AppNotificationConstants.EXTRA_TARGET_ID,
-                payload.targetId
-            )
-
-            putExtra(
-                AppNotificationConstants.EXTRA_TITLE,
-                payload.title
-            )
-
-            putExtra(
-                AppNotificationConstants.EXTRA_TEXT,
-                payload.text
+                targetId
             )
 
             putExtra(
                 AppNotificationConstants.EXTRA_SCHEDULED_AT,
-                payload.scheduledAtMillis
+                scheduledAtMillis
+            )
+
+            putExtra(
+                AppNotificationConstants.EXTRA_REQUEST_CODE,
+                requestCode
             )
         }
 

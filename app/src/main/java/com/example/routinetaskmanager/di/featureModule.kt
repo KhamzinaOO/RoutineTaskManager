@@ -5,7 +5,6 @@ import com.example.routinetaskmanager.featureHome.HomeViewModel
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import com.example.routinetaskmanager.featureReminder.domain.useCase.CreateReminderUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
@@ -41,13 +40,6 @@ val featureReminderModule = module {
             scheduleCalculator = get(),
             alarmScheduler = get(),
             scheduledNotificationDao = get()
-        )
-    }
-
-    factory {
-        CreateReminderUseCase(
-            reminderRepository = get(),
-            rescheduleRemindersUseCase = get()
         )
     }
 

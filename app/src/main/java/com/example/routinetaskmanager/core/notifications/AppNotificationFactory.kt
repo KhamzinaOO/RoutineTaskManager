@@ -9,53 +9,51 @@ import com.example.routinetaskmanager.MainActivity
 import com.example.routinetaskmanager.R
 
 class AppNotificationFactory(
-    private val context : Context
+    private val context: Context
 ) {
+
     fun createNotification(
-        targetType: NotificationTargetType,
-        targetId : Long,
-        title : String,
-        text : String?
-    ) : Notification{
+        payload: NotificationPayload
+    ): Notification {
         val openAppIntent = Intent(
             context,
             MainActivity::class.java
         ).apply {
-            putExtra(AppNotificationConstants.EXTRA_TARGET_TYPE, targetType.name)
-            putExtra(AppNotificationConstants.EXTRA_TARGET_ID, targetId)
+            putExtra(AppNotificationConstants.EXTRA_TARGET_TYPE, payload.targetType.name)
+            putExtra(AppNotificationConstants.EXTRA_TARGET_ID, payload.targetId)
+            putExtra(AppNotificationConstants.EXTRA_SCHEDULED_AT, payload.scheduledAtMillis)
         }
 
         val contentPendingIntent = PendingIntent.getActivity(
             context,
-            buildContentRequestCode(targetType, targetId),
+            buildContentRequestCode(payload),
             openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         return NotificationCompat.Builder(
             context,
-            AppNotificationConstants.CHANNEL_REMINDERS_ID
+            payload.channelId
         )
             .setSmallIcon(R.drawable.ic_notifications)
-            .setContentTitle(title)
-            .setContentText(text ?: title)
+            .setContentTitle(payload.title)
+            .setContentText(payload.text ?: payload.title)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(text ?: title)
+                    .bigText(payload.text ?: payload.title)
             )
             .setContentIntent(contentPendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setGroup(AppNotificationConstants.REMINDER_GROUP_KEY)
             .build()
     }
 
-
     private fun buildContentRequestCode(
-        targetType: NotificationTargetType,
-        targetId: Long
+        payload: NotificationPayload
     ): Int {
-        return "open-${targetType.name}-$targetId".hashCode()
+        return "open-${payload.targetType.name}-${payload.targetId}".hashCode()
     }
 }

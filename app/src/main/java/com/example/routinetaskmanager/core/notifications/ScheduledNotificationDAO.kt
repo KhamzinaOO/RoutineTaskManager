@@ -5,36 +5,54 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
+
 @Dao
-interface ScheduledNotificationDAO {
+interface ScheduledNotificationDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(
+    suspend fun insert(
         entity: ScheduledNotificationEntity
     )
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(
-        entities : List<ScheduledNotificationEntity>
+    suspend fun insertAll(
+        entities: List<ScheduledNotificationEntity>
     )
 
     @Query("SELECT * FROM scheduled_notifications")
-    suspend fun getAll() : List<ScheduledNotificationEntity>
+    suspend fun getAll(): List<ScheduledNotificationEntity>
 
-    @Query("""SELECT * FROM scheduled_notifications
-            WHERE targetType = :targetType""")
+    @Query(
+        """
+        SELECT * FROM scheduled_notifications
+        WHERE targetType = :targetType
+        """
+    )
     suspend fun getByTargetType(
-        targetType : NotificationTargetType
+        targetType: String
     ): List<ScheduledNotificationEntity>
 
-//    @Query("""
-//        SELECT * FROM scheduled_notifications
-//        WHERE targetType = :targetType
-//        AND targetId = :targetId
-//    """)
-//    suspend fun getByTarget(
-//        targetType : NotificationTargetType,
-//        targetId : Long
-//    )
+    @Query(
+        """
+        SELECT * FROM scheduled_notifications
+        WHERE targetType = :targetType
+        AND targetId = :targetId
+        """
+    )
+    suspend fun getByTarget(
+        targetType: String,
+        targetId: Long
+    ): List<ScheduledNotificationEntity>
+
+    @Query(
+        """
+        SELECT * FROM scheduled_notifications
+        WHERE requestCode = :requestCode
+        """
+    )
+    suspend fun getByRequestCode(
+        requestCode: Int
+    ): ScheduledNotificationEntity?
 
     @Query(
         """

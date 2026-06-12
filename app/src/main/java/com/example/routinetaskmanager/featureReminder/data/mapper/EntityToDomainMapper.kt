@@ -16,7 +16,9 @@ fun ReminderWithImages.toDomain(): Reminder {
         notificationMode = NotificationMode.valueOf(reminder.notificationMode),
         images = images.map { it.toDomain() },
         createdAt = reminder.createdAt,
-        updatedAt = reminder.updatedAt
+        updatedAt = reminder.updatedAt,
+        isEnabled = reminder.isEnabled,
+        notificationEnabled = reminder.notificationEnabled
     )
 }
 
@@ -38,6 +40,8 @@ fun Reminder.toEntity(): ReminderEntity {
         repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(repeatRule),
         notificationMode = notificationMode.name,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        isEnabled = isEnabled,
+        notificationEnabled = notificationEnabled
     )
 }

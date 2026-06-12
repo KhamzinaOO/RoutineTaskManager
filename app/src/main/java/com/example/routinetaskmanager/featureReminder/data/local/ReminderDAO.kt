@@ -126,4 +126,46 @@ interface ReminderDao {
     @Transaction
     @Query("SELECT * FROM reminders ORDER BY createdAt DESC")
     suspend fun getRemindersWithImagesSnapshot(): List<ReminderWithImages>
+
+    @Query(
+        """
+    UPDATE reminders
+    SET isEnabled = :enabled,
+        updatedAt = :updatedAt
+    WHERE id = :reminderId
+    """
+    )
+    suspend fun updateReminderEnabled(
+        reminderId: Long,
+        enabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query(
+        """
+    UPDATE reminders
+    SET notificationEnabled = :enabled,
+        updatedAt = :updatedAt
+    WHERE id = :reminderId
+    """
+    )
+    suspend fun updateNotificationEnabled(
+        reminderId: Long,
+        enabled: Boolean,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query(
+        """
+    UPDATE reminders
+    SET notificationMode = :notificationMode,
+        updatedAt = :updatedAt
+    WHERE id = :reminderId
+    """
+    )
+    suspend fun updateNotificationMode(
+        reminderId: Long,
+        notificationMode: String,
+        updatedAt: Long = System.currentTimeMillis()
+    )
 }

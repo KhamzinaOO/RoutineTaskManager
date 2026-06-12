@@ -1,12 +1,16 @@
 package com.example.routinetaskmanager.core.notifications
 
+
 interface AppAlarmScheduler {
+
     fun schedule(
-        payload: NotificationPayload,
-        requestCode : Int
+        targetType: NotificationTargetType,
+        targetId: Long,
+        scheduledAtMillis: Long,
+        requestCode: Int
     )
 
     fun cancel(
-        requestCode : Int
+        requestCode: Int
     )
 }
