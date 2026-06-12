@@ -122,4 +122,8 @@ interface ReminderDao {
     suspend fun deleteImagesByReminderId(
         reminderId: Long
     )
+
+    @Transaction
+    @Query("SELECT * FROM reminders ORDER BY createdAt DESC")
+    suspend fun getRemindersWithImagesSnapshot(): List<ReminderWithImages>
 }

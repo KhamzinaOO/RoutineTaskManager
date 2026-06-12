@@ -1,0 +1,9 @@
+package com.example.routinetaskmanager.core.notifications
+
+data class NotificationPayload(
+    val targetType : NotificationTargetType,
+    val targetId : Long,
+    val title : String,
+    val text : String?,
+    val scheduledAtMillis : Long
+)

@@ -7,7 +7,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import kotlinx.coroutines.flow.Flow
 
 interface ReminderRepository {
-
+    suspend fun getAllRemindersSnapshot(): List<Reminder>
     fun observeReminders(): Flow<List<Reminder>>
 
     fun observeReminderById(

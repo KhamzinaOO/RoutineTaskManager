@@ -20,6 +20,14 @@ class ReminderRepositoryImpl(
     private val imageStorage: ImageStorage
 ) : ReminderRepository {
 
+    override suspend fun getAllRemindersSnapshot(): List<Reminder> {
+        return reminderDao
+            .getRemindersWithImagesSnapshot()
+            .map { reminderWithImages ->
+                reminderWithImages.toDomain()
+            }
+    }
+
     override fun observeReminders(): Flow<List<Reminder>> {
         return reminderDao.observeRemindersWithImages()
             .map { reminderWithImagesList ->

@@ -6,6 +6,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.example.routinetaskmanager.featureReminder.domain.useCase.CreateReminderUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.parseHourMinuteOrNull
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toRepeatRule
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
@@ -26,6 +27,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 class CreateReminderViewModel(
+    private val createReminderUseCase: CreateReminderUseCase,
     private val reminderRepository: ReminderRepository
 ) : ViewModel() {
 
@@ -167,7 +169,7 @@ class CreateReminderViewModel(
             }
 
             runCatching {
-                reminderRepository.createReminder(
+                createReminderUseCase.invoke(
                     name = state.name.trim(),
                     instructionsText = state.instructions
                         .trim()
