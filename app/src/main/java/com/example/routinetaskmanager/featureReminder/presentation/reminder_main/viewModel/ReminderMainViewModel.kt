@@ -2,11 +2,9 @@ package com.example.routinetaskmanager.featureReminder.presentation.reminder_mai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderEffect
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

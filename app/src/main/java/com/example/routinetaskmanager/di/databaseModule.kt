@@ -1,7 +1,7 @@
 package com.example.routinetaskmanager.di
 
 import androidx.room.Room
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDAO
+import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.AppDatabase
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import org.koin.android.ext.koin.androidContext
@@ -27,7 +27,7 @@ val databaseModule = module {
         get<AppDatabase>().reminderDao()
     }
 
-    single<ScheduledNotificationDAO> {
+    single<ScheduledNotificationDao> {
         get<AppDatabase>().scheduleDao()
     }
 }

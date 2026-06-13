@@ -2,7 +2,7 @@ package com.example.routinetaskmanager.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDAO
+import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
@@ -20,5 +20,5 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEn
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun reminderDao(): ReminderDao
-    abstract fun scheduleDao(): ScheduledNotificationDAO
+    abstract fun scheduleDao(): ScheduledNotificationDao
 }

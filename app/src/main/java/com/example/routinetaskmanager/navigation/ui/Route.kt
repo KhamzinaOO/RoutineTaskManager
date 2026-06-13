@@ -33,9 +33,12 @@ data object Tasks : TopRoute {
 data object AllReminders : Route
 
 @Serializable
-data class CreateReminder(
-    val reminderId : Long? = null
-) : Route
+data object CreateReminder : Route
+
+@Serializable
+data class EditReminder(
+    val reminderId : Long
+): Route
 @Serializable
 data class ReminderInfo(
     val reminderId : Long? = null

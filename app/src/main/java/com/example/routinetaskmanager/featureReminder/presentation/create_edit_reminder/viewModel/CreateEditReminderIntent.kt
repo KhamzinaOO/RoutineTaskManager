@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
 
 import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
@@ -8,53 +8,53 @@ import com.example.routinetaskmanager.featureReminder.presentation.common.model.
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
 
-sealed interface CreateReminderIntent {
+sealed interface CreateEditReminderIntent {
 
     data class NameChanged(
         val value: String
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class InstructionsChanged(
         val value: String
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class RepeatTypeChanged(
         val value: ReminderRepeatType
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class AfterAnotherStateChanged(
         val value: AfterAnotherRepeatUi
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class OnSchedulePeriodStateChanged(
         val value: OnSchedulePeriodRepeatUi
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class OnScheduleCertainStateChanged(
         val value: OnScheduleCertainRepeatUi
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class DuringSessionStateChanged(
         val value: DuringSessionPeriodRepeatUi
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class NotificationModeChanged(
         val value: NotificationMode
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class ImageAdded(
         val uri: Uri
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
     data class ImageRemoved(
         val uri: Uri
-    ) : CreateReminderIntent
+    ) : CreateEditReminderIntent
 
-    data object TakePictureClicked : CreateReminderIntent
+    data object TakePictureClicked : CreateEditReminderIntent
 
-    data object SaveClicked : CreateReminderIntent
+    data object SaveClicked : CreateEditReminderIntent
 
-    data object BackClicked : CreateReminderIntent
+    data object BackClicked : CreateEditReminderIntent
 
-    data object ErrorShown : CreateReminderIntent
+    data object ErrorShown : CreateEditReminderIntent
 }

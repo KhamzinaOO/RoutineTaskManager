@@ -1,12 +1,11 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
-import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
+import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.parseHourMinuteOrNull
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toRepeatRule
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
@@ -27,19 +26,18 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 
 class CreateReminderViewModel(
-    private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
-    private val reminderRepository: ReminderRepository
+    private val commandUseCase: ReminderCommandUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CreateReminderUiState())
-    val uiState: StateFlow<CreateReminderUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CreateEditReminderUiState())
+    val uiState: StateFlow<CreateEditReminderUiState> = _uiState.asStateFlow()
 
-    private val _effect = Channel<CreateReminderEffect>(Channel.BUFFERED)
+    private val _effect = Channel<CreateEditReminderEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-    fun onIntent(intent: CreateReminderIntent) {
+    fun onIntent(intent: CreateEditReminderIntent) {
         when (intent) {
-            is CreateReminderIntent.NameChanged -> {
+            is CreateEditReminderIntent.NameChanged -> {
                 _uiState.update {
                     it.copy(
                         name = intent.value,
@@ -48,7 +46,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.InstructionsChanged -> {
+            is CreateEditReminderIntent.InstructionsChanged -> {
                 _uiState.update {
                     it.copy(
                         instructions = intent.value,
@@ -57,11 +55,11 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.TakePictureClicked -> {
-                sendEffect(CreateReminderEffect.OpenImagePicker)
+            is CreateEditReminderIntent.TakePictureClicked -> {
+                sendEffect(CreateEditReminderEffect.OpenImagePicker)
             }
 
-            is CreateReminderIntent.RepeatTypeChanged -> {
+            is CreateEditReminderIntent.RepeatTypeChanged -> {
                 _uiState.update {
                     it.copy(
                         repeatType = intent.value,
@@ -70,7 +68,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.AfterAnotherStateChanged -> {
+            is CreateEditReminderIntent.AfterAnotherStateChanged -> {
                 _uiState.update {
                     it.copy(
                         afterAnotherState = intent.value,
@@ -79,7 +77,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.OnSchedulePeriodStateChanged -> {
+            is CreateEditReminderIntent.OnSchedulePeriodStateChanged -> {
                 _uiState.update {
                     it.copy(
                         onSchedulePeriodState = intent.value,
@@ -88,7 +86,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.OnScheduleCertainStateChanged -> {
+            is CreateEditReminderIntent.OnScheduleCertainStateChanged -> {
                 _uiState.update {
                     it.copy(
                         onScheduleCertainState = intent.value,
@@ -97,7 +95,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.DuringSessionStateChanged -> {
+            is CreateEditReminderIntent.DuringSessionStateChanged -> {
                 _uiState.update {
                     it.copy(
                         duringSessionState = intent.value,
@@ -106,7 +104,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.NotificationModeChanged -> {
+            is CreateEditReminderIntent.NotificationModeChanged -> {
                 _uiState.update {
                     it.copy(
                         notificationMode = intent.value,
@@ -115,7 +113,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.ImageAdded -> {
+            is CreateEditReminderIntent.ImageAdded -> {
                 _uiState.update {
                     it.copy(
                         imageUris = it.imageUris + intent.uri,
@@ -124,7 +122,7 @@ class CreateReminderViewModel(
                 }
             }
 
-            is CreateReminderIntent.ImageRemoved -> {
+            is CreateEditReminderIntent.ImageRemoved -> {
                 _uiState.update {
                     it.copy(
                         imageUris = it.imageUris - intent.uri,
@@ -133,15 +131,15 @@ class CreateReminderViewModel(
                 }
             }
 
-            CreateReminderIntent.SaveClicked -> {
+            CreateEditReminderIntent.SaveClicked -> {
                 saveReminder()
             }
 
-            CreateReminderIntent.BackClicked -> {
-                sendEffect(CreateReminderEffect.NavigateBack)
+            CreateEditReminderIntent.BackClicked -> {
+                sendEffect(CreateEditReminderEffect.NavigateBack)
             }
 
-            CreateReminderIntent.ErrorShown -> {
+            CreateEditReminderIntent.ErrorShown -> {
                 _uiState.update {
                     it.copy(errorMessage = null)
                 }
@@ -170,7 +168,7 @@ class CreateReminderViewModel(
             }
 
             runCatching {
-                reminderRepository.createReminder(
+                commandUseCase.createReminder(
                     name = state.name.trim(),
                     instructionsText = state.instructions
                         .trim()
@@ -179,13 +177,12 @@ class CreateReminderViewModel(
                     notificationMode = state.notificationMode,
                     imageUris = state.imageUris
                 )
-                rescheduleRemindersUseCase.invoke()
             }.onSuccess {
                 _uiState.update {
                     it.copy(isSaving = false)
                 }
 
-                _effect.send(CreateReminderEffect.NavigateBack)
+                _effect.send(CreateEditReminderEffect.NavigateBack)
             }.onFailure { throwable ->
                 val message = throwable.message ?: "Failed to create reminder"
 
@@ -196,13 +193,13 @@ class CreateReminderViewModel(
                     )
                 }
 
-                _effect.send(CreateReminderEffect.ShowMessage(message))
+                _effect.send(CreateEditReminderEffect.ShowMessage(message))
             }
         }
     }
 
     private fun validateState(
-        state: CreateReminderUiState
+        state: CreateEditReminderUiState
     ): String? {
         if (state.name.isBlank()) {
             return "Enter reminder name"
@@ -228,7 +225,7 @@ class CreateReminderViewModel(
     }
 
     private fun buildRepeatRule(
-        state: CreateReminderUiState
+        state: CreateEditReminderUiState
     ): ReminderRepeatRule {
         return when (state.repeatType) {
             ReminderRepeatType.ON_SCHEDULE_PERIOD -> {
@@ -250,7 +247,7 @@ class CreateReminderViewModel(
     }
 
     private fun sendEffect(
-        effect: CreateReminderEffect
+        effect: CreateEditReminderEffect
     ) {
         viewModelScope.launch {
             _effect.send(effect)

@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.ui
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,8 +18,8 @@ import com.example.routinetaskmanager.core.ui.NotificationSegmentedButton
 import com.example.routinetaskmanager.core.ui.TitleText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderIntent
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderUiState
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderIntent
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderUiState
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
@@ -27,8 +27,8 @@ import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
 
 @Composable
 fun CreateReminderScreen(
-    uiState : CreateReminderUiState,
-    onIntent : (CreateReminderIntent) -> Unit
+    uiState : CreateEditReminderUiState,
+    onIntent : (CreateEditReminderIntent) -> Unit
 ) {
 
     val repeatType = uiState.repeatType
@@ -46,7 +46,7 @@ fun CreateReminderScreen(
             topBar = {
                 CommonTopAppBarWithArrowBack(
                     title = "Create new reminder",
-                    onBackClick = { onIntent(CreateReminderIntent.BackClicked) }
+                    onBackClick = { onIntent(CreateEditReminderIntent.BackClicked) }
                 )
             }
         )
@@ -65,7 +65,7 @@ fun CreateReminderScreen(
             placeholder = "Enter a reminder name",
             value = uiState.name,
             onValueChange = { value ->
-                onIntent(CreateReminderIntent.NameChanged(value))
+                onIntent(CreateEditReminderIntent.NameChanged(value))
             }
         )
         TitleText(
@@ -75,10 +75,10 @@ fun CreateReminderScreen(
             placeholder = "Instructions",
             value = uiState.instructions,
             onValueChange = { value ->
-                onIntent(CreateReminderIntent.InstructionsChanged(value))
+                onIntent(CreateEditReminderIntent.InstructionsChanged(value))
             },
             onTakePictureClick = {
-                onIntent(CreateReminderIntent.TakePictureClicked)
+                onIntent(CreateEditReminderIntent.TakePictureClicked)
             }
         )
         TitleText(
@@ -90,7 +90,7 @@ fun CreateReminderScreen(
                 val selected = ReminderRepeatType.entries.toTypedArray().getOrElse(item.id) {
                     ReminderRepeatType.ON_SCHEDULE_PERIOD
                 }
-                onIntent(CreateReminderIntent.RepeatTypeChanged(selected))
+                onIntent(CreateEditReminderIntent.RepeatTypeChanged(selected))
             },
             values = repeatTypeDropdownValues(),
             icon = Icons.Default.Search,
@@ -106,7 +106,7 @@ fun CreateReminderScreen(
                     state = onSchedulePeriodState,
                     onStateChange = {
                         onIntent(
-                            CreateReminderIntent.OnSchedulePeriodStateChanged(
+                            CreateEditReminderIntent.OnSchedulePeriodStateChanged(
                                 it
                             )
                         )
@@ -122,7 +122,7 @@ fun CreateReminderScreen(
                     state = onScheduleCertainState,
                     onStateChange = {
                         onIntent(
-                            CreateReminderIntent.OnScheduleCertainStateChanged(
+                            CreateEditReminderIntent.OnScheduleCertainStateChanged(
                                 it
                             )
                         )
@@ -135,7 +135,7 @@ fun CreateReminderScreen(
                     state = duringSessionState,
                     onStateChange = {
                         onIntent(
-                            CreateReminderIntent.DuringSessionStateChanged(
+                            CreateEditReminderIntent.DuringSessionStateChanged(
                                 it
                             )
                         )
@@ -149,7 +149,7 @@ fun CreateReminderScreen(
                     state = afterAnotherState,
                     onStateChange = {
                         onIntent(
-                            CreateReminderIntent.AfterAnotherStateChanged(
+                            CreateEditReminderIntent.AfterAnotherStateChanged(
                                 it
                             )
                         )
@@ -167,7 +167,7 @@ fun CreateReminderScreen(
 
         Button(
             onClick = {
-                onIntent(CreateReminderIntent.SaveClicked)
+                onIntent(CreateEditReminderIntent.SaveClicked)
             }
         ) {
         }

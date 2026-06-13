@@ -97,4 +97,10 @@ class ReminderCommandUseCase(
             rescheduleRemindersUseCase()
         }
     }
+
+    suspend fun getReminderById(id : Long) : Reminder?{
+        return withContext(dispatcherProvider.io){
+            reminderRepository.getReminderById(id)
+        }
+    }
 }

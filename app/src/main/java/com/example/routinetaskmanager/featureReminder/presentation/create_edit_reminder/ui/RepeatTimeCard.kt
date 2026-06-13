@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.ui
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -2,7 +2,7 @@ package com.example.routinetaskmanager.di
 
 import com.example.routinetaskmanager.core.notifications.AndroidAppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.AppNotificationChannel
+import com.example.routinetaskmanager.core.notifications.AppNotificationChannels
 import com.example.routinetaskmanager.core.notifications.AppNotificationFactory
 import com.example.routinetaskmanager.core.notifications.AppNotificationManager
 import com.example.routinetaskmanager.core.notifications.NotificationRouter
@@ -17,7 +17,7 @@ import org.koin.dsl.module
 val notificationModule = module {
 
     single {
-        AppNotificationChannel(
+        AppNotificationChannels(
             context = androidContext()
         )
     }

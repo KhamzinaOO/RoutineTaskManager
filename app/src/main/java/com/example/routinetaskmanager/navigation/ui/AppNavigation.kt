@@ -28,7 +28,8 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.routinetaskmanager.featureHome.HomeScreen
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.navigation.CreateReminderRoute
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.navigation.CreateReminderRoute
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.navigation.EditReminderRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.navigation.ReminderMainRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerItem
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerScaffold
@@ -205,10 +206,10 @@ fun AppNavigation() {
                                         }
                                     },
                                     onFABClicked = {
-                                        branches.push(CreateReminder())
+                                        branches.push(CreateReminder)
                                     },
                                     onEditClick = {
-                                        branches.push(route = CreateReminder(it))
+                                        branches.push(route = EditReminder(it))
                                     },
                                     showSnackBar = {
                                         scope.launch {
@@ -217,6 +218,18 @@ fun AppNavigation() {
                                     }
                                 )
                             }
+                        }
+
+                        entry<EditReminder>{ args ->
+                            EditReminderRoute(
+                                id = args.reminderId,
+                                showMessage = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(it)
+                                    }
+                                },
+                                onBackClick = { branches.pop() }
+                            )
                         }
 
                         entry<CreateReminder> {

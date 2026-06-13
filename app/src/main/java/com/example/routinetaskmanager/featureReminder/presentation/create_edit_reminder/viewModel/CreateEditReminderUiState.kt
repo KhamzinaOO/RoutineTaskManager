@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
 
 import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
@@ -8,7 +8,7 @@ import com.example.routinetaskmanager.featureReminder.presentation.common.model.
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
 
-data class CreateReminderUiState(
+data class CreateEditReminderUiState(
     val name: String = "",
     val instructions: String = "",
 

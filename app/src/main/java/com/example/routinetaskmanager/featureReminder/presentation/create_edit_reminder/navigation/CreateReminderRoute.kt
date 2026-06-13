@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_reminder.navigation
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.navigation
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -7,10 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderEffect
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderIntent
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.viewModel.CreateReminderViewModel
-import com.example.routinetaskmanager.featureReminder.presentation.create_reminder.ui.CreateReminderScreen
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderEffect
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderIntent
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateReminderViewModel
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui.CreateReminderScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -26,7 +26,7 @@ fun CreateReminderRoute(
     ) { uri ->
         if (uri != null) {
             viewModel.onIntent(
-                CreateReminderIntent.ImageAdded(uri)
+                CreateEditReminderIntent.ImageAdded(uri)
             )
         }
     }
@@ -34,11 +34,11 @@ fun CreateReminderRoute(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                CreateReminderEffect.NavigateBack -> {
+                CreateEditReminderEffect.NavigateBack -> {
                     onBackClick()
                 }
 
-                CreateReminderEffect.OpenImagePicker -> {
+                CreateEditReminderEffect.OpenImagePicker -> {
                     imagePickerLauncher.launch(
                         PickVisualMediaRequest(
                             ActivityResultContracts.PickVisualMedia.ImageOnly
@@ -47,7 +47,7 @@ fun CreateReminderRoute(
                 }
 
 
-                is CreateReminderEffect.ShowMessage -> {
+                is CreateEditReminderEffect.ShowMessage -> {
                     showMessage(effect.message)
                 }
             }
