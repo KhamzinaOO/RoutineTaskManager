@@ -5,6 +5,7 @@ import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.withContext
 
@@ -15,33 +16,24 @@ class ReminderCommandUseCase(
 ) {
 
     suspend fun createReminder(
-        name: String,
-        instructionsText: String?,
-        repeatRule: ReminderRepeatRule,
-        notificationMode: NotificationMode,
-        imageUris: List<Uri>
+        data: ReminderSaveData
     ): Long {
         return withContext(dispatcherProvider.io) {
-            val reminderId = reminderRepository.createReminder(
-                name = name,
-                instructionsText = instructionsText,
-                repeatRule = repeatRule,
-                notificationMode = notificationMode,
-                imageUris = imageUris
-            )
-
+            val reminderId = reminderRepository.createReminder(data)
             rescheduleRemindersUseCase()
-
             reminderId
         }
     }
 
     suspend fun updateReminder(
-        reminder: Reminder
+        reminderId: Long,
+        data: ReminderSaveData
     ) {
         withContext(dispatcherProvider.io) {
-            reminderRepository.updateReminder(reminder)
-
+            reminderRepository.updateReminder(
+                id = reminderId,
+                data = data
+            )
             rescheduleRemindersUseCase()
         }
     }

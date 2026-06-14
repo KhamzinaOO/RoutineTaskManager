@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model
 
 import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode

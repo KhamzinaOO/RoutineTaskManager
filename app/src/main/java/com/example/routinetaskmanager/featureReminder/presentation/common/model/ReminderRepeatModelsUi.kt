@@ -1,5 +1,6 @@
 package com.example.routinetaskmanager.featureReminder.presentation.common.model
 
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import java.time.DayOfWeek
@@ -82,3 +83,11 @@ fun <T> defaultWeeklyRepeatUi(
         }
     )
 }
+
+data class ReminderRepeatUiStateBundle(
+    val repeatType: ReminderRepeatType,
+    val afterAnotherState: AfterAnotherRepeatUi,
+    val onSchedulePeriodState: OnSchedulePeriodRepeatUi,
+    val onScheduleCertainState: OnScheduleCertainRepeatUi,
+    val duringSessionState: DuringSessionPeriodRepeatUi
+)

@@ -4,6 +4,7 @@ import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
 import kotlinx.coroutines.flow.Flow
 
 interface ReminderRepository {
@@ -18,18 +19,12 @@ interface ReminderRepository {
         reminderId: Long
     ): Reminder?
 
-    suspend fun createReminder(
-        name: String,
-        instructionsText: String?,
-        repeatRule: ReminderRepeatRule,
-        notificationMode: NotificationMode,
-        imageUris: List<Uri>
-    ): Long
+    suspend fun createReminder(data: ReminderSaveData): Long
 
     suspend fun updateReminder(
-        reminder : Reminder
+        id: Long,
+        data: ReminderSaveData
     )
-
     suspend fun deleteReminder(
         reminderId: Long
     )

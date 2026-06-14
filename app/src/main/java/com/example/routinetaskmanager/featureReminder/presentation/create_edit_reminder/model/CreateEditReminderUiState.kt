@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model
 
 import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
@@ -9,20 +9,17 @@ import com.example.routinetaskmanager.featureReminder.presentation.common.model.
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
 
 data class CreateEditReminderUiState(
+    val screenMode: CreateEditReminderMode = CreateEditReminderMode.Create,
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
     val name: String = "",
     val instructions: String = "",
-
     val repeatType: ReminderRepeatType = ReminderRepeatType.ON_SCHEDULE_PERIOD,
-
     val afterAnotherState: AfterAnotherRepeatUi = AfterAnotherRepeatUi(),
     val onSchedulePeriodState: OnSchedulePeriodRepeatUi = OnSchedulePeriodRepeatUi(),
     val onScheduleCertainState: OnScheduleCertainRepeatUi = OnScheduleCertainRepeatUi(),
     val duringSessionState: DuringSessionPeriodRepeatUi = DuringSessionPeriodRepeatUi(),
-
     val notificationMode: NotificationMode = NotificationMode.SOUND,
-
     val imageUris: List<Uri> = emptyList(),
-
-    val isSaving: Boolean = false,
     val errorMessage: String? = null
 )

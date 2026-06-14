@@ -1,6 +1,8 @@
 package com.example.routinetaskmanager.featureReminder.data.repository
 
 import android.net.Uri
+import androidx.room.withTransaction
+import com.example.routinetaskmanager.data.local.AppDatabase
 import com.example.routinetaskmanager.data.storage.ImageStorage
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
@@ -12,11 +14,13 @@ import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ReminderRepositoryImpl(
+    private val database: AppDatabase,
     private val reminderDao: ReminderDao,
     private val imageStorage: ImageStorage
 ) : ReminderRepository {
@@ -55,23 +59,19 @@ class ReminderRepositoryImpl(
     }
 
     override suspend fun createReminder(
-        name: String,
-        instructionsText: String?,
-        repeatRule: ReminderRepeatRule,
-        notificationMode: NotificationMode,
-        imageUris: List<Uri>
+        data: ReminderSaveData
     ): Long {
         val now = System.currentTimeMillis()
 
         val reminderEntity = ReminderEntity(
             id = 0,
-            name = name.trim(),
-            instructionsText = instructionsText
+            name = data.name.trim(),
+            instructionsText = data.instructionsText
                 ?.trim()
                 ?.takeIf { it.isNotBlank() },
-            repeatType = repeatRule.toRepeatType(),
-            repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(repeatRule),
-            notificationMode = notificationMode.name,
+            repeatType = data.repeatRule.toRepeatType(),
+            repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(data.repeatRule),
+            notificationMode = data.notificationMode.name,
             createdAt = now,
             updatedAt = now
         )
@@ -81,7 +81,7 @@ class ReminderRepositoryImpl(
         val savedImagePaths = mutableListOf<String>()
 
         try {
-            val imageEntities = imageUris.mapIndexed { index, uri ->
+            val imageEntities = data.imageUris.mapIndexed { index, uri ->
                 val imagePath = imageStorage.saveImageToInternalStorage(
                     sourceUri = uri,
                     fileName = "reminder_${reminderId}_${System.currentTimeMillis()}_$index.jpg"
@@ -105,7 +105,9 @@ class ReminderRepositoryImpl(
             return reminderId
         } catch (e: Exception) {
             savedImagePaths.forEach { imagePath ->
-                imageStorage.deleteImage(imagePath)
+                runCatching {
+                    imageStorage.deleteImage(imagePath)
+                }
             }
 
             reminderDao.deleteReminderById(reminderId)
@@ -115,9 +117,88 @@ class ReminderRepositoryImpl(
     }
 
     override suspend fun updateReminder(
-        reminder: Reminder
+        reminderId: Long,
+        data: ReminderSaveData
     ) {
-        reminderDao.updateReminder(reminder.toEntity())
+        val now = System.currentTimeMillis()
+
+        val currentReminder = reminderDao.getReminderById(reminderId)
+            ?: throw IllegalArgumentException("Reminder not found")
+
+        val currentImages = reminderDao.getImagesByReminderId(reminderId)
+        val currentImagePaths = currentImages.map { it.imagePath }.toSet()
+        val currentImagesByPath = currentImages.associateBy { it.imagePath }
+
+        val savedNewImagePaths = mutableListOf<String>()
+
+        try {
+            val finalImagePaths = data.imageUris.mapIndexed { index, uri ->
+                val existingImagePath = findExistingImagePath(
+                    uri = uri,
+                    currentImagePaths = currentImagePaths
+                )
+
+                if (existingImagePath != null) {
+                    existingImagePath
+                } else {
+                    val imagePath = imageStorage.saveImageToInternalStorage(
+                        sourceUri = uri,
+                        fileName = "reminder_${reminderId}_${System.currentTimeMillis()}_$index.jpg"
+                    )
+
+                    savedNewImagePaths.add(imagePath)
+
+                    imagePath
+                }
+            }
+
+            val updatedReminderEntity = currentReminder.copy(
+                name = data.name.trim(),
+                instructionsText = data.instructionsText
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() },
+                repeatType = data.repeatRule.toRepeatType(),
+                repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(data.repeatRule),
+                notificationMode = data.notificationMode.name,
+                updatedAt = now
+            )
+
+            val imageEntities = finalImagePaths.mapIndexed { index, imagePath ->
+                ReminderImageEntity(
+                    id = currentImagesByPath[imagePath]?.id ?: 0,
+                    reminderId = reminderId,
+                    imagePath = imagePath,
+                    sortOrder = index,
+                    createdAt = currentImagesByPath[imagePath]?.createdAt ?: now
+                )
+            }
+
+            database.withTransaction {
+                reminderDao.updateReminder(updatedReminderEntity)
+
+                reminderDao.deleteImagesByReminderId(reminderId)
+
+                if (imageEntities.isNotEmpty()) {
+                    reminderDao.insertReminderImages(imageEntities)
+                }
+            }
+
+            val removedImagePaths = currentImagePaths - finalImagePaths.toSet()
+
+            removedImagePaths.forEach { imagePath ->
+                runCatching {
+                    imageStorage.deleteImage(imagePath)
+                }
+            }
+        } catch (e: Exception) {
+            savedNewImagePaths.forEach { imagePath ->
+                runCatching {
+                    imageStorage.deleteImage(imagePath)
+                }
+            }
+
+            throw e
+        }
     }
 
     override suspend fun deleteReminder(
@@ -201,5 +282,17 @@ class ReminderRepositoryImpl(
             reminderId = reminderId,
             notificationMode = notificationMode.name
         )
+    }
+
+    private fun findExistingImagePath(
+        uri: Uri,
+        currentImagePaths: Set<String>
+    ): String? {
+        val uriString = uri.toString()
+        val uriPath = uri.path
+
+        return currentImagePaths.firstOrNull { imagePath ->
+            imagePath == uriString || imagePath == uriPath
+        }
     }
 }

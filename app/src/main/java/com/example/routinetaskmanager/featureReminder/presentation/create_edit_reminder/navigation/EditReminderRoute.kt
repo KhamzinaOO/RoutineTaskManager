@@ -8,16 +8,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui.CreateReminderScreen
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderEffect
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderIntent
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateReminderViewModel
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderEffect
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.EditReminderViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
 fun EditReminderRoute(
     id : Long,
-    viewModel : CreateReminderViewModel = koinViewModel(parameters = { parametersOf(id) }),
+    viewModel : EditReminderViewModel = koinViewModel(parameters = { parametersOf(id) }),
     showMessage : (String) -> Unit,
     onBackClick : () -> Unit
 ) {

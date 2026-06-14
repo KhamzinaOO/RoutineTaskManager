@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.di
 
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.routinetaskmanager.data.storage.ImageStorage
 import com.example.routinetaskmanager.featureHome.HomeViewModel
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
@@ -10,7 +9,7 @@ import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveRemi
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateReminderViewModel
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.EditReminderViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainViewModel
 import org.koin.android.ext.koin.androidContext
@@ -23,7 +22,7 @@ val featureHomeModule = module {
 }
 
 val featureReminderModule = module {
-    viewModelOf(::CreateReminderViewModel)
+    viewModelOf(::CreateEditReminderViewModel)
     viewModelOf(::ReminderMainViewModel)
     viewModelOf(::AllRemindersViewModel)
     viewModel { (id : Long)->
@@ -69,6 +68,7 @@ val featureReminderModule = module {
 
     single<ReminderRepository> {
         ReminderRepositoryImpl(
+            database = get(),
             reminderDao = get(),
             imageStorage = get()
         )

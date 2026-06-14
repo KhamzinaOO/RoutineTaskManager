@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model
 
 sealed interface CreateEditReminderEffect {
     data object OpenImagePicker : CreateEditReminderEffect
