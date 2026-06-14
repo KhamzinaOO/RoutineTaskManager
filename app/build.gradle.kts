@@ -23,10 +23,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -80,5 +76,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.androidx.room.testing)
-    androidTestImplementation(libs.androidx.room.testing)
+
+    implementation(libs.coil.compose)
 }

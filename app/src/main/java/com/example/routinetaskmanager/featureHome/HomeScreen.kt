@@ -27,6 +27,7 @@ import com.example.routinetaskmanager.featureWidgets.AmountTracker
 import com.example.routinetaskmanager.featureWidgets.TimerTracker
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
+import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -37,6 +38,7 @@ fun HomeScreen(
     //uiState : HomeUiState
 ){
     AppChromeEffect(
+        owner = Home,
         chrome = AppChrome(
             topBar = {
                 HomeTopBar(

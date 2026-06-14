@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,8 +35,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.core.ui.CommonIconButton
-import com.example.routinetaskmanager.core.ui.SegmentedButton
+import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
+import com.example.routinetaskmanager.core.presentation.ui.SegmentedButton
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderCard
 import com.example.routinetaskmanager.featureTask.ui.TaskCard
 import com.example.routinetaskmanager.featureTask.ui.TaskCardUi

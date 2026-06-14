@@ -10,7 +10,6 @@ import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCom
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderViewModel
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.EditReminderViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -25,8 +24,8 @@ val featureReminderModule = module {
     viewModelOf(::CreateEditReminderViewModel)
     viewModelOf(::ReminderMainViewModel)
     viewModelOf(::AllRemindersViewModel)
-    viewModel { (id : Long)->
-        EditReminderViewModel(
+    viewModel { (id : Long?)->
+        CreateEditReminderViewModel(
             commandUseCase = get(),
             id = id
         )

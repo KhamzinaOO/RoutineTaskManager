@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.ui
+package com.example.routinetaskmanager.core.presentation.ui
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text

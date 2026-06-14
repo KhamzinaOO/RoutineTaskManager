@@ -28,8 +28,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.routinetaskmanager.featureHome.HomeScreen
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.navigation.CreateReminderRoute
-import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.navigation.EditReminderRoute
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.CreateEditReminderRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.navigation.ReminderMainRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerItem
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerScaffold
@@ -47,14 +46,13 @@ data class AppChrome(
 @Stable
 class AppScaffoldState {
     var chrome by mutableStateOf(AppChrome())
-        internal set
+        private set
 
-    fun setChrome(chrome: AppChrome) {
+    private var chromeOwner: Route? = null
+
+    fun setChrome(owner: Route, chrome: AppChrome) {
+        chromeOwner = owner
         this.chrome = chrome
-    }
-
-    fun clearChrome() {
-        chrome = AppChrome()
     }
 }
 
@@ -62,20 +60,21 @@ val LocalAppScaffoldState = staticCompositionLocalOf<AppScaffoldState> {
     error("No AppScaffoldState provided")
 }
 
+val LocalCurrentRoute = staticCompositionLocalOf<Route> {
+    error("No current route provided")
+}
 @Composable
-fun AppChromeEffect(chrome: AppChrome) {
+fun AppChromeEffect(
+    owner: Route,
+    chrome: AppChrome
+) {
     val scaffoldState = LocalAppScaffoldState.current
-
-    DisposableEffect(scaffoldState, chrome) {
-        onDispose {
-            if (scaffoldState.chrome == chrome) {
-                scaffoldState.clearChrome()
-            }
-        }
-    }
+    val currentRoute = LocalCurrentRoute.current
 
     SideEffect {
-        scaffoldState.setChrome(chrome)
+        if (owner == currentRoute) {
+            scaffoldState.setChrome(owner, chrome)
+        }
     }
 }
 
@@ -92,7 +91,8 @@ fun AppNavigation() {
     val focusManager = LocalFocusManager.current
 
     CompositionLocalProvider(
-        LocalAppScaffoldState provides appScaffoldState
+        LocalAppScaffoldState provides appScaffoldState,
+        LocalCurrentRoute provides currentRoute
     ) {
         Scaffold(
             modifier = Modifier
@@ -221,7 +221,7 @@ fun AppNavigation() {
                         }
 
                         entry<EditReminder>{ args ->
-                            EditReminderRoute(
+                            CreateEditReminderRoute(
                                 id = args.reminderId,
                                 showMessage = {
                                     scope.launch {
@@ -233,7 +233,8 @@ fun AppNavigation() {
                         }
 
                         entry<CreateReminder> {
-                            CreateReminderRoute(
+                            CreateEditReminderRoute(
+                                id = null,
                                 showMessage = {
                                     scope.launch {
                                         snackbarHostState.showSnackbar(it)

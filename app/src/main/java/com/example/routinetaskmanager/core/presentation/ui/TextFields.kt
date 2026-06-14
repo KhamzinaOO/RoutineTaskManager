@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.ui
+package com.example.routinetaskmanager.core.presentation.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

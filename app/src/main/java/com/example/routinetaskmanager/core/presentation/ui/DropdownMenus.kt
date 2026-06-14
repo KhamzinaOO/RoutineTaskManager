@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.ui
+package com.example.routinetaskmanager.core.presentation.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -28,8 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.routinetaskmanager.core.model.DropdownMenuItemUi
+import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
 
 @Composable
 fun CommonDropdownMenu(
@@ -87,11 +89,11 @@ private fun CommonDropdownMenuBase(
     onItemClick: (DropdownMenuItemUi) -> Unit,
     modifier: Modifier,
     enabled: Boolean,
-    height: androidx.compose.ui.unit.Dp,
+    height: Dp,
     fillMaxWidth: Boolean,
     leadingIcon: ImageVector?,
     leadingIconContentDescription: String?,
-    buttonColors: androidx.compose.material3.ButtonColors
+    buttonColors: ButtonColors
 ) {
     var expanded by remember { mutableStateOf(false) }
 

@@ -18,7 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.core.ui.CommonIconButton
+import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
 
 @Composable
 fun TimerTracker(

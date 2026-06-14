@@ -1,29 +1,42 @@
 package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.routinetaskmanager.core.model.DropdownMenuItemUi
-import com.example.routinetaskmanager.core.ui.CommonDropdownMenuLarge
-import com.example.routinetaskmanager.core.ui.CommonTextFiled
-import com.example.routinetaskmanager.core.ui.NotificationSegmentedButton
-import com.example.routinetaskmanager.core.ui.TitleText
+import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
+import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenuLarge
+import com.example.routinetaskmanager.core.presentation.ui.CommonTextFiled
+import com.example.routinetaskmanager.core.presentation.ui.NotificationSegmentedButton
+import com.example.routinetaskmanager.core.presentation.ui.TitleText
+import com.example.routinetaskmanager.core.presentation.ui.image.FullscreenImagePagerDialog
+import com.example.routinetaskmanager.core.presentation.ui.image.ImagesRow
+import com.example.routinetaskmanager.core.presentation.ui.image.ImagesRowWithClearIcons
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderUiState
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderMode
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
+import com.example.routinetaskmanager.navigation.ui.CreateReminder
 
 @Composable
 fun CreateReminderScreen(
@@ -41,11 +54,19 @@ fun CreateReminderScreen(
 
     val duringSessionState = uiState.duringSessionState
 
+    var selectedImageIndex by rememberSaveable {
+        mutableStateOf<Int?>(null)
+    }
+
     AppChromeEffect(
+        owner = CreateReminder,
         chrome = AppChrome(
             topBar = {
                 CommonTopAppBarWithArrowBack(
-                    title = "Create new reminder",
+                    title = when (uiState.screenMode) {
+                        is CreateEditReminderMode.Create -> "Create new reminder"
+                        is CreateEditReminderMode.Edit -> "Edit reminder"
+                    },
                     onBackClick = { onIntent(CreateEditReminderIntent.BackClicked) }
                 )
             }
@@ -81,6 +102,25 @@ fun CreateReminderScreen(
                 onIntent(CreateEditReminderIntent.TakePictureClicked)
             }
         )
+
+        ImagesRowWithClearIcons(
+            imagePaths = uiState.imagePaths,
+            onImageClick = { index ->
+                selectedImageIndex = index
+            },
+            onDeleteClick = { index ->
+                onIntent(CreateEditReminderIntent.ImageRemoved(uiState.imagePaths[index]))
+            }
+        )
+
+        selectedImageIndex?.let { path ->
+            FullscreenImagePagerDialog(
+                imagePaths = uiState.imagePaths,
+                initialIndex = path,
+                onDismiss = { selectedImageIndex = null }
+            )
+        }
+
         TitleText(
             text = "Repeat type"
         )
@@ -165,11 +205,19 @@ fun CreateReminderScreen(
 
         NotificationSegmentedButton { }
 
-        Button(
-            onClick = {
-                onIntent(CreateEditReminderIntent.SaveClicked)
-            }
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
+            Button(
+                onClick = {
+                    onIntent(CreateEditReminderIntent.SaveClicked)
+                }
+            ) {
+                Text(
+                    text = "Save"
+                )
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.core.ui.CommonIconButton
+import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
 import com.example.routinetaskmanager.featureTask.model.CheckboxFiledValue
 

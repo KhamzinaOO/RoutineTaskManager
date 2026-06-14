@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model
 
-import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
@@ -20,6 +19,6 @@ data class CreateEditReminderUiState(
     val onScheduleCertainState: OnScheduleCertainRepeatUi = OnScheduleCertainRepeatUi(),
     val duringSessionState: DuringSessionPeriodRepeatUi = DuringSessionPeriodRepeatUi(),
     val notificationMode: NotificationMode = NotificationMode.SOUND,
-    val imageUris: List<Uri> = emptyList(),
+    val imagePaths: List<String> = emptyList(),
     val errorMessage: String? = null
 )

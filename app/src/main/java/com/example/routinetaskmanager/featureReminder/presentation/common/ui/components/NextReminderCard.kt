@@ -18,8 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.example.routinetaskmanager.core.ui.CommonButton
-import com.example.routinetaskmanager.core.ui.CommonOutlinedButton
+import com.example.routinetaskmanager.core.presentation.ui.CommonButton
+import com.example.routinetaskmanager.core.presentation.ui.CommonOutlinedButton
 
 @Composable
 fun NextReminderCard(

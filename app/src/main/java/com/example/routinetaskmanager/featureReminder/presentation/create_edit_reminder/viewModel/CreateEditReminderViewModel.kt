@@ -3,7 +3,6 @@ package com.example.routinetaskmanager.featureReminder.presentation.create_edit_
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
@@ -131,7 +130,7 @@ class CreateEditReminderViewModel(
             is CreateEditReminderIntent.ImageAdded -> {
                 _uiState.update {
                     it.copy(
-                        imageUris = it.imageUris + intent.uri,
+                        imagePaths = it.imagePaths + intent.path,
                         errorMessage = null
                     )
                 }
@@ -140,7 +139,7 @@ class CreateEditReminderViewModel(
             is CreateEditReminderIntent.ImageRemoved -> {
                 _uiState.update {
                     it.copy(
-                        imageUris = it.imageUris - intent.uri,
+                        imagePaths = it.imagePaths - intent.path,
                         errorMessage = null
                     )
                 }
@@ -176,15 +175,15 @@ class CreateEditReminderViewModel(
             return
         }
 
-        val repeatRule = buildRepeatRule(state)
-
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
 
             runCatching {
                 when (state.screenMode) {
-                    CreateEditReminderMode.Create -> {
-                        buildSaveData(state)
+                    is CreateEditReminderMode.Create -> {
+                        commandUseCase.createReminder(
+                            buildSaveData(state)
+                        )
                     }
 
                     is CreateEditReminderMode.Edit -> {
@@ -222,7 +221,9 @@ class CreateEditReminderViewModel(
             instructionsText = state.instructions,
             repeatRule = buildRepeatRule(state),
             notificationMode = state.notificationMode,
-            imageUris = state.imageUris
+            imageUris = state.imagePaths.map {
+                it.toUri()
+            }
         )
     }
 
@@ -292,8 +293,8 @@ class CreateEditReminderViewModel(
                             onScheduleCertainState = repeatUiState.onScheduleCertainState,
                             duringSessionState = repeatUiState.duringSessionState,
                             notificationMode = reminder.notificationMode,
-                            imageUris = reminder.images.map { image ->
-                                image.imagePath.toUri()
+                            imagePaths = reminder.images.map { image ->
+                                image.imagePath
                             }
                         )
                     }

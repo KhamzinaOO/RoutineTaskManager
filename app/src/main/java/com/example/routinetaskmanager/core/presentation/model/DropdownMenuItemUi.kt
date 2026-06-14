@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.model
+package com.example.routinetaskmanager.core.presentation.model
 
 data class DropdownMenuItemUi(
     val id : Int,

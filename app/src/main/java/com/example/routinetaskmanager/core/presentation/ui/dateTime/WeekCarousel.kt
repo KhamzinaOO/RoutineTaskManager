@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.ui
+package com.example.routinetaskmanager.core.presentation.ui.dateTime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
@@ -144,7 +145,7 @@ fun WeekRow(
                 isSelected = isSelected(day),
                 date = day.format(DateTimeFormatter.ofPattern("d")),
                 dayOfWeek = day.dayOfWeek.getDisplayName(
-                    java.time.format.TextStyle.SHORT_STANDALONE,
+                    TextStyle.SHORT_STANDALONE,
                     locale
                 ),
                 onClick = { onClick(day) }

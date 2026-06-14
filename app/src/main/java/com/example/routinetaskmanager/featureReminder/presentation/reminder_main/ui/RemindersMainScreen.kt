@@ -1,16 +1,12 @@
 package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -29,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.routinetaskmanager.core.ui.WeekCarousel
+import com.example.routinetaskmanager.core.presentation.ui.dateTime.WeekCarousel
 import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureHome.ScheduleRow
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
@@ -41,6 +37,7 @@ import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonCalendarAppBar
 import com.example.routinetaskmanager.navigation.ui.CommonFloatingButton
+import com.example.routinetaskmanager.navigation.ui.Reminders
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -54,6 +51,7 @@ fun RemindersMainScreen(
     val reminders = uiState.reminders
 
     AppChromeEffect(
+        owner = Reminders,
         chrome = AppChrome(
             topBar = {
                 CommonCalendarAppBar(
