@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderEffect
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui.CreateReminderScreen
@@ -22,6 +23,14 @@ fun CreateEditReminderRoute(
     onBackClick : () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = {
+            viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
+        },
+        onDenied = {
+            viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionDenied)
+        }
+    )
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia()
@@ -48,6 +57,9 @@ fun CreateEditReminderRoute(
                     )
                 }
 
+                CreateEditReminderEffect.RequestNotificationPermission -> {
+                    requestNotificationPermission()
+                }
 
                 is CreateEditReminderEffect.ShowMessage -> {
                     showMessage(effect.message)

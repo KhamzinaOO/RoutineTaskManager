@@ -8,7 +8,7 @@ interface AppAlarmScheduler {
         targetId: Long,
         scheduledAtMillis: Long,
         requestCode: Int
-    )
+    ): Boolean
 
     fun cancel(
         requestCode: Int

@@ -19,7 +19,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
+import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.NextReminderCard
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
 import com.example.routinetaskmanager.featureTask.ui.TaskCardUi
@@ -30,20 +34,48 @@ import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
 import kotlinx.coroutines.delay
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
-    //uiState : HomeUiState
+    viewModel: HomeViewModel = koinViewModel(),
+    showMessage: (String) -> Unit
 ){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
+        onGranted = {
+            viewModel.onSessionButtonClick()
+        },
+        onDenied = {
+            viewModel.onExactAlarmAccessDenied()
+            viewModel.onSessionButtonClick()
+        }
+    )
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = {
+            requestExactAlarmAccess()
+        },
+        onDenied = {
+            viewModel.onNotificationPermissionDenied()
+        }
+    )
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is HomeEffect.ShowMessage -> showMessage(effect.message)
+            }
+        }
+    }
+
     AppChromeEffect(
         owner = Home,
         chrome = AppChrome(
             topBar = {
                 HomeTopBar(
-                    greeting = "Good morning!",
-                    date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMMM y")),
+                    greeting = uiState.greetingText,
+                    date = uiState.dateText,
                     onSettingClick = {
 
                     }
@@ -56,13 +88,19 @@ fun HomeScreen(
         modifier = Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        var isRunning by remember { mutableStateOf(false) }
         var elapsedTimeMillis by remember { mutableLongStateOf(0L) }
 
-        LaunchedEffect(isRunning) {
-            while (isRunning) {
+        LaunchedEffect(uiState.isSessionActive, uiState.sessionStartedAtMillis) {
+            val startedAtMillis = uiState.sessionStartedAtMillis
+
+            if (!uiState.isSessionActive || startedAtMillis == null) {
+                elapsedTimeMillis = 0L
+                return@LaunchedEffect
+            }
+
+            while (true) {
+                elapsedTimeMillis = System.currentTimeMillis() - startedAtMillis
                 delay(1000L)
-                elapsedTimeMillis += 1000L
             }
         }
 
@@ -74,10 +112,11 @@ fun HomeScreen(
             contentAlignment = Alignment.CenterEnd
         ){
             WorkSessionButton(
-                0,
+                remindersCount = uiState.sessionReminderCount,
                 timer = timerText,
-                onEndClick = {isRunning = false},
-                onStartClick = {isRunning = true}
+                isActive = uiState.isSessionActive,
+                onEndClick = { viewModel.onEndSessionButtonClick() },
+                onStartClick = { requestNotificationPermission() }
             )
         }
 
@@ -85,22 +124,27 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            NextReminderCard(
-                label = "Wednesday 9:00",
-                outlinedButtonText = "Skip",
-                onOutlinedButtonClick = {},
-                filledButtonText = "Do now",
-                onFilledButtonClick = {}
-            )
+            uiState.reminders.firstOrNull { reminder ->
+                reminder.status == ReminderOccurrenceStatus.PLANNED
+            }?.let { reminder ->
+                NextReminderCard(
+                    label = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
+                    outlinedButtonText = "Skip",
+                    onOutlinedButtonClick = {},
+                    filledButtonText = "Do now",
+                    onFilledButtonClick = {}
+                )
+            }
 
             var isLeftButtonPicked by remember { mutableStateOf(true) }
             ScheduleItemsCard(
-                reminders = listOf(
-                    ReminderCardUi(time = "11:00", status = true, text = "Use eye drops"),
-                    ReminderCardUi(time = "12:00", status = true, text = "Use eye drops"),
-                    ReminderCardUi(time = "13:00", status = false, text = "Use eye drops"),
-                    ReminderCardUi(time = "14:00", status = false, text = "Use eye drops"),
-                ),
+                reminders = uiState.reminders.map { reminder ->
+                    ReminderCardUi(
+                        time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        status = reminder.status == ReminderOccurrenceStatus.COMPLETED,
+                        text = reminder.reminderName
+                    )
+                },
                 tasks = listOf(
                     TaskCardUi(
                         text = "task",

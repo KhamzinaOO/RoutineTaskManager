@@ -22,11 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 
-//TODO() ImeActions
 @Composable
 fun HandleValueChangeTextFiled(
     value: String,
@@ -117,7 +117,10 @@ fun OvalNumberFieldWithHint(
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             textAlign = TextAlign.End
         ),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
         modifier = modifier
             .width(70.dp)
             .height(34.dp)
@@ -209,7 +212,10 @@ private fun TimePartField(
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             textAlign = TextAlign.Center
         ),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
         modifier = modifier,
         decorationBox = { innerTextField ->
             Box(
@@ -237,7 +243,10 @@ fun OvalNumberField(
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             textAlign = TextAlign.Center
         ),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = ImeAction.Done
+        ),
         modifier = modifier
             .width(70.dp)
             .height(34.dp)
@@ -257,5 +266,4 @@ fun OvalNumberField(
         }
     )
 }
-
 

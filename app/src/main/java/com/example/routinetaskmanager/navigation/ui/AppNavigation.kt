@@ -148,7 +148,13 @@ fun AppNavigation() {
                     ),
                     entryProvider = entryProvider {
                         entry<Home> {
-                            HomeScreen()
+                            HomeScreen(
+                                showMessage = { message ->
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(message)
+                                    }
+                                }
+                            )
                         }
 
                         entry<Widgets> {
@@ -182,7 +188,12 @@ fun AppNavigation() {
                                             }
                                         }
                                     },
-                                    onFABClicked = {branches.push(CreateReminder)}
+                                    onFABClicked = {branches.push(CreateReminder)},
+                                    showMessage = { message ->
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(message)
+                                        }
+                                    }
                                 )
                             }
                         }

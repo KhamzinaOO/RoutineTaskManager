@@ -1,7 +1,12 @@
 package com.example.routinetaskmanager.featureHome
 
-data class HomeUiState (
-    val greetingText : String,
-    val dateText : String,
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 
+data class HomeUiState (
+    val greetingText : String = "",
+    val dateText : String = "",
+    val reminders: List<ReminderOccurrence> = emptyList(),
+    val isSessionActive: Boolean = false,
+    val sessionStartedAtMillis: Long? = null,
+    val sessionReminderCount: Int = 0
 )

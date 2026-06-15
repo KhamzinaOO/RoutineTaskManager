@@ -4,10 +4,10 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 
 class AndroidAppAlarmScheduler(
-    private val context: Context
+    private val context: Context,
+    private val permissionChecker: AppNotificationPermissionChecker
 ) : AppAlarmScheduler {
 
     private val alarmManager: AlarmManager =
@@ -18,29 +18,28 @@ class AndroidAppAlarmScheduler(
         targetId: Long,
         scheduledAtMillis: Long,
         requestCode: Int
-    ) {
+    ): Boolean {
         if (scheduledAtMillis <= System.currentTimeMillis()) {
-            return
+            return false
         }
 
-        val pendingIntent = createPendingIntent(
-            targetType = targetType,
-            targetId = targetId,
-            scheduledAtMillis = scheduledAtMillis,
-            requestCode = requestCode
+        if (!permissionChecker.canPostNotifications()) {
+            return false
+        }
+
+        val pendingIntent = runCatching {
+            createPendingIntent(
+                targetType = targetType,
+                targetId = targetId,
+                scheduledAtMillis = scheduledAtMillis,
+                requestCode = requestCode
+            )
+        }.getOrNull() ?: return false
+
+        return scheduleSafely(
+            triggerAtMillis = scheduledAtMillis,
+            pendingIntent = pendingIntent
         )
-
-        if (canScheduleExactAlarms()) {
-            scheduleExact(
-                triggerAtMillis = scheduledAtMillis,
-                pendingIntent = pendingIntent
-            )
-        } else {
-            scheduleInexact(
-                triggerAtMillis = scheduledAtMillis,
-                pendingIntent = pendingIntent
-            )
-        }
     }
 
     override fun cancel(
@@ -56,8 +55,10 @@ class AndroidAppAlarmScheduler(
         )
 
         if (pendingIntent != null) {
-            alarmManager.cancel(pendingIntent)
-            pendingIntent.cancel()
+            runCatching {
+                alarmManager.cancel(pendingIntent)
+                pendingIntent.cancel()
+            }
         }
     }
 
@@ -102,33 +103,43 @@ class AndroidAppAlarmScheduler(
         )
     }
 
-    private fun scheduleExact(
+    private fun scheduleSafely(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
-    ) {
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            pendingIntent
-        )
+    ): Boolean {
+        if (!permissionChecker.canScheduleExactAlarms()) {
+            return scheduleInexact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
+        }
+
+        return runCatching {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+            true
+        }.getOrElse {
+            scheduleInexact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
+        }
     }
 
     private fun scheduleInexact(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
-    ) {
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            pendingIntent
-        )
-    }
-
-    private fun canScheduleExactAlarms(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            return true
-        }
-
-        return alarmManager.canScheduleExactAlarms()
+    ): Boolean {
+        return runCatching {
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMillis,
+                pendingIntent
+            )
+            true
+        }.getOrDefault(false)
     }
 }

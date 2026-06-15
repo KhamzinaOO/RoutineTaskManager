@@ -117,15 +117,15 @@ class ReminderRepositoryImpl(
     }
 
     override suspend fun updateReminder(
-        reminderId: Long,
+        id: Long,
         data: ReminderSaveData
     ) {
         val now = System.currentTimeMillis()
 
-        val currentReminder = reminderDao.getReminderById(reminderId)
+        val currentReminder = reminderDao.getReminderById(id)
             ?: throw IllegalArgumentException("Reminder not found")
 
-        val currentImages = reminderDao.getImagesByReminderId(reminderId)
+        val currentImages = reminderDao.getImagesByReminderId(id)
         val currentImagePaths = currentImages.map { it.imagePath }.toSet()
         val currentImagesByPath = currentImages.associateBy { it.imagePath }
 
@@ -143,7 +143,7 @@ class ReminderRepositoryImpl(
                 } else {
                     val imagePath = imageStorage.saveImageToInternalStorage(
                         sourceUri = uri,
-                        fileName = "reminder_${reminderId}_${System.currentTimeMillis()}_$index.jpg"
+                        fileName = "reminder_${id}_${System.currentTimeMillis()}_$index.jpg"
                     )
 
                     savedNewImagePaths.add(imagePath)
@@ -166,7 +166,7 @@ class ReminderRepositoryImpl(
             val imageEntities = finalImagePaths.mapIndexed { index, imagePath ->
                 ReminderImageEntity(
                     id = currentImagesByPath[imagePath]?.id ?: 0,
-                    reminderId = reminderId,
+                    reminderId = id,
                     imagePath = imagePath,
                     sortOrder = index,
                     createdAt = currentImagesByPath[imagePath]?.createdAt ?: now
@@ -176,7 +176,7 @@ class ReminderRepositoryImpl(
             database.withTransaction {
                 reminderDao.updateReminder(updatedReminderEntity)
 
-                reminderDao.deleteImagesByReminderId(reminderId)
+                reminderDao.deleteImagesByReminderId(id)
 
                 if (imageEntities.isNotEmpty()) {
                     reminderDao.insertReminderImages(imageEntities)

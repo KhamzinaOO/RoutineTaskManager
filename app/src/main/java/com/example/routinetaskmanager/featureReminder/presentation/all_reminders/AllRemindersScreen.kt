@@ -98,7 +98,7 @@ fun AllRemindersScreen(
         ) {
             items(
                 items = reminders,
-                key = { it.id }
+                key = { reminder -> reminder.id }
             ) { reminder ->
                 Box(
                     modifier = Modifier.fillMaxWidth()

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -82,7 +83,12 @@ fun ScheduleItemsCard(
                     .height(300.dp)
                     .fillMaxWidth()
                 ) {
-                    items(reminders) { reminder ->
+                    itemsIndexed(
+                        items = reminders,
+                        key = { index, reminder ->
+                            "${reminder.time}-${reminder.text}-$index"
+                        }
+                    ) { _, reminder ->
                         ScheduleRow(
                             time = reminder.time,
                             isDone = reminder.status,
@@ -108,7 +114,12 @@ fun ScheduleItemsCard(
 
                         }
                     }
-                    items(tasks)  { task ->
+                    itemsIndexed(
+                        items = tasks,
+                        key = { index, task ->
+                            "${task.time}-${task.text}-$index"
+                        }
+                    )  { _, task ->
                         ScheduleRow(
                             time = task.time,
                             isDone = task.status,

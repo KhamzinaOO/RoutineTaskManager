@@ -54,6 +54,10 @@ sealed interface CreateEditReminderIntent {
 
     data object SaveClicked : CreateEditReminderIntent
 
+    data object NotificationPermissionGranted : CreateEditReminderIntent
+
+    data object NotificationPermissionDenied : CreateEditReminderIntent
+
     data object BackClicked : CreateEditReminderIntent
 
     data object ErrorShown : CreateEditReminderIntent

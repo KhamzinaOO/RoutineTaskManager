@@ -25,14 +25,17 @@ class RescheduleRemindersUseCase(
         withContext(Dispatchers.IO) {
             val oldReminderNotifications = scheduledNotificationDao.getByTargetType(
                 targetType = NotificationTargetType.REMINDER.name
-            )
+            ).filterNot { notification ->
+                notification.occurrenceKey.startsWith(SESSION_OCCURRENCE_KEY_PREFIX)
+            }
 
             oldReminderNotifications.forEach { entity ->
                 alarmScheduler.cancel(entity.requestCode)
             }
 
-            scheduledNotificationDao.deleteByTargetType(
-                targetType = NotificationTargetType.REMINDER.name
+            scheduledNotificationDao.deleteByTargetTypeExceptOccurrenceKeyPrefix(
+                targetType = NotificationTargetType.REMINDER.name,
+                occurrenceKeyPrefix = SESSION_OCCURRENCE_KEY_PREFIX
             )
 
             val reminders = reminderRepository.getAllRemindersSnapshot()
@@ -60,7 +63,7 @@ class RescheduleRemindersUseCase(
                 }
                 .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
 
-            val entities = nextOccurrences.map { occurrence ->
+            val entities = nextOccurrences.mapNotNull { occurrence ->
                 val scheduledAtMillis = occurrence.scheduledAt
                     .atZone(ZoneId.systemDefault())
                     .toInstant()
@@ -80,12 +83,16 @@ class RescheduleRemindersUseCase(
 
                 val channelId = reminder.notificationMode.toReminderChannelId()
 
-                alarmScheduler.schedule(
+                val wasScheduled = alarmScheduler.schedule(
                     targetType = NotificationTargetType.REMINDER,
                     targetId = occurrence.reminderId,
                     scheduledAtMillis = scheduledAtMillis,
                     requestCode = requestCode
                 )
+
+                if (!wasScheduled) {
+                    return@mapNotNull null
+                }
 
                 ScheduledNotificationEntity(
                     requestCode = requestCode,
@@ -110,6 +117,7 @@ class RescheduleRemindersUseCase(
     }
 
     private companion object {
+        const val SESSION_OCCURRENCE_KEY_PREFIX = "REMINDER-SESSION-"
         const val SCHEDULE_LOOK_AHEAD_DAYS = 7L
         const val MAX_SCHEDULED_REMINDER_NOTIFICATIONS = 30
     }

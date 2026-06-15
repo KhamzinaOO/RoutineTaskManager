@@ -60,13 +60,15 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             )
 
             if (payload != null) {
-                appNotificationManager.showNotification(payload)
+                val wasShown = appNotificationManager.showNotification(payload)
 
-                notificationTriggerRouter.onNotificationShown(
-                    targetType = targetType,
-                    targetId = targetId,
-                    scheduledAtMillis = scheduledAtMillis
-                )
+                if (wasShown) {
+                    notificationTriggerRouter.onNotificationShown(
+                        targetType = targetType,
+                        targetId = targetId,
+                        scheduledAtMillis = scheduledAtMillis
+                    )
+                }
             }
 
             if (requestCode != Int.MIN_VALUE) {

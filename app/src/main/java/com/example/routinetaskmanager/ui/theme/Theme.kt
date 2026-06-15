@@ -96,7 +96,7 @@ fun RoutineTaskManagerTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        darkTheme -> DarkColorScheme
+        //darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 

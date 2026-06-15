@@ -8,6 +8,7 @@ import com.example.routinetaskmanager.featureReminder.presentation.common.model.
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
 
 data class CreateEditReminderUiState(
+    val id : Long? = null,
     val screenMode: CreateEditReminderMode = CreateEditReminderMode.Create,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,

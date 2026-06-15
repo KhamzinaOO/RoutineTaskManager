@@ -46,6 +46,17 @@ class CreateEditReminderViewModel(
     init {
         if (id != null) {
             loadReminder()
+            _uiState.update {
+                it.copy(
+                    screenMode = CreateEditReminderMode.Edit(id)
+                )
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    screenMode = CreateEditReminderMode.Create
+                )
+            }
         }
     }
 
@@ -149,6 +160,19 @@ class CreateEditReminderViewModel(
                 saveReminder()
             }
 
+            CreateEditReminderIntent.NotificationPermissionGranted -> {
+                rescheduleNotificationsAfterPermissionGrant()
+            }
+
+            CreateEditReminderIntent.NotificationPermissionDenied -> {
+                sendEffect(
+                    CreateEditReminderEffect.ShowMessage(
+                        "Notifications are disabled. Reminder was saved without scheduled alerts"
+                    )
+                )
+                sendEffect(CreateEditReminderEffect.NavigateBack)
+            }
+
             CreateEditReminderIntent.BackClicked -> {
                 sendEffect(CreateEditReminderEffect.NavigateBack)
             }
@@ -197,7 +221,16 @@ class CreateEditReminderViewModel(
                 }
             }.onSuccess {
                 _uiState.update { it.copy(isSaving = false) }
-                sendEffect(CreateEditReminderEffect.NavigateBack)
+
+                when (state.screenMode) {
+                    is CreateEditReminderMode.Create -> {
+                        sendEffect(CreateEditReminderEffect.RequestNotificationPermission)
+                    }
+
+                    is CreateEditReminderMode.Edit -> {
+                        sendEffect(CreateEditReminderEffect.NavigateBack)
+                    }
+                }
             }.onFailure { throwable ->
                 val message = throwable.message ?: "Failed to save reminder"
 
@@ -209,6 +242,23 @@ class CreateEditReminderViewModel(
                 }
 
                 sendEffect(CreateEditReminderEffect.ShowMessage(message))
+            }
+        }
+    }
+
+    private fun rescheduleNotificationsAfterPermissionGrant() {
+        viewModelScope.launch {
+            runCatching {
+                commandUseCase.rescheduleReminderNotifications()
+            }.onSuccess {
+                sendEffect(CreateEditReminderEffect.NavigateBack)
+            }.onFailure { throwable ->
+                sendEffect(
+                    CreateEditReminderEffect.ShowMessage(
+                        throwable.message ?: "Failed to schedule reminder notifications"
+                    )
+                )
+                sendEffect(CreateEditReminderEffect.NavigateBack)
             }
         }
     }
@@ -285,6 +335,7 @@ class CreateEditReminderViewModel(
 
                     _uiState.update {
                         it.copy(
+                            id = id,
                             name = reminder.name,
                             instructions = reminder.instructionsText ?: "",
                             repeatType = repeatUiState.repeatType,

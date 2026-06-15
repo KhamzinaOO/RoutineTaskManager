@@ -5,10 +5,14 @@ import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.AppNotificationChannels
 import com.example.routinetaskmanager.core.notifications.AppNotificationFactory
 import com.example.routinetaskmanager.core.notifications.AppNotificationManager
+import com.example.routinetaskmanager.core.notifications.AppNotificationPermissionChecker
 import com.example.routinetaskmanager.core.notifications.NotificationRouter
+import com.example.routinetaskmanager.core.notifications.NotificationTriggerRouter
 import com.example.routinetaskmanager.core.notifications.ReminderNotificationHandler
+import com.example.routinetaskmanager.core.notifications.ReminderNotificationTriggerHandler
 import com.example.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
 import com.example.routinetaskmanager.core.notifications.TaskNotificationHandler
+import com.example.routinetaskmanager.core.notifications.TaskNotificationTriggerHandler
 import com.example.routinetaskmanager.featureReminder.notifications.ReminderNotificationHandlerImpl
 import com.example.routinetaskmanager.featureTask.TaskNotificationHandlerImpl
 import org.koin.android.ext.koin.androidContext
@@ -29,15 +33,23 @@ val notificationModule = module {
     }
 
     single {
+        AppNotificationPermissionChecker(
+            context = androidContext()
+        )
+    }
+
+    single {
         AppNotificationManager(
             context = androidContext(),
-            notificationFactory = get()
+            notificationFactory = get(),
+            permissionChecker = get()
         )
     }
 
     single<AppAlarmScheduler> {
         AndroidAppAlarmScheduler(
-            context = androidContext()
+            context = androidContext(),
+            permissionChecker = get()
         )
     }
 
@@ -60,10 +72,29 @@ val notificationModule = module {
         )
     }
 
-    //TODO()
+    single {
+        ReminderNotificationTriggerHandler(
+            reminderRepository = get(),
+            scheduledNotificationDao = get(),
+            rescheduleRemindersUseCase = get()
+        )
+    }
+
+    single {
+        TaskNotificationTriggerHandler()
+    }
+
+    single {
+        NotificationTriggerRouter(
+            reminderHandler = get(),
+            taskHandler = get()
+        )
+    }
+
     factory {
         RescheduleAllNotificationsUseCase(
-            rescheduleRemindersUseCase = get()
+            rescheduleRemindersUseCase = get(),
+            workSessionManager = get()
         )
     }
 }

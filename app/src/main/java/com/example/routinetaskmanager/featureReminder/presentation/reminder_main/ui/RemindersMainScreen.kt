@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,6 +25,8 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.presentation.ui.dateTime.WeekCarousel
+import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
+import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureHome.ScheduleRow
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
@@ -49,6 +50,23 @@ fun RemindersMainScreen(
     onIntent : (ReminderMainIntent) -> Unit
 ){
     val reminders = uiState.reminders
+    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
+        onGranted = {
+            onIntent(ReminderMainIntent.SessionButtonClick)
+        },
+        onDenied = {
+            onIntent(ReminderMainIntent.ExactAlarmAccessDenied)
+            onIntent(ReminderMainIntent.SessionButtonClick)
+        }
+    )
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = {
+            requestExactAlarmAccess()
+        },
+        onDenied = {
+            onIntent(ReminderMainIntent.NotificationPermissionDenied)
+        }
+    )
 
     AppChromeEffect(
         owner = Reminders,
@@ -89,13 +107,19 @@ fun RemindersMainScreen(
             )
         }
 
-        var isRunning by remember { mutableStateOf(false) }
         var elapsedTimeMillis by remember { mutableLongStateOf(0L) }
 
-        LaunchedEffect(isRunning) {
-            while (isRunning) {
+        LaunchedEffect(uiState.isSessionActive, uiState.sessionStartedAtMillis) {
+            val startedAtMillis = uiState.sessionStartedAtMillis
+
+            if (!uiState.isSessionActive || startedAtMillis == null) {
+                elapsedTimeMillis = 0L
+                return@LaunchedEffect
+            }
+
+            while (true) {
+                elapsedTimeMillis = System.currentTimeMillis() - startedAtMillis
                 delay(1000L)
-                elapsedTimeMillis += 1000L
             }
         }
 
@@ -107,10 +131,11 @@ fun RemindersMainScreen(
             contentAlignment = Alignment.CenterEnd
         ) {
             WorkSessionButton(
-                0,
+                remindersCount = uiState.sessionReminderCount,
                 timer = timerText,
-                onEndClick = { isRunning = false },
-                onStartClick = { isRunning = true }
+                isActive = uiState.isSessionActive,
+                onEndClick = { onIntent(ReminderMainIntent.EndSessionButtonClick) },
+                onStartClick = { requestNotificationPermission() }
             )
         }
 
@@ -132,9 +157,14 @@ fun RemindersMainScreen(
                             .fillMaxHeight()
                             .fillMaxWidth()
                     ) {
-                        itemsIndexed(items = reminders, key = {index, reminder -> reminder.reminderId + index}) { _, reminder ->
+                        itemsIndexed(
+                            items = reminders,
+                            key = { index, reminder ->
+                                "${reminder.reminderId}-${reminder.scheduledAt}-$index"
+                            }
+                        ) { _, reminder ->
                             ScheduleRow(
-                                time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("hh:mm") ),
+                                time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("HH:mm") ),
                                 isDone = reminder.status == ReminderOccurrenceStatus.COMPLETED,
                                 content = {
                                     ReminderCard(

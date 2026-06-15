@@ -36,6 +36,18 @@ interface ScheduledNotificationDao {
         """
         SELECT * FROM scheduled_notifications
         WHERE targetType = :targetType
+        AND occurrenceKey LIKE :occurrenceKeyPrefix || '%'
+        """
+    )
+    suspend fun getByTargetTypeAndOccurrenceKeyPrefix(
+        targetType: String,
+        occurrenceKeyPrefix: String
+    ): List<ScheduledNotificationEntity>
+
+    @Query(
+        """
+        SELECT * FROM scheduled_notifications
+        WHERE targetType = :targetType
         AND targetId = :targetId
         """
     )
@@ -72,6 +84,30 @@ interface ScheduledNotificationDao {
     )
     suspend fun deleteByTargetType(
         targetType: String
+    )
+
+    @Query(
+        """
+        DELETE FROM scheduled_notifications
+        WHERE targetType = :targetType
+        AND occurrenceKey LIKE :occurrenceKeyPrefix || '%'
+        """
+    )
+    suspend fun deleteByTargetTypeAndOccurrenceKeyPrefix(
+        targetType: String,
+        occurrenceKeyPrefix: String
+    )
+
+    @Query(
+        """
+        DELETE FROM scheduled_notifications
+        WHERE targetType = :targetType
+        AND occurrenceKey NOT LIKE :occurrenceKeyPrefix || '%'
+        """
+    )
+    suspend fun deleteByTargetTypeExceptOccurrenceKeyPrefix(
+        targetType: String,
+        occurrenceKeyPrefix: String
     )
 
     @Query(

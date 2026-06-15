@@ -1,15 +1,12 @@
 package com.example.routinetaskmanager.core.notifications
 
-import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.core.content.ContextCompat
 
 class AppNotificationManager(
     private val context: Context,
-    private val notificationFactory: AppNotificationFactory
+    private val notificationFactory: AppNotificationFactory,
+    private val permissionChecker: AppNotificationPermissionChecker
 ) {
 
     private val systemNotificationManager: NotificationManager =
@@ -17,37 +14,32 @@ class AppNotificationManager(
 
     fun showNotification(
         payload: NotificationPayload
-    ) {
-        if (!canShowNotifications()) {
-            return
+    ): Boolean {
+        if (!permissionChecker.canPostNotifications()) {
+            return false
         }
 
-        val notification = notificationFactory.createNotification(payload)
+        return runCatching {
+            val notification = notificationFactory.createNotification(payload)
 
-        systemNotificationManager.notify(
-            buildNotificationId(payload),
-            notification
-        )
+            systemNotificationManager.notify(
+                buildNotificationId(payload),
+                notification
+            )
+
+            true
+        }.getOrDefault(false)
     }
 
     fun cancelNotification(
         targetType: NotificationTargetType,
         targetId: Long
     ) {
-        systemNotificationManager.cancel(
-            "notification-${targetType.name}-$targetId".hashCode()
-        )
-    }
-
-    private fun canShowNotifications(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            return true
+        runCatching {
+            systemNotificationManager.cancel(
+                "notification-${targetType.name}-$targetId".hashCode()
+            )
         }
-
-        return ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.POST_NOTIFICATIONS
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun buildNotificationId(

@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 class ReminderCommandUseCase(
     private val reminderRepository: ReminderRepository,
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
+    private val workSessionManager: WorkSessionManager,
     private val dispatcherProvider: DispatcherProvider
 ) {
 
@@ -90,9 +91,23 @@ class ReminderCommandUseCase(
         }
     }
 
+    suspend fun rescheduleReminderNotifications() {
+        withContext(dispatcherProvider.io) {
+            rescheduleRemindersUseCase()
+        }
+    }
+
     suspend fun getReminderById(id : Long) : Reminder?{
         return withContext(dispatcherProvider.io){
             reminderRepository.getReminderById(id)
         }
+    }
+
+    suspend fun startWorkSession(): WorkSessionState {
+        return workSessionManager.startOrRestartSession()
+    }
+
+    suspend fun endWorkSession() {
+        workSessionManager.endSession()
     }
 }

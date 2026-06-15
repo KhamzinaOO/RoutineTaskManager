@@ -37,6 +37,7 @@ import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
 import com.example.routinetaskmanager.navigation.ui.CreateReminder
+import com.example.routinetaskmanager.navigation.ui.EditReminder
 
 @Composable
 fun CreateReminderScreen(
@@ -59,7 +60,10 @@ fun CreateReminderScreen(
     }
 
     AppChromeEffect(
-        owner = CreateReminder,
+        owner = when (uiState.screenMode){
+            is CreateEditReminderMode.Create -> CreateReminder
+            is CreateEditReminderMode.Edit -> EditReminder(uiState.id ?: 0)
+        },
         chrome = AppChrome(
             topBar = {
                 CommonTopAppBarWithArrowBack(
@@ -203,7 +207,12 @@ fun CreateReminderScreen(
             text = "Notification sound"
         )
 
-        NotificationSegmentedButton { }
+        NotificationSegmentedButton(
+            selectedMode = uiState.notificationMode,
+            onButtonClick = { mode ->
+                onIntent(CreateEditReminderIntent.NotificationModeChanged(mode))
+            }
+        )
 
         Box(
             modifier = Modifier.fillMaxWidth(),

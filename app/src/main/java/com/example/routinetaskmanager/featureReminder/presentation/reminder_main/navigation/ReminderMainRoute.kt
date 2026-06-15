@@ -13,7 +13,8 @@ import org.koin.androidx.compose.koinViewModel
 fun ReminderMainRoute(
     viewModel: ReminderMainViewModel = koinViewModel(),
     onTopBarIconClick : () -> Unit,
-    onFABClicked : () -> Unit
+    onFABClicked : () -> Unit,
+    showMessage: (String) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -26,6 +27,10 @@ fun ReminderMainRoute(
 
                 is ReminderMainEffect.FABClicked -> {
                     onFABClicked()
+                }
+
+                is ReminderMainEffect.ShowMessage -> {
+                    showMessage(effect.message)
                 }
             }
         }
