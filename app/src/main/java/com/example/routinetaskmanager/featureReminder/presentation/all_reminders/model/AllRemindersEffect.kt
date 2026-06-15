@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model
 
 sealed interface AllRemindersEffect {
     data object FABClicked : AllRemindersEffect

@@ -11,13 +11,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -80,9 +81,17 @@ fun AppChromeEffect(
 
 @Composable
 fun AppNavigation() {
-    val branches = remember { BottomBranches<Route>(start = Home) }
+    val branches = rememberSaveable(
+        saver = BottomBranches.Saver
+    ) {
+        BottomBranches(start = Home)
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val currentRoute = branches.backStack.last()
+
+    val currentRoute by remember {
+        derivedStateOf { branches.backStack.last() }
+    }
 
     val appScaffoldState = remember { AppScaffoldState() }
 
@@ -172,7 +181,8 @@ fun AppNavigation() {
                                                 drawerState.close()
                                             }
                                         }
-                                    }
+                                    },
+                                    onFABClicked = {branches.push(CreateReminder)}
                                 )
                             }
                         }

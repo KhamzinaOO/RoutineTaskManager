@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model
 
 import java.time.LocalDate
 

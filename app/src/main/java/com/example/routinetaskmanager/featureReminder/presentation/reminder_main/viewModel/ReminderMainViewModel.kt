@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainIntent
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

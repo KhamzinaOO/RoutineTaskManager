@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersEffect
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
 import org.koin.androidx.compose.koinViewModel
 

@@ -31,8 +31,8 @@ import com.example.routinetaskmanager.featureHome.ScheduleRow
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderCard
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
-import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainIntent
-import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainUiState
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainIntent
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainUiState
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonCalendarAppBar

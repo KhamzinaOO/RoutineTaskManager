@@ -28,8 +28,10 @@ import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
 import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenu
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersIntent
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersUiState
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersIntent
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersUiState
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.ui.components.ReminderMiniCard
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderCard
 import com.example.routinetaskmanager.navigation.ui.AllReminders
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
@@ -98,39 +100,19 @@ fun AllRemindersScreen(
                 items = reminders,
                 key = { it.id }
             ) { reminder ->
-
                 Box(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Card(
+                    ReminderMiniCard(
                         modifier = Modifier
                             .combinedClickable(
-                                onClick = {},
+                                onClick = {onIntent(AllRemindersIntent.OnItemClick(reminder.id))},
                                 onLongClick = {
                                     openedReminderId = reminder.id
                                 }
-                            )
-                            .fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text(text = reminder.name)
-
-                            reminder.instructionsText?.let {
-                                Text(text = it)
-                            }
-
-                            Text(
-                                text = reminder.repeatRule.toRepeatType()
-                            )
-                        }
-                    }
-
+                            ),
+                        reminder = reminder
+                    )
                     ReminderActionsMenu(
                         expanded = openedReminderId == reminder.id,
                         onDismiss = {

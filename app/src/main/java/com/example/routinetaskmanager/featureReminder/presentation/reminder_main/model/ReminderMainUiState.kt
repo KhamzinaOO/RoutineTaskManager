@@ -1,6 +1,5 @@
-package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel
+package com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model
 
-import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 
 data class ReminderMainUiState (

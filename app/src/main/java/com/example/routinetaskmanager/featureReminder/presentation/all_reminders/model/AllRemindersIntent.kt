@@ -1,6 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel
-
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderFilter
+package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model
 
 sealed interface AllRemindersIntent {
     data class ShowMessage (val message : String) : AllRemindersIntent

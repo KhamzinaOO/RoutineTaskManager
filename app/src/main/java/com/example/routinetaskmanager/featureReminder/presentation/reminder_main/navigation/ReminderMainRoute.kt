@@ -5,14 +5,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersMainScreen
-import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainEffect
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ReminderMainRoute(
     viewModel: ReminderMainViewModel = koinViewModel(),
-    onTopBarIconClick : () -> Unit
+    onTopBarIconClick : () -> Unit,
+    onFABClicked : () -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -21,6 +22,10 @@ fun ReminderMainRoute(
             when(effect){
                 is ReminderMainEffect.OpenDrawer -> {
                     onTopBarIconClick()
+                }
+
+                is ReminderMainEffect.FABClicked -> {
+                    onFABClicked()
                 }
             }
         }

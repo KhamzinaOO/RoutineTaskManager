@@ -2,13 +2,12 @@ package com.example.routinetaskmanager.featureReminder.presentation.all_reminder
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersIntent
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersUiState
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderFilter
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderRepeatTypeUi
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.toRepeatTypeUi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.mapper.toMiniCardUi
 
 class AllRemindersViewModel(
     private val reminderRepository: ReminderRepository
@@ -97,7 +97,7 @@ class AllRemindersViewModel(
                         )
 
                         newState.copy(
-                            remindersToShow = newState.filteredReminders()
+                            remindersToShow = newState.filteredReminders().map { it.toMiniCardUi() }
                         )
                     }
                 }
@@ -127,7 +127,7 @@ class AllRemindersViewModel(
             )
 
             newState.copy(
-                remindersToShow = newState.filteredReminders()
+                remindersToShow = newState.filteredReminders().map { it.toMiniCardUi() }
             )
         }
     }
