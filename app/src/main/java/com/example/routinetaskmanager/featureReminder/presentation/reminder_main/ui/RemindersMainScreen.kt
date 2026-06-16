@@ -21,10 +21,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
 import com.example.routinetaskmanager.core.presentation.ui.dateTime.WeekCarousel
+import com.example.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
+import com.example.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
 import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
@@ -47,33 +51,62 @@ import java.time.format.TextStyle
 @Composable
 fun RemindersMainScreen(
     uiState : ReminderMainUiState,
-    onIntent : (ReminderMainIntent) -> Unit
+    onIntent : (ReminderMainIntent) -> Unit,
+    showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val reminders = uiState.reminders
+    val context = LocalContext.current
+    val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
+
     val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = {
             onIntent(ReminderMainIntent.SessionButtonClick)
         },
         onDenied = {
             onIntent(ReminderMainIntent.ExactAlarmAccessDenied)
-            onIntent(ReminderMainIntent.SessionButtonClick)
+        },
+        onDeniedWithAction = {
+            showActionMessage(
+                "Exact alarm access is required to start a work session",
+                "Settings"
+            ) {
+                openExactAlarmSettings(context)
+            }
         }
     )
+
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
             requestExactAlarmAccess()
         },
         onDenied = {
             onIntent(ReminderMainIntent.NotificationPermissionDenied)
+        },
+        onDeniedWithAction = { action ->
+            val actionLabel = when (action) {
+                PermissionDeniedAction.RetryRequest -> "Retry"
+                PermissionDeniedAction.OpenSettings -> "Settings"
+            }
+
+            showActionMessage(
+                "Notifications are required to start a work session",
+                actionLabel
+            ) {
+                when (action) {
+                    PermissionDeniedAction.RetryRequest -> notificationPermissionRequestRef[0]?.invoke()
+                    PermissionDeniedAction.OpenSettings -> openAppNotificationSettings(context)
+                }
+            }
         }
     )
+    notificationPermissionRequestRef[0] = requestNotificationPermission
 
     AppChromeEffect(
         owner = Reminders,
         chrome = AppChrome(
             topBar = {
                 CommonCalendarAppBar(
-                    title = LocalDate.now().month.getDisplayName(
+                    title = uiState.selectedDate.month.getDisplayName(
                         TextStyle.FULL_STANDALONE,
                         LocalLocale.current.platformLocale
                     ),
@@ -100,10 +133,13 @@ fun RemindersMainScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
         ) {
             WeekCarousel(
-                onDaySelected = {}
+                onDaySelected = { date ->
+                    onIntent(ReminderMainIntent.DateClick(date))
+                }
             )
         }
 
@@ -127,13 +163,15 @@ fun RemindersMainScreen(
 
 
         Box(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
             contentAlignment = Alignment.CenterEnd
         ) {
             WorkSessionButton(
                 remindersCount = uiState.sessionReminderCount,
                 timer = timerText,
                 isActive = uiState.isSessionActive,
+                isLoading = uiState.isSessionActionInProgress,
                 onEndClick = { onIntent(ReminderMainIntent.EndSessionButtonClick) },
                 onStartClick = { requestNotificationPermission() }
             )
@@ -141,7 +179,9 @@ fun RemindersMainScreen(
 
         if(reminders.isNotEmpty()){
             Box(
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 Card(
                     Modifier

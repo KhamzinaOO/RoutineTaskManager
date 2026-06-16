@@ -14,7 +14,8 @@ fun ReminderMainRoute(
     viewModel: ReminderMainViewModel = koinViewModel(),
     onTopBarIconClick : () -> Unit,
     onFABClicked : () -> Unit,
-    showMessage: (String) -> Unit
+    showMessage: (String) -> Unit,
+    showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -38,6 +39,7 @@ fun ReminderMainRoute(
 
     RemindersMainScreen(
         uiState = uiState,
-        onIntent = viewModel::onIntent
+        onIntent = viewModel::onIntent,
+        showActionMessage = showActionMessage
     )
 }

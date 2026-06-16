@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,20 +23,30 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 
 @Composable
 fun WorkSessionButton(
+    modifier: Modifier = Modifier,
     remindersCount: Int,
     timer: String,
     isActive: Boolean,
+    isLoading: Boolean = false,
+    enabled: Boolean = true,
     onStartClick: () -> Unit,
     onEndClick: () -> Unit
 ) {
+    val actionLabel = if (isActive) "Stop work session" else "Start work session"
+
     WorkSessionButtonContainer(
+        modifier = modifier,
         topText = if (isActive) timer else "Start work session",
         topTextStyle = if (isActive) {
             MaterialTheme.typography.titleLarge
@@ -45,10 +56,16 @@ fun WorkSessionButton(
         bottomText = if (isActive) {
             "work session"
         } else {
-            "$remindersCount reminders in today's session"
+            pluralStringResource(
+                R.plurals.work_session_reminders_count,
+                remindersCount,
+                remindersCount
+            )
         },
         icon = if (isActive) painterResource(R.drawable.ic_pause) else painterResource(R.drawable.ic_play_arrow),
-        iconDescription = if (isActive) "stop" else "play",
+        actionLabel = actionLabel,
+        isLoading = isLoading,
+        enabled = enabled && !isLoading,
         colors = if (isActive) {
             CardDefaults.cardColors(
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -68,11 +85,14 @@ fun WorkSessionButton(
 
 @Composable
 fun WorkSessionButtonContainer(
+    modifier: Modifier = Modifier,
     topText: String,
     topTextStyle: TextStyle,
     bottomText: String,
     icon: Painter,
-    iconDescription: String,
+    actionLabel: String,
+    isLoading: Boolean,
+    enabled: Boolean,
     colors: CardColors,
     onClick: () -> Unit
 ) {
@@ -84,9 +104,17 @@ fun WorkSessionButtonContainer(
     )
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .clip(shape)
-            .clickable(onClick = onClick),
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = actionLabel,
+                onClick = onClick
+            )
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$topText, $bottomText"
+            },
         colors = colors,
         shape = shape
     ) {
@@ -122,11 +150,19 @@ fun WorkSessionButtonContainer(
                     .size(39.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = icon,
-                    contentDescription = iconDescription,
-                    tint = colors.containerColor
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = colors.containerColor,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        painter = icon,
+                        contentDescription = null,
+                        tint = colors.containerColor
+                    )
+                }
             }
         }
     }

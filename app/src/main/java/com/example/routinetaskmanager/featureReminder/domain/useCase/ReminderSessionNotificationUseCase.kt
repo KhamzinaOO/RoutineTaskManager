@@ -5,14 +5,18 @@ import com.example.routinetaskmanager.core.notifications.NotificationTargetType
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.core.notifications.toReminderChannelId
+import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.Duration
@@ -24,6 +28,24 @@ class ReminderSessionNotificationUseCase(
     private val alarmScheduler: AppAlarmScheduler,
     private val scheduledNotificationDao: ScheduledNotificationDao
 ) {
+
+    fun observeSessionOccurrences(
+        startedAt: LocalDateTime
+    ): Flow<List<ReminderOccurrence>> {
+        return reminderRepository.observeReminders()
+            .map { reminders ->
+                val enabledReminders = reminders.filter { reminder ->
+                    reminder.isEnabled && reminder.notificationEnabled
+                }
+
+                buildSessionOccurrences(
+                    reminders = enabledReminders,
+                    startedAt = startedAt
+                )
+                    .take(MAX_SESSION_NOTIFICATIONS)
+                    .map { it.toReminderOccurrence() }
+            }
+    }
 
     suspend fun startSession(
         startedAt: LocalDateTime = LocalDateTime.now()
@@ -258,6 +280,16 @@ class ReminderSessionNotificationUseCase(
         val scheduledAt: LocalDateTime,
         val sequence: Int
     )
+
+    private fun SessionOccurrence.toReminderOccurrence(): ReminderOccurrence {
+        return ReminderOccurrence(
+            reminderId = reminder.id,
+            reminderName = reminder.name,
+            instructionsText = reminder.instructionsText,
+            scheduledAt = scheduledAt,
+            repeatType = reminder.repeatRule.toRepeatTypeDomain()
+        )
+    }
 
     data class SessionScheduleResult(
         val sessionReminderCount: Int,

@@ -63,6 +63,7 @@ val featureReminderModule = module {
 
     single {
         WorkSessionManager(
+            context = androidContext(),
             reminderSessionNotificationUseCase = get()
         )
     }

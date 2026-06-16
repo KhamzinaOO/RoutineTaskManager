@@ -8,6 +8,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -99,6 +100,23 @@ fun AppNavigation() {
 
     val focusManager = LocalFocusManager.current
 
+    fun showActionSnackbar(
+        message: String,
+        actionLabel: String,
+        onAction: () -> Unit
+    ) {
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = actionLabel
+            )
+
+            if (result == SnackbarResult.ActionPerformed) {
+                onAction()
+            }
+        }
+    }
+
     CompositionLocalProvider(
         LocalAppScaffoldState provides appScaffoldState,
         LocalCurrentRoute provides currentRoute
@@ -153,7 +171,8 @@ fun AppNavigation() {
                                     scope.launch {
                                         snackbarHostState.showSnackbar(message)
                                     }
-                                }
+                                },
+                                showActionMessage = ::showActionSnackbar
                             )
                         }
 
@@ -193,7 +212,8 @@ fun AppNavigation() {
                                         scope.launch {
                                             snackbarHostState.showSnackbar(message)
                                         }
-                                    }
+                                    },
+                                    showActionMessage = ::showActionSnackbar
                                 )
                             }
                         }

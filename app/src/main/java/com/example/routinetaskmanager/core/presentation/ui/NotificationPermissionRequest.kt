@@ -28,10 +28,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
+enum class PermissionDeniedAction {
+    RetryRequest,
+    OpenSettings
+}
+
 @Composable
 fun rememberNotificationPermissionRequest(
     onGranted: () -> Unit,
-    onDenied: () -> Unit
+    onDenied: () -> Unit,
+    onDeniedWithAction: ((PermissionDeniedAction) -> Unit)? = null
 ): () -> Unit {
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -43,7 +49,12 @@ fun rememberNotificationPermissionRequest(
         if (isGranted) {
             onGranted()
         } else {
-            onDenied()
+            notifyNotificationPermissionDenied(
+                context = context,
+                activity = activity,
+                onDenied = onDenied,
+                onDeniedWithAction = onDeniedWithAction
+            )
         }
     }
 
@@ -79,7 +90,7 @@ fun rememberNotificationPermissionRequest(
         AlertDialog(
             onDismissRequest = {
                 showRationale = false
-                onDenied()
+                onDeniedWithAction?.invoke(PermissionDeniedAction.RetryRequest) ?: onDenied()
             },
             title = {
                 Text(text = "Allow notifications?")
@@ -101,7 +112,7 @@ fun rememberNotificationPermissionRequest(
                 TextButton(
                     onClick = {
                         showRationale = false
-                        onDenied()
+                        onDeniedWithAction?.invoke(PermissionDeniedAction.RetryRequest) ?: onDenied()
                     }
                 ) {
                     Text(text = "Not now")
@@ -116,7 +127,8 @@ fun rememberNotificationPermissionRequest(
 @Composable
 fun rememberExactAlarmAccessRequest(
     onGranted: () -> Unit,
-    onDenied: () -> Unit
+    onDenied: () -> Unit,
+    onDeniedWithAction: ((PermissionDeniedAction) -> Unit)? = null
 ): () -> Unit {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -148,7 +160,7 @@ fun rememberExactAlarmAccessRequest(
             context.startActivity(intent)
         }.onFailure {
             awaitingSettingsResult = false
-            onDenied()
+            onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
         }
     }
 
@@ -160,7 +172,7 @@ fun rememberExactAlarmAccessRequest(
                 if (hasExactAlarmAccess()) {
                     onGranted()
                 } else {
-                    onDenied()
+                    onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
                 }
             }
         }
@@ -184,7 +196,7 @@ fun rememberExactAlarmAccessRequest(
         AlertDialog(
             onDismissRequest = {
                 showExplanation = false
-                onDenied()
+                onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
             },
             title = {
                 Text(text = "Allow exact reminders?")
@@ -206,16 +218,77 @@ fun rememberExactAlarmAccessRequest(
                 TextButton(
                     onClick = {
                         showExplanation = false
-                        onDenied()
+                        onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
                     }
                 ) {
-                    Text(text = "Use fallback")
+                    Text(text = "Not now")
                 }
             }
         )
     }
 
     return ::requestAccess
+}
+
+fun openAppNotificationSettings(context: Context) {
+    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+    } else {
+        appDetailsSettingsIntent(context)
+    }
+
+    context.startActivity(intent)
+}
+
+fun openExactAlarmSettings(context: Context) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+        return
+    }
+
+    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+        data = Uri.parse("package:${context.packageName}")
+    }
+
+    context.startActivity(intent)
+}
+
+private fun notifyNotificationPermissionDenied(
+    context: Context,
+    activity: Activity?,
+    onDenied: () -> Unit,
+    onDeniedWithAction: ((PermissionDeniedAction) -> Unit)?
+) {
+    val action = if (canRequestNotificationPermissionAgain(context, activity)) {
+        PermissionDeniedAction.RetryRequest
+    } else {
+        PermissionDeniedAction.OpenSettings
+    }
+
+    onDeniedWithAction?.invoke(action) ?: onDenied()
+}
+
+private fun canRequestNotificationPermissionAgain(
+    context: Context,
+    activity: Activity?
+): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        return false
+    }
+
+    return activity?.let {
+        ActivityCompat.shouldShowRequestPermissionRationale(
+            it,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+    } ?: false
+}
+
+private fun appDetailsSettingsIntent(context: Context): Intent {
+    return Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.parse("package:${context.packageName}")
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? {

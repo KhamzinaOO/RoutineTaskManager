@@ -2,6 +2,8 @@ package com.example.routinetaskmanager.featureHome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
@@ -10,6 +12,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -25,7 +28,8 @@ import java.util.Locale
 class HomeViewModel(
     private val observeReminderScheduleUseCase: ObserveReminderScheduleUseCase,
     private val reminderCommandUseCase: ReminderCommandUseCase,
-    private val workSessionManager: WorkSessionManager
+    private val workSessionManager: WorkSessionManager,
+    private val workSessionForegroundController: WorkSessionForegroundController
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -43,15 +47,23 @@ class HomeViewModel(
         observeWorkSession()
         observeTodayReminders()
         refreshSessionReminderCount()
+        ensureForegroundServiceForActiveSession()
     }
 
     fun onSessionButtonClick() {
         viewModelScope.launch {
+            if (_uiState.value.isSessionActionInProgress) {
+                return@launch
+            }
+
             val wasActive = _uiState.value.isSessionActive
+            _uiState.update { it.copy(isSessionActionInProgress = true) }
 
             runCatching {
                 reminderCommandUseCase.startWorkSession()
             }.onSuccess { sessionState ->
+                sessionState.startedAtMillis?.let(workSessionForegroundController::start)
+
                 val message = when {
                     sessionState.scheduledNotificationCount == 0 -> {
                         "Work session started. No session reminders scheduled"
@@ -73,15 +85,24 @@ class HomeViewModel(
                         throwable.message ?: "Failed to start work session"
                     )
                 )
+            }.also {
+                _uiState.update { it.copy(isSessionActionInProgress = false) }
             }
         }
     }
 
     fun onEndSessionButtonClick() {
         viewModelScope.launch {
+            if (_uiState.value.isSessionActionInProgress) {
+                return@launch
+            }
+
+            _uiState.update { it.copy(isSessionActionInProgress = true) }
+
             runCatching {
                 reminderCommandUseCase.endWorkSession()
             }.onSuccess {
+                workSessionForegroundController.stop()
                 sendEffect(HomeEffect.ShowMessage("Work session ended"))
             }.onFailure { throwable ->
                 sendEffect(
@@ -89,6 +110,8 @@ class HomeViewModel(
                         throwable.message ?: "Failed to end work session"
                     )
                 )
+            }.also {
+                _uiState.update { it.copy(isSessionActionInProgress = false) }
             }
         }
     }
@@ -123,10 +146,29 @@ class HomeViewModel(
             .launchIn(viewModelScope)
     }
 
+    private fun ensureForegroundServiceForActiveSession() {
+        workSessionManager.state.value.startedAtMillis?.let { startedAtMillis ->
+            if (workSessionManager.state.value.isActive) {
+                workSessionForegroundController.start(startedAtMillis)
+            }
+        }
+    }
+
     private fun observeTodayReminders() {
         viewModelScope.launch {
             runCatching {
-                observeReminderScheduleUseCase(range = dayRange(LocalDate.now()))
+                val today = LocalDate.now()
+
+                combine(
+                    observeReminderScheduleUseCase(range = dayRange(today)),
+                    workSessionManager.observeActiveSessionOccurrences()
+                ) { scheduledReminders, sessionReminders ->
+                    mergeReminderOccurrences(
+                        scheduledReminders = scheduledReminders,
+                        sessionReminders = sessionReminders,
+                        date = today
+                    )
+                }
             }.onSuccess { remindersFlow ->
                 remindersFlow.distinctUntilChanged().collect { reminders ->
                     _uiState.update {
@@ -142,6 +184,20 @@ class HomeViewModel(
                 )
             }
         }
+    }
+
+    private fun mergeReminderOccurrences(
+        scheduledReminders: List<ReminderOccurrence>,
+        sessionReminders: List<ReminderOccurrence>,
+        date: LocalDate
+    ): List<ReminderOccurrence> {
+        return (scheduledReminders + sessionReminders.filter { occurrence ->
+            occurrence.scheduledAt.toLocalDate() == date
+        })
+            .distinctBy { occurrence ->
+                "${occurrence.reminderId}-${occurrence.scheduledAt}-${occurrence.repeatType}"
+            }
+            .sortedBy { occurrence -> occurrence.scheduledAt }
     }
 
     private fun refreshSessionReminderCount() {

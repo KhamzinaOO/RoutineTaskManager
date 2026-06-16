@@ -13,6 +13,7 @@ import com.example.routinetaskmanager.core.notifications.ReminderNotificationTri
 import com.example.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
 import com.example.routinetaskmanager.core.notifications.TaskNotificationHandler
 import com.example.routinetaskmanager.core.notifications.TaskNotificationTriggerHandler
+import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
 import com.example.routinetaskmanager.featureReminder.notifications.ReminderNotificationHandlerImpl
 import com.example.routinetaskmanager.featureTask.TaskNotificationHandlerImpl
 import org.koin.android.ext.koin.androidContext
@@ -50,6 +51,12 @@ val notificationModule = module {
         AndroidAppAlarmScheduler(
             context = androidContext(),
             permissionChecker = get()
+        )
+    }
+
+    single {
+        WorkSessionForegroundController(
+            context = androidContext()
         )
     }
 

@@ -18,8 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
+import com.example.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
+import com.example.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
 import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
@@ -40,26 +44,55 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
-    showMessage: (String) -> Unit
+    showMessage: (String) -> Unit,
+    showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
+
     val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = {
             viewModel.onSessionButtonClick()
         },
         onDenied = {
             viewModel.onExactAlarmAccessDenied()
-            viewModel.onSessionButtonClick()
+        },
+        onDeniedWithAction = {
+            showActionMessage(
+                "Exact alarm access is required to start a work session",
+                "Settings"
+            ) {
+                openExactAlarmSettings(context)
+            }
         }
     )
+
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
             requestExactAlarmAccess()
         },
         onDenied = {
             viewModel.onNotificationPermissionDenied()
+        },
+        onDeniedWithAction = { action ->
+            val actionLabel = when (action) {
+                PermissionDeniedAction.RetryRequest -> "Retry"
+                PermissionDeniedAction.OpenSettings -> "Settings"
+            }
+
+            showActionMessage(
+                "Notifications are required to start a work session",
+                actionLabel
+            ) {
+                when (action) {
+                    PermissionDeniedAction.RetryRequest -> notificationPermissionRequestRef[0]?.invoke()
+                    PermissionDeniedAction.OpenSettings -> openAppNotificationSettings(context)
+                }
+            }
         }
     )
+    notificationPermissionRequestRef[0] = requestNotificationPermission
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -115,6 +148,7 @@ fun HomeScreen(
                 remindersCount = uiState.sessionReminderCount,
                 timer = timerText,
                 isActive = uiState.isSessionActive,
+                isLoading = uiState.isSessionActionInProgress,
                 onEndClick = { viewModel.onEndSessionButtonClick() },
                 onStartClick = { requestNotificationPermission() }
             )

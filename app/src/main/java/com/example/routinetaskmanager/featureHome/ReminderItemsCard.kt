@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -80,31 +82,44 @@ fun ScheduleItemsCard(
             )
             if(isLeftButtonPicked){
                 LazyColumn(modifier = Modifier
-                    .height(300.dp)
+                    .heightIn(max = 300.dp)
                     .fillMaxWidth()
                 ) {
-                    itemsIndexed(
-                        items = reminders,
-                        key = { index, reminder ->
-                            "${reminder.time}-${reminder.text}-$index"
+                    if (reminders.isEmpty()){
+                        item {
+                            Text(
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .fillMaxWidth(),
+                                text = "Reminders not found",
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
                         }
-                    ) { _, reminder ->
-                        ScheduleRow(
-                            time = reminder.time,
-                            isDone = reminder.status,
-                            content = {
-                                ReminderCard(
-                                    modifier = Modifier.padding(vertical = 4.dp),
-                                    text = reminder.text
-                                )
+                    }else{
+                        itemsIndexed(
+                            items = reminders,
+                            key = { index, reminder ->
+                                "${reminder.time}-${reminder.text}-$index"
                             }
-                        )
+                        ) { _, reminder ->
+                            ScheduleRow(
+                                time = reminder.time,
+                                isDone = reminder.status,
+                                content = {
+                                    ReminderCard(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        text = reminder.text
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }else{
                 LazyColumn(
                     modifier = Modifier
-                        .height(300.dp)
+                        .heightIn(max = 300.dp)
                         .fillMaxWidth()
                 ) {
                     item {
@@ -114,22 +129,35 @@ fun ScheduleItemsCard(
 
                         }
                     }
-                    itemsIndexed(
-                        items = tasks,
-                        key = { index, task ->
-                            "${task.time}-${task.text}-$index"
+                    if(tasks.isEmpty()){
+                        item {
+                            Text(
+                                modifier = Modifier
+                                    .padding(top = 16.dp)
+                                    .fillMaxWidth(),
+                                text = "Tasks not found",
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
                         }
-                    )  { _, task ->
-                        ScheduleRow(
-                            time = task.time,
-                            isDone = task.status,
-                            content = {
-                                TaskCard(
-                                    modifier = Modifier.padding(4.dp),
-                                    value = task
-                                )
+                    }else{
+                        itemsIndexed(
+                            items = tasks,
+                            key = { index, task ->
+                                "${task.time}-${task.text}-$index"
                             }
-                        )
+                        )  { _, task ->
+                            ScheduleRow(
+                                time = task.time,
+                                isDone = task.status,
+                                content = {
+                                    TaskCard(
+                                        modifier = Modifier.padding(4.dp),
+                                        value = task
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             }

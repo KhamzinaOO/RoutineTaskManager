@@ -8,5 +8,6 @@ data class HomeUiState (
     val reminders: List<ReminderOccurrence> = emptyList(),
     val isSessionActive: Boolean = false,
     val sessionStartedAtMillis: Long? = null,
-    val sessionReminderCount: Int = 0
+    val sessionReminderCount: Int = 0,
+    val isSessionActionInProgress: Boolean = false
 )

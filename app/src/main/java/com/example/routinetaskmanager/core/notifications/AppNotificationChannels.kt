@@ -43,11 +43,22 @@ class AppNotificationChannels(
             enableVibration(false)
         }
 
+        val workSessionChannel = NotificationChannel(
+            AppNotificationConstants.CHANNEL_WORK_SESSION_ID,
+            "work session",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Active work session timer"
+            setSound(null, null)
+            enableVibration(false)
+        }
+
         notificationManager.createNotificationChannels(
             listOf(
                 notificationSoundChannel,
                 notificationVibrationChannel,
-                notificationSilentChannel
+                notificationSilentChannel,
+                workSessionChannel
             )
         )
     }

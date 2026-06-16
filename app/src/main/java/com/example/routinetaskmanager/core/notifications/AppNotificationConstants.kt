@@ -16,4 +16,11 @@ object AppNotificationConstants {
     const val CHANNEL_NOTIFICATION_SOUND_ID = "notification_sound_channel"
     const val CHANNEL_NOTIFICATION_VIBRATION_ID = "notification_vibration_channel"
     const val CHANNEL_NOTIFICATION_SILENT_ID = "notification_silent_channel"
+    const val CHANNEL_WORK_SESSION_ID = "work_session_channel"
+
+    const val ACTION_START_WORK_SESSION_SERVICE =
+        "com.example.routinetaskmanager.action.START_WORK_SESSION_SERVICE"
+    const val ACTION_STOP_WORK_SESSION_SERVICE =
+        "com.example.routinetaskmanager.action.STOP_WORK_SESSION_SERVICE"
+    const val EXTRA_WORK_SESSION_STARTED_AT = "extra_work_session_started_at"
 }
