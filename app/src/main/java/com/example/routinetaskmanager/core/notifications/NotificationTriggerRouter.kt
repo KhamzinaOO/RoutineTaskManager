@@ -8,20 +8,23 @@ class NotificationTriggerRouter(
     suspend fun buildPayloadOrNull(
         targetType: NotificationTargetType,
         targetId: Long,
-        scheduledAtMillis: Long
+        scheduledAtMillis: Long,
+        occurrenceKind: NotificationOccurrenceKind
     ): NotificationPayload? {
         return when (targetType) {
             NotificationTargetType.REMINDER -> {
                 reminderHandler.buildPayloadOrNull(
                     targetId = targetId,
-                    scheduledAtMillis = scheduledAtMillis
+                    scheduledAtMillis = scheduledAtMillis,
+                    occurrenceKind = occurrenceKind
                 )
             }
 
             NotificationTargetType.TASK -> {
                 taskHandler.buildPayloadOrNull(
                     targetId = targetId,
-                    scheduledAtMillis = scheduledAtMillis
+                    scheduledAtMillis = scheduledAtMillis,
+                    occurrenceKind = occurrenceKind
                 )
             }
         }
@@ -30,20 +33,23 @@ class NotificationTriggerRouter(
     suspend fun onNotificationShown(
         targetType: NotificationTargetType,
         targetId: Long,
-        scheduledAtMillis: Long
+        scheduledAtMillis: Long,
+        occurrenceKind: NotificationOccurrenceKind
     ) {
         when (targetType) {
             NotificationTargetType.REMINDER -> {
                 reminderHandler.onNotificationShown(
                     targetId = targetId,
-                    scheduledAtMillis = scheduledAtMillis
+                    scheduledAtMillis = scheduledAtMillis,
+                    occurrenceKind = occurrenceKind
                 )
             }
 
             NotificationTargetType.TASK -> {
                 taskHandler.onNotificationShown(
                     targetId = targetId,
-                    scheduledAtMillis = scheduledAtMillis
+                    scheduledAtMillis = scheduledAtMillis,
+                    occurrenceKind = occurrenceKind
                 )
             }
         }

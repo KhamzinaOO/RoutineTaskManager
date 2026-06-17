@@ -3,6 +3,7 @@ package com.example.routinetaskmanager.core.notifications
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import com.example.routinetaskmanager.R
 
 class AppNotificationChannels(
     private val context: Context
@@ -16,39 +17,39 @@ class AppNotificationChannels(
 
         val notificationSoundChannel = NotificationChannel(
             AppNotificationConstants.CHANNEL_NOTIFICATION_SOUND_ID,
-            "notifications",
+            context.getString(R.string.notification_channel_sound_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "notification notifications with sound"
+            description = context.getString(R.string.notification_channel_sound_description)
             enableVibration(true)
         }
 
         val notificationVibrationChannel = NotificationChannel(
             AppNotificationConstants.CHANNEL_NOTIFICATION_VIBRATION_ID,
-            "notifications vibration",
+            context.getString(R.string.notification_channel_vibration_name),
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "notification notifications with vibration"
+            description = context.getString(R.string.notification_channel_vibration_description)
             setSound(null, null)
             enableVibration(true)
         }
 
         val notificationSilentChannel = NotificationChannel(
             AppNotificationConstants.CHANNEL_NOTIFICATION_SILENT_ID,
-            "notifications silent",
+            context.getString(R.string.notification_channel_silent_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Silent notification notifications"
+            description = context.getString(R.string.notification_channel_silent_description)
             setSound(null, null)
             enableVibration(false)
         }
 
         val workSessionChannel = NotificationChannel(
             AppNotificationConstants.CHANNEL_WORK_SESSION_ID,
-            "work session",
+            context.getString(R.string.notification_channel_work_session_name),
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Active work session timer"
+            description = context.getString(R.string.notification_channel_work_session_description)
             setSound(null, null)
             enableVibration(false)
         }

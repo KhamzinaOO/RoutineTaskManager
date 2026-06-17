@@ -35,7 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -73,8 +75,8 @@ fun ScheduleItemsCard(
         ) {
             SegmentedButton(
                 isLeftButtonPicked = isLeftButtonPicked,
-                leftText = "Reminders",
-                rightText = "Tasks",
+                leftText = stringResource(R.string.tab_reminders),
+                rightText = stringResource(R.string.tab_tasks),
                 onLeftButtonClick = onLeftButtonClick,
                 onRightButtonClick = onRightButtonClick,
                 leftLeadingIcon = painterResource(R.drawable.ic_schedule),
@@ -91,9 +93,11 @@ fun ScheduleItemsCard(
                                 modifier = Modifier
                                     .padding(top = 16.dp)
                                     .fillMaxWidth(),
-                                text = "Reminders not found",
+                                text = stringResource(R.string.empty_reminders),
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.outlineVariant
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }else{
@@ -135,9 +139,11 @@ fun ScheduleItemsCard(
                                 modifier = Modifier
                                     .padding(top = 16.dp)
                                     .fillMaxWidth(),
-                                text = "Tasks not found",
+                                text = stringResource(R.string.empty_tasks),
                                 textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.outlineVariant
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }else{
@@ -172,7 +178,7 @@ fun ScheduleItemsCard(
                         .size(40.dp),
                     color = MaterialTheme.colorScheme.surfaceDim,
                     icon = Icons.Default.Add,
-                    contentDescription = "Add",
+                    contentDescription = stringResource(R.string.action_add),
                     tint = MaterialTheme.colorScheme.primary,
                     onClick = onAddIconClick
                 )
@@ -196,7 +202,10 @@ fun ScheduleRow(
             modifier = Modifier.padding(top = 10.dp),
             text = time,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline
+            color = MaterialTheme.colorScheme.outline,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
 
         Box(
@@ -229,13 +238,13 @@ fun ScheduleRow(
                     Icon(
                         modifier = Modifier.size(18.dp),
                         imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "checked"
+                        contentDescription = stringResource(R.string.action_checked)
                     )
                 } else {
                     Icon(
                         modifier = Modifier.size(18.dp),
                         painter = painterResource(R.drawable.ic_circle),
-                        contentDescription = "unchecked",
+                        contentDescription = stringResource(R.string.state_unchecked),
                         tint = MaterialTheme.colorScheme.outline
                     )
                 }

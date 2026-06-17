@@ -49,6 +49,7 @@ fun TaskCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
+                    modifier = Modifier.weight(1f),
                     text = value.text,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -64,7 +65,10 @@ fun TaskCard(
                     Text(
                         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
                         text = value.duration,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
                     )
                 }
             }

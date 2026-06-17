@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -27,7 +28,8 @@ fun ReminderCard(
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 16.dp),
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

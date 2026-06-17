@@ -83,7 +83,8 @@ val notificationModule = module {
         ReminderNotificationTriggerHandler(
             reminderRepository = get(),
             scheduledNotificationDao = get(),
-            rescheduleRemindersUseCase = get()
+            rescheduleRemindersUseCase = get(),
+            workSessionManager = get()
         )
     }
 

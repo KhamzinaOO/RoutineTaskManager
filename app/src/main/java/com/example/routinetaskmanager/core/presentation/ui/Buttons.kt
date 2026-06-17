@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 
@@ -45,7 +46,7 @@ fun CommonButton(
     ),
     shape : Shape = CircleShape,
     text : String,
-    contentPadding : PaddingValues = ButtonDefaults.ContentPadding
+    contentPadding : PaddingValues = PaddingValues(horizontal = 12.dp)
 ){
     Button(
         modifier = modifier.height(34.dp),
@@ -56,7 +57,10 @@ fun CommonButton(
         contentPadding = contentPadding
     ) {
         Text(
-            text = text
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }
@@ -72,7 +76,7 @@ fun CommonButtonWithLeadingIcon(
     ),
     shape: Shape = CircleShape,
     text: String,
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 10.dp),
     icon: (@Composable RowScope.() -> Unit)? = null
 ) {
     Button(
@@ -86,10 +90,15 @@ fun CommonButtonWithLeadingIcon(
         icon?.invoke(this)
 
         if (icon != null) {
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(4.dp))
         }
 
-        Text(text = text)
+        Text(
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
+        )
     }
 }
 
@@ -104,7 +113,7 @@ fun CommonOutlinedButton(
     ),
     shape : Shape = CircleShape,
     text : String,
-    contentPadding : PaddingValues = ButtonDefaults.ContentPadding
+    contentPadding : PaddingValues = PaddingValues(horizontal = 12.dp)
 ){
     OutlinedButton(
         modifier = modifier.height(34.dp),
@@ -116,7 +125,10 @@ fun CommonOutlinedButton(
         border = BorderStroke(width = 1.dp, MaterialTheme.colorScheme.onTertiary)
     ) {
         Text(
-            text = text
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }
@@ -170,6 +182,7 @@ fun SegmentedButton(
             },
             colors = leftButtonColor,
             text = leftText,
+            contentPadding = PaddingValues(horizontal = 8.dp),
             icon = {
                 leftLeadingIcon?.let {
                     Icon(
@@ -187,6 +200,7 @@ fun SegmentedButton(
             },
             colors = rightButtonColor,
             text = rightText,
+            contentPadding = PaddingValues(horizontal = 8.dp),
             icon = {
                 rightLeadingIcon?.let {
                     Icon(

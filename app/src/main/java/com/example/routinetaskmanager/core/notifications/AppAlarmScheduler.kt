@@ -7,7 +7,8 @@ interface AppAlarmScheduler {
         targetType: NotificationTargetType,
         targetId: Long,
         scheduledAtMillis: Long,
-        requestCode: Int
+        requestCode: Int,
+        precision: AlarmPrecision = AlarmPrecision.INEXACT
     ): Boolean
 
     fun cancel(

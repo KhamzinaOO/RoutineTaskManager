@@ -3,6 +3,8 @@ package com.example.routinetaskmanager.featureReminder.presentation.create_edit_
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
@@ -167,7 +169,7 @@ class CreateEditReminderViewModel(
             CreateEditReminderIntent.NotificationPermissionDenied -> {
                 sendEffect(
                     CreateEditReminderEffect.ShowMessage(
-                        "Notifications are disabled. Reminder was saved without scheduled alerts"
+                        UiText.StringResource(R.string.notifications_disabled_saved_without_alerts)
                     )
                 )
                 sendEffect(CreateEditReminderEffect.NavigateBack)
@@ -232,7 +234,8 @@ class CreateEditReminderViewModel(
                     }
                 }
             }.onFailure { throwable ->
-                val message = throwable.message ?: "Failed to save reminder"
+                val message = throwable.message?.let(UiText::DynamicString)
+                    ?: UiText.StringResource(R.string.error_failed_save_reminder)
 
                 _uiState.update {
                     it.copy(
@@ -255,7 +258,8 @@ class CreateEditReminderViewModel(
             }.onFailure { throwable ->
                 sendEffect(
                     CreateEditReminderEffect.ShowMessage(
-                        throwable.message ?: "Failed to schedule reminder notifications"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_schedule_reminder_notifications)
                     )
                 )
                 sendEffect(CreateEditReminderEffect.NavigateBack)
@@ -279,9 +283,9 @@ class CreateEditReminderViewModel(
 
     private fun validateState(
         state: CreateEditReminderUiState
-    ): String? {
+    ): UiText? {
         if (state.name.isBlank()) {
-            return "Enter reminder name"
+            return UiText.StringResource(R.string.error_enter_reminder_name)
         }
 
         return when (state.repeatType) {
@@ -351,7 +355,8 @@ class CreateEditReminderViewModel(
                     }
                 }
             }.onFailure { throwable ->
-                val message = throwable.message ?: "Failed to load reminder"
+                val message = throwable.message?.let(UiText::DynamicString)
+                    ?: UiText.StringResource(R.string.error_failed_load_reminder)
 
                 _effect.send(
                     CreateEditReminderEffect.ShowMessage(message)
@@ -370,13 +375,13 @@ class CreateEditReminderViewModel(
 
     private fun validateAfterAnother(
         state: AfterAnotherRepeatUi
-    ): String? {
+    ): UiText? {
         return validateRepeatInterval(state.waitInterval)
     }
 
     private fun validateDuringSession(
         state: DuringSessionPeriodRepeatUi
-    ): String? {
+    ): UiText? {
         return validateWeeklyRepeat(
             schedule = state.schedule,
             valueValidator = { intervalRepeat ->
@@ -387,7 +392,7 @@ class CreateEditReminderViewModel(
 
     private fun validateOnSchedulePeriod(
         state: OnSchedulePeriodRepeatUi
-    ): String? {
+    ): UiText? {
         return validateWeeklyRepeat(
             schedule = state.schedule,
             valueValidator = { day ->
@@ -399,7 +404,7 @@ class CreateEditReminderViewModel(
 
     private fun validateOnScheduleCertain(
         state: OnScheduleCertainRepeatUi
-    ): String? {
+    ): UiText? {
         return validateWeeklyRepeat(
             schedule = state.schedule,
             valueValidator = { day ->
@@ -410,15 +415,15 @@ class CreateEditReminderViewModel(
 
     private fun validateRepeatInterval(
         interval: RepeatIntervalUi
-    ): String? {
+    ): UiText? {
         val value = interval.value.trim().toIntOrNull()
 
         if (value == null) {
-            return "Repeat interval must be a number"
+            return UiText.StringResource(R.string.error_repeat_interval_number)
         }
 
         if (value <= 0) {
-            return "Repeat interval must be greater than zero"
+            return UiText.StringResource(R.string.error_repeat_interval_positive)
         }
 
         return null
@@ -426,7 +431,7 @@ class CreateEditReminderViewModel(
 
     private fun validateTimeWindow(
         timeWindow: TimeWindowUi
-    ): String? {
+    ): UiText? {
         if (timeWindow.allDayEnabled) {
             return null
         }
@@ -440,11 +445,11 @@ class CreateEditReminderViewModel(
         }.getOrNull()
 
         if (start == null || end == null) {
-            return "Time window must be valid"
+            return UiText.StringResource(R.string.error_time_window_valid)
         }
 
         if (!start.isBefore(end)) {
-            return "Start time must be before end time"
+            return UiText.StringResource(R.string.error_start_before_end)
         }
 
         return null
@@ -452,14 +457,14 @@ class CreateEditReminderViewModel(
 
     private fun validateCertainTime(
         day: OnScheduleCertainDayUi
-    ): String? {
+    ): UiText? {
         val typedTime = parseHourMinuteOrNull(
             hours = day.hours,
             minutes = day.minutes
         )
 
         if (day.pickedTimes.isEmpty() && typedTime == null) {
-            return "Add at least one valid time"
+            return UiText.StringResource(R.string.error_add_valid_time)
         }
 
         return null
@@ -467,10 +472,10 @@ class CreateEditReminderViewModel(
 
     private fun <T> validateWeeklyRepeat(
         schedule: WeeklyRepeatUi<T>,
-        valueValidator: (T) -> String?
-    ): String? {
+        valueValidator: (T) -> UiText?
+    ): UiText? {
         if (schedule.selectedDays.isEmpty()) {
-            return "Select at least one day"
+            return UiText.StringResource(R.string.error_select_day)
         }
 
         return when (schedule.mode) {
@@ -482,7 +487,7 @@ class CreateEditReminderViewModel(
                 val enabledEntries = schedule.advancedEntries.filter { it.enabled }
 
                 if (enabledEntries.isEmpty()) {
-                    return "Enable at least one day"
+                    return UiText.StringResource(R.string.error_enable_day)
                 }
 
                 enabledEntries

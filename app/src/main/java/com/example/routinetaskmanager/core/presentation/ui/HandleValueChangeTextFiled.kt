@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -21,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 
@@ -32,7 +35,9 @@ fun HandleValueChangeTextFiled(
     value: String,
     onValueChange: (String) -> Unit,
     onIncrement : () -> Unit,
-    onDecrement : () -> Unit
+    onDecrement : () -> Unit,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    imeAction: ImeAction = ImeAction.Done
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -41,20 +46,22 @@ fun HandleValueChangeTextFiled(
         CommonIconButton(
             color = Color.Transparent,
             icon = painterResource(R.drawable.ic_remove),
-            contentDescription = "Decrement",
+            contentDescription = stringResource(R.string.action_decrement),
             tint = MaterialTheme.colorScheme.secondary,
             onClick = onDecrement
         )
 
         OvalNumberField(
             value = value,
-            onValueChange = onValueChange
+            onValueChange = onValueChange,
+            keyboardActions = keyboardActions,
+            imeAction = imeAction
         )
 
         CommonIconButton(
             color = Color.Transparent,
             icon = Icons.Default.Add,
-            contentDescription = "Increment",
+            contentDescription = stringResource(R.string.action_increment),
             tint = MaterialTheme.colorScheme.secondary,
             onClick = onIncrement
         )
@@ -68,7 +75,11 @@ fun HandleValueChangeTimeTextFiled(
     onHoursChange: (String) -> Unit,
     onMinutesChange: (String) -> Unit,
     onIncrement : () -> Unit,
-    onDecrement : () -> Unit
+    onDecrement : () -> Unit,
+    hoursKeyboardActions: KeyboardActions = KeyboardActions.Default,
+    minutesKeyboardActions: KeyboardActions = KeyboardActions.Default,
+    hoursImeAction: ImeAction = ImeAction.Next,
+    minutesImeAction: ImeAction = ImeAction.Done
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -77,7 +88,7 @@ fun HandleValueChangeTimeTextFiled(
         CommonIconButton(
             color = Color.Transparent,
             icon = painterResource(R.drawable.ic_remove),
-            contentDescription = "Decrement",
+            contentDescription = stringResource(R.string.action_decrement),
             tint = MaterialTheme.colorScheme.secondary,
             onClick = onDecrement
         )
@@ -87,12 +98,16 @@ fun HandleValueChangeTimeTextFiled(
             minutes = minutes,
             onHoursChange = onHoursChange,
             onMinutesChange = onMinutesChange,
+            hoursKeyboardActions = hoursKeyboardActions,
+            minutesKeyboardActions = minutesKeyboardActions,
+            hoursImeAction = hoursImeAction,
+            minutesImeAction = minutesImeAction
         )
 
         CommonIconButton(
             color = Color.Transparent,
             icon = Icons.Default.Add,
-            contentDescription = "Increment",
+            contentDescription = stringResource(R.string.action_increment),
             tint = MaterialTheme.colorScheme.secondary,
             onClick = onIncrement
         )
@@ -105,6 +120,8 @@ fun OvalNumberFieldWithHint(
     hintText : String,
     value: String = "0",
     onValueChange: (String) -> Unit,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    imeAction: ImeAction = ImeAction.Done
 ) {
     BasicTextField(
         value = value,
@@ -119,8 +136,9 @@ fun OvalNumberFieldWithHint(
         ),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Done
+            imeAction = imeAction
         ),
+        keyboardActions = keyboardActions,
         modifier = modifier
             .width(70.dp)
             .height(34.dp)
@@ -148,7 +166,10 @@ fun OvalNumberFieldWithHint(
                     modifier = Modifier,
                     text = hintText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false
                 )
             }
         }
@@ -162,6 +183,10 @@ fun OvalTimeField(
     minutes: String,
     onHoursChange: (String) -> Unit,
     onMinutesChange: (String) -> Unit,
+    hoursKeyboardActions: KeyboardActions = KeyboardActions.Default,
+    minutesKeyboardActions: KeyboardActions = KeyboardActions.Default,
+    hoursImeAction: ImeAction = ImeAction.Next,
+    minutesImeAction: ImeAction = ImeAction.Done
 ) {
     Row(
         modifier = modifier
@@ -178,6 +203,8 @@ fun OvalTimeField(
         TimePartField(
             value = hours,
             onValueChange = onHoursChange,
+            keyboardActions = hoursKeyboardActions,
+            imeAction = hoursImeAction,
             modifier = Modifier.width(24.dp)
         )
 
@@ -190,6 +217,8 @@ fun OvalTimeField(
         TimePartField(
             value = minutes,
             onValueChange = onMinutesChange,
+            keyboardActions = minutesKeyboardActions,
+            imeAction = minutesImeAction,
             modifier = Modifier.width(24.dp)
         )
     }
@@ -199,6 +228,8 @@ fun OvalTimeField(
 private fun TimePartField(
     value: String,
     onValueChange: (String) -> Unit,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    imeAction: ImeAction = ImeAction.Done,
     modifier: Modifier = Modifier,
 ) {
     BasicTextField(
@@ -214,8 +245,9 @@ private fun TimePartField(
         ),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Done
+            imeAction = imeAction
         ),
+        keyboardActions = keyboardActions,
         modifier = modifier,
         decorationBox = { innerTextField ->
             Box(
@@ -231,6 +263,8 @@ fun OvalNumberField(
     modifier: Modifier = Modifier,
     value: String = "0",
     onValueChange: (String) -> Unit,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    imeAction: ImeAction = ImeAction.Done
 ) {
     BasicTextField(
         value = value,
@@ -245,8 +279,9 @@ fun OvalNumberField(
         ),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
-            imeAction = ImeAction.Done
+            imeAction = imeAction
         ),
+        keyboardActions = keyboardActions,
         modifier = modifier
             .width(70.dp)
             .height(34.dp)
@@ -266,4 +301,3 @@ fun OvalNumberField(
         }
     )
 }
-

@@ -2,6 +2,8 @@ package com.example.routinetaskmanager.featureReminder.presentation.all_reminder
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.mapper.toMiniCardUi
 
 class AllRemindersViewModel(
     private val reminderRepository: ReminderRepository
@@ -61,7 +62,7 @@ class AllRemindersViewModel(
             }
 
             is AllRemindersIntent.ShowMessage -> {
-                sendEffect(AllRemindersEffect.ShowMessage(intent.message))
+                sendEffect(AllRemindersEffect.ShowMessage(UiText.DynamicString(intent.message)))
             }
 
             is AllRemindersIntent.FilterReminder -> {
@@ -97,7 +98,7 @@ class AllRemindersViewModel(
                         )
 
                         newState.copy(
-                            remindersToShow = newState.filteredReminders().map { it.toMiniCardUi() }
+                            remindersToShow = newState.filteredReminders()
                         )
                     }
                 }
@@ -113,7 +114,8 @@ class AllRemindersViewModel(
             }.onFailure { error ->
                 sendEffect(
                     AllRemindersEffect.ShowMessage(
-                        error.message ?: "Не удалось удалить напоминание"
+                        error.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_delete_reminder)
                     )
                 )
             }
@@ -127,7 +129,7 @@ class AllRemindersViewModel(
             )
 
             newState.copy(
-                remindersToShow = newState.filteredReminders().map { it.toMiniCardUi() }
+                remindersToShow = newState.filteredReminders()
             )
         }
     }

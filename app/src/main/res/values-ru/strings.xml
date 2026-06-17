@@ -1,0 +1,189 @@
+<resources>
+    <string name="app_name">RoutineTaskManager</string>
+
+    <string name="nav_home">Главная</string>
+    <string name="nav_widgets">Виджеты</string>
+    <string name="nav_reminders">Напоминания</string>
+    <string name="nav_tasks">Задачи</string>
+
+    <string name="action_add">Добавить</string>
+    <string name="action_allow">Разрешить</string>
+    <string name="action_back">Назад</string>
+    <string name="action_calendar">Календарь</string>
+    <string name="action_check">Выбрано</string>
+    <string name="action_checked">Отмечено</string>
+    <string name="action_clear">Очистить</string>
+    <string name="action_close">Закрыть</string>
+    <string name="action_decrement">Уменьшить</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_do_now">Сделать сейчас</string>
+    <string name="action_edit">Изменить</string>
+    <string name="action_increment">Увеличить</string>
+    <string name="action_menu">Меню</string>
+    <string name="action_not_now">Не сейчас</string>
+    <string name="action_open">Открыть</string>
+    <string name="action_open_settings">Открыть настройки</string>
+    <string name="action_refresh">Обновить</string>
+    <string name="action_retry">Повторить</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_search">Поиск</string>
+    <string name="action_settings">Настройки</string>
+    <string name="action_skip">Пропустить</string>
+    <string name="action_start">Запустить</string>
+    <string name="action_stop">Остановить</string>
+    <string name="state_unchecked">Не отмечено</string>
+
+    <string name="greeting_morning">Доброе утро!</string>
+    <string name="greeting_afternoon">Добрый день!</string>
+    <string name="greeting_evening">Добрый вечер!</string>
+    <string name="greeting_night">Доброй ночи!</string>
+
+    <string name="home_sample_task">задача</string>
+    <string name="home_sample_description">описание</string>
+    <string name="home_sample_long_description">описаниеописаниеописаниеописаниеописаниеописаниеописаниеописаниеописаниеописаниеописаниеописание</string>
+    <string name="home_drink_water">Пить воду</string>
+    <string name="home_water_progress">0,2/2 л</string>
+    <string name="home_water_unit_ml">мл</string>
+    <string name="home_pomodoro_focus">Фокус Помодоро</string>
+
+    <string name="tab_reminders">Напоминания</string>
+    <string name="tab_tasks">Задачи</string>
+    <string name="task_checkbox">Чекбокс</string>
+    <string name="task_add_checkbox_instruction">Добавить инструкцию с чекбоксом</string>
+    <string name="empty_reminders">Напоминания не найдены</string>
+    <string name="empty_tasks">Задачи не найдены</string>
+
+    <string name="all_reminders_title">Все напоминания</string>
+    <string name="drawer_main">Главная</string>
+    <string name="drawer_all_reminders">Все напоминания</string>
+    <string name="filter_all">Все</string>
+    <string name="status_on">Вкл.</string>
+    <string name="status_off">Выкл.</string>
+    <string name="notifications_off">Уведомления выключены</string>
+
+    <string name="reminder_create_title">Новое напоминание</string>
+    <string name="reminder_edit_title">Редактировать напоминание</string>
+    <string name="field_name">Название</string>
+    <string name="field_reminder_name_placeholder">Введите название напоминания</string>
+    <string name="field_instructions">Инструкции</string>
+    <string name="field_repeat_type">Тип повтора</string>
+    <string name="field_repeat_time">Время повтора</string>
+    <string name="field_notification_sound">Звук уведомления</string>
+
+    <string name="repeat_type_on_schedule_period">По расписанию (период)</string>
+    <string name="repeat_type_on_schedule_certain">По расписанию (точное время)</string>
+    <string name="repeat_type_during_session">Во время сессии</string>
+    <string name="repeat_type_after_another">После другой активности</string>
+    <string name="repeat_label_after_another_reminder">После другого напоминания</string>
+    <string name="repeat_label_on_schedule_period_compact">По расписанию · Период</string>
+    <string name="repeat_label_on_schedule_certain_compact">По расписанию · Точное время</string>
+    <string name="repeat_detail_after">Через %1$d %2$s</string>
+    <string name="repeat_detail_every">Каждые %1$d %2$s · %3$s</string>
+    <string name="repeat_days_never">Никогда</string>
+    <string name="repeat_days_every_day">Каждый день</string>
+    <string name="repeat_days_weekdays">Будни</string>
+    <string name="repeat_days_weekend">Выходные</string>
+    <plurals name="repeat_times_count">
+        <item quantity="one">%d раз · %s</item>
+        <item quantity="few">%d раза · %s</item>
+        <item quantity="many">%d раз · %s</item>
+        <item quantity="other">%d раза · %s</item>
+    </plurals>
+    <plurals name="repeat_unit_minutes_count">
+        <item quantity="one">минута</item>
+        <item quantity="few">минуты</item>
+        <item quantity="many">минут</item>
+        <item quantity="other">минуты</item>
+    </plurals>
+    <plurals name="repeat_unit_hours_count">
+        <item quantity="one">час</item>
+        <item quantity="few">часа</item>
+        <item quantity="many">часов</item>
+        <item quantity="other">часа</item>
+    </plurals>
+    <plurals name="repeat_unit_days_count">
+        <item quantity="one">день</item>
+        <item quantity="few">дня</item>
+        <item quantity="many">дней</item>
+        <item quantity="other">дня</item>
+    </plurals>
+    <string name="repeat_mode_default">Обычно</string>
+    <string name="repeat_mode_advanced">Расширенно</string>
+    <string name="repeat_wait_time">Время ожидания</string>
+    <string name="repeat_every">Каждые</string>
+    <string name="repeat_notification_time">Время уведомления</string>
+    <string name="repeat_unit_minutes">минут</string>
+    <string name="repeat_unit_hours">часов</string>
+    <string name="repeat_unit_days">дней</string>
+    <string name="time_all_day">Весь день</string>
+
+    <string name="notification_mode_sound">Звук</string>
+    <string name="notification_mode_vibration">Вибрация</string>
+    <string name="notification_mode_mute">Без звука</string>
+    <string name="notification_mode_silent">Тихо</string>
+
+    <string name="image_content_description">Изображение</string>
+    <string name="add_photo_content_description">Добавить фото</string>
+
+    <string name="next_reminder_label">следующее напоминание</string>
+    <string name="work_session_title">Рабочая сессия</string>
+    <string name="work_session_running_text">Таймер запущен</string>
+    <string name="work_session_start">Начать рабочую сессию</string>
+    <string name="work_session_active_label">рабочая сессия</string>
+    <string name="work_session_stop">Остановить рабочую сессию</string>
+    <string name="work_session_started_no_session_reminders">Рабочая сессия началась. Сессионные напоминания не запланированы</string>
+    <plurals name="work_session_restarted_count">
+        <item quantity="one">Сессионное напоминание перезапущено: %d</item>
+        <item quantity="few">Сессионные напоминания перезапущены: %d</item>
+        <item quantity="many">Сессионные напоминания перезапущены: %d</item>
+        <item quantity="other">Сессионные напоминания перезапущены: %d</item>
+    </plurals>
+    <plurals name="work_session_started_scheduled_count">
+        <item quantity="one">Рабочая сессия началась. Запланировано напоминание: %d</item>
+        <item quantity="few">Рабочая сессия началась. Запланировано напоминания: %d</item>
+        <item quantity="many">Рабочая сессия началась. Запланировано напоминаний: %d</item>
+        <item quantity="other">Рабочая сессия началась. Запланировано напоминания: %d</item>
+    </plurals>
+    <string name="work_session_ended">Рабочая сессия завершена</string>
+    <plurals name="work_session_reminders_count">
+        <item quantity="one">%d напоминание в сегодняшней сессии</item>
+        <item quantity="few">%d напоминания в сегодняшней сессии</item>
+        <item quantity="many">%d напоминаний в сегодняшней сессии</item>
+        <item quantity="other">%d напоминания в сегодняшней сессии</item>
+    </plurals>
+
+    <string name="notification_permission_title">Разрешить уведомления?</string>
+    <string name="notification_permission_rationale">Рабочие сессии используют уведомления, чтобы напоминать в выбранное время.</string>
+    <string name="exact_alarm_permission_title">Разрешить точные напоминания?</string>
+    <string name="exact_alarm_permission_rationale">Доступ к точным будильникам позволяет выбранным напоминаниям приходить строго в нужную минуту.</string>
+    <string name="notifications_required_for_session">Для запуска рабочей сессии нужны уведомления</string>
+    <string name="notifications_disabled_enable_settings">Уведомления выключены. Включите их в настройках, чтобы получать напоминания</string>
+    <string name="notifications_disabled_saved_without_alerts">Уведомления выключены. Напоминание сохранено без запланированных уведомлений</string>
+
+    <string name="notification_channel_sound_name">уведомления</string>
+    <string name="notification_channel_sound_description">Напоминания со звуком</string>
+    <string name="notification_channel_vibration_name">уведомления с вибрацией</string>
+    <string name="notification_channel_vibration_description">Напоминания с вибрацией</string>
+    <string name="notification_channel_silent_name">тихие уведомления</string>
+    <string name="notification_channel_silent_description">Тихие напоминания</string>
+    <string name="notification_channel_work_session_name">рабочая сессия</string>
+    <string name="notification_channel_work_session_description">Таймер активной рабочей сессии</string>
+
+    <string name="error_failed_load_reminders">Не удалось загрузить напоминания</string>
+    <string name="error_failed_start_work_session">Не удалось начать рабочую сессию</string>
+    <string name="error_failed_start_work_session_service">Android заблокировал foreground-таймер. Рабочая сессия не была начата. Попробуйте еще раз.</string>
+    <string name="error_failed_restore_work_session_service">Android заблокировал foreground-таймер для активной рабочей сессии.</string>
+    <string name="error_failed_end_work_session">Не удалось завершить рабочую сессию</string>
+    <string name="error_failed_save_reminder">Не удалось сохранить напоминание</string>
+    <string name="error_failed_schedule_reminder_notifications">Не удалось запланировать уведомления напоминаний</string>
+    <string name="error_failed_load_reminder">Не удалось загрузить напоминание</string>
+    <string name="error_failed_delete_reminder">Не удалось удалить напоминание</string>
+    <string name="error_enter_reminder_name">Введите название напоминания</string>
+    <string name="error_repeat_interval_number">Интервал повтора должен быть числом</string>
+    <string name="error_repeat_interval_positive">Интервал повтора должен быть больше нуля</string>
+    <string name="error_time_window_valid">Укажите корректный временной интервал</string>
+    <string name="error_start_before_end">Время начала должно быть раньше времени окончания</string>
+    <string name="error_add_valid_time">Добавьте хотя бы одно корректное время</string>
+    <string name="error_select_day">Выберите хотя бы один день</string>
+    <string name="error_enable_day">Включите хотя бы один день</string>
+</resources>

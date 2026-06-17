@@ -1,11 +1,12 @@
 package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model
 
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 
 data class AllRemindersUiState(
     val reminders: List<Reminder> = emptyList(),
-    val remindersToShow: List<ReminderMiniCardUi> = emptyList(),
+    val remindersToShow: List<Reminder> = emptyList(),
     val reminderFilter: ReminderFilter = ReminderFilter(),
     val isLoading: Boolean = false,
     val repeatTypeFilterList  : List<ReminderRepeatTypeUi> = ReminderRepeatType.entries.map {
@@ -13,6 +14,6 @@ data class AllRemindersUiState(
     } + ReminderRepeatTypeUi(
         id = -1,
         repeatType = null,
-        repeatTypeName = "All"
+        repeatTypeNameRes = R.string.filter_all
     )
 )

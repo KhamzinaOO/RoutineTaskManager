@@ -1,5 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model
 
+import com.example.routinetaskmanager.core.presentation.model.UiText
+
 sealed interface AllRemindersEffect {
     data object FABClicked : AllRemindersEffect
     data object MenuButtonClicked : AllRemindersEffect
@@ -9,5 +11,5 @@ sealed interface AllRemindersEffect {
 
     data class OpenClicked (val id : Long) : AllRemindersEffect
 
-    data class ShowMessage (val message : String) : AllRemindersEffect
+    data class ShowMessage (val message : UiText) : AllRemindersEffect
 }

@@ -13,10 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.presentation.ui.CommonButton
 import com.example.routinetaskmanager.core.presentation.ui.OvalNumberFieldWithHint
+import com.example.routinetaskmanager.R
 
 @Composable
 fun AmountTracker(
@@ -42,7 +46,10 @@ fun AmountTracker(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -61,14 +68,13 @@ fun AmountTracker(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     OvalNumberFieldWithHint(
-                        hintText = textFieldHint
-                    ) {
-
-                    }
+                        hintText = textFieldHint,
+                        onValueChange = {}
+                    )
 
                     CommonButton(
                         onClick = onAddButtonClicked,
-                        text = "Add"
+                        text = stringResource(R.string.action_add)
                     )
                 }
             }

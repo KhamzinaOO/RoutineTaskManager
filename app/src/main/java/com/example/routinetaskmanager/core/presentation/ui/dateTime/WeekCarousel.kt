@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -184,12 +185,18 @@ fun DayOfWeekBox(
             Text(
                 text = date,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isSelected) selectedTextColor else unselectedTextColor
+                color = if (isSelected) selectedTextColor else unselectedTextColor,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                softWrap = false
             )
             Text(
                 text = dayOfWeek,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (isSelected) selectedTextColor else unselectedTextColor
+                color = if (isSelected) selectedTextColor else unselectedTextColor,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                softWrap = false
             )
         }
     }

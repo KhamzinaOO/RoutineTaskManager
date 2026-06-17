@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -21,8 +22,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
 import com.example.routinetaskmanager.core.presentation.ui.CommonButton
 import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenu
@@ -74,8 +80,8 @@ fun RepeatTimeCardBase(
         ) {
             SegmentedButton(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                leftText = "Default",
-                rightText = "Advanced",
+                leftText = stringResource(R.string.repeat_mode_default),
+                rightText = stringResource(R.string.repeat_mode_advanced),
                 isLeftButtonPicked = isDefaultButtonPicked,
                 onLeftButtonClick = onDefaultButtonClick,
                 onRightButtonClick = onAdvancedButtonClick
@@ -111,7 +117,7 @@ fun AfterAnotherRepeatCard(
     ) {
         IntervalRow(
             modifier = Modifier.padding(8.dp),
-            label = "Wait time",
+            label = stringResource(R.string.repeat_wait_time),
             interval = state.waitInterval,
             onIntervalChange = { onStateChange(state.copy(waitInterval = it)) },
             dropdownValues = dropdownValues
@@ -336,7 +342,12 @@ fun <T> AdvancedCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = item.day.name)
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = item.day.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
                     Switch(
                         checked = item.enabled,
@@ -361,7 +372,7 @@ fun DuringSessionContent(
     dropdownValues: List<DropdownMenuItemUi>
 ) {
     IntervalRow(
-        label = "Every",
+        label = stringResource(R.string.repeat_every),
         interval = value.interval,
         onIntervalChange = { onValueChange(value.copy(interval = it)) },
         dropdownValues = dropdownValues
@@ -380,7 +391,7 @@ fun OnSchedulePeriodContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         IntervalRow(
-            label = "Every",
+            label = stringResource(R.string.repeat_every),
             interval = value.interval,
             onIntervalChange = { interval ->
                 onValueChange(value.copy(interval = interval))
@@ -442,7 +453,11 @@ private fun IntervalRow(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         itemVerticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label)
+        Text(
+            text = label,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         HandleValueChangeTextFiled(
             value = interval.value,
@@ -473,12 +488,18 @@ private fun NotificationTimeRow(
     value: OnScheduleCertainDayUi,
     onValueChange: (OnScheduleCertainDayUi) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         itemVerticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Notification time")
+        Text(
+            text = stringResource(R.string.repeat_notification_time),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         HandleValueChangeTimeTextFiled(
             hours = value.hours,
@@ -489,6 +510,12 @@ private fun NotificationTimeRow(
             onMinutesChange = { minutes ->
                 onValueChange(value.copy(minutes = minutes))
             },
+            hoursKeyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Next) }
+            ),
+            minutesKeyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
             onIncrement = {
                 onValueChange(value.shiftInputTime(minutesDelta = 1))
             },
@@ -501,7 +528,7 @@ private fun NotificationTimeRow(
             onClick = {
                 onValueChange(value.addInputTime())
             },
-            text = "Add"
+            text = stringResource(R.string.action_add)
         )
     }
 }
@@ -594,11 +621,12 @@ private fun <T> WeeklyRepeatUi<T>.updateAdvancedEntry(
     )
 }
 
+@Composable
 private fun previewDropdownValues(): List<DropdownMenuItemUi> {
     return listOf(
-        DropdownMenuItemUi(RepeatUnit.MINUTES.ordinal, "minutes"),
-        DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, "hours"),
-        DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, "days")
+        DropdownMenuItemUi(RepeatUnit.MINUTES.ordinal, stringResource(R.string.repeat_unit_minutes)),
+        DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, stringResource(R.string.repeat_unit_hours)),
+        DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, stringResource(R.string.repeat_unit_days))
     )
 }
 

@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.domain.useCase
 
 import android.net.Uri
+import com.example.routinetaskmanager.core.notifications.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.NotificationTargetType
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
@@ -50,6 +51,7 @@ class ReminderSessionNotificationUseCaseTest {
         assertEquals(14, result.scheduledNotificationCount)
         assertEquals(14, dao.entities.size)
         assertEquals(14, alarmScheduler.scheduled.size)
+        assertTrue(alarmScheduler.scheduledPrecisions.all { it == AlarmPrecision.INEXACT })
 
         val firstAfterAnotherMillis = startedAt
             .plusMinutes(5)
@@ -171,15 +173,18 @@ class ReminderSessionNotificationUseCaseTest {
 
     private class FakeAlarmScheduler : AppAlarmScheduler {
         val scheduled = mutableListOf<Int>()
+        val scheduledPrecisions = mutableListOf<AlarmPrecision>()
         val cancelled = mutableListOf<Int>()
 
         override fun schedule(
             targetType: NotificationTargetType,
             targetId: Long,
             scheduledAtMillis: Long,
-            requestCode: Int
+            requestCode: Int,
+            precision: AlarmPrecision
         ): Boolean {
             scheduled.add(requestCode)
+            scheduledPrecisions.add(precision)
             return true
         }
 
@@ -204,6 +209,15 @@ class ReminderSessionNotificationUseCaseTest {
 
         override suspend fun getByTargetType(targetType: String): List<ScheduledNotificationEntity> {
             return entities.filter { it.targetType == targetType }
+        }
+
+        override suspend fun getByTargetTypeAndOccurrenceKind(
+            targetType: String,
+            occurrenceKind: String
+        ): List<ScheduledNotificationEntity> {
+            return entities.filter {
+                it.targetType == targetType && it.occurrenceKind == occurrenceKind
+            }
         }
 
         override suspend fun getByTargetTypeAndOccurrenceKeyPrefix(
@@ -232,6 +246,15 @@ class ReminderSessionNotificationUseCaseTest {
 
         override suspend fun deleteByTargetType(targetType: String) {
             entities.removeAll { it.targetType == targetType }
+        }
+
+        override suspend fun deleteByTargetTypeAndOccurrenceKind(
+            targetType: String,
+            occurrenceKind: String
+        ) {
+            entities.removeAll {
+                it.targetType == targetType && it.occurrenceKind == occurrenceKind
+            }
         }
 
         override suspend fun deleteByTargetTypeAndOccurrenceKeyPrefix(

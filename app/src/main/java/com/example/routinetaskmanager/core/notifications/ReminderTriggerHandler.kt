@@ -2,17 +2,20 @@ package com.example.routinetaskmanager.core.notifications
 
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
+import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
 import java.time.Duration
 
 class ReminderNotificationTriggerHandler(
     private val reminderRepository: ReminderRepository,
     private val scheduledNotificationDao: ScheduledNotificationDao,
-    private val rescheduleRemindersUseCase: RescheduleRemindersUseCase
+    private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
+    private val workSessionManager: WorkSessionManager
 ) : NotificationTriggerHandler {
 
     override suspend fun buildPayloadOrNull(
         targetId: Long,
-        scheduledAtMillis: Long
+        scheduledAtMillis: Long,
+        occurrenceKind: NotificationOccurrenceKind
     ): NotificationPayload? {
         val reminder = reminderRepository.getReminderById(targetId)
             ?: return null
@@ -28,7 +31,7 @@ class ReminderNotificationTriggerHandler(
         val delayMillis = System.currentTimeMillis() - scheduledAtMillis
 
         if (delayMillis > MAX_ALLOWED_DELAY.toMillis()) {
-            rescheduleRemindersUseCase()
+            rescheduleByOccurrenceKind(occurrenceKind)
             return null
         }
 
@@ -44,9 +47,24 @@ class ReminderNotificationTriggerHandler(
 
     override suspend fun onNotificationShown(
         targetId: Long,
-        scheduledAtMillis: Long
+        scheduledAtMillis: Long,
+        occurrenceKind: NotificationOccurrenceKind
     ) {
-        rescheduleRemindersUseCase()
+        rescheduleByOccurrenceKind(occurrenceKind)
+    }
+
+    private suspend fun rescheduleByOccurrenceKind(
+        occurrenceKind: NotificationOccurrenceKind
+    ) {
+        when (occurrenceKind) {
+            NotificationOccurrenceKind.REGULAR -> {
+                rescheduleRemindersUseCase()
+            }
+
+            NotificationOccurrenceKind.SESSION -> {
+                workSessionManager.rescheduleActiveSessionIfNeeded()
+            }
+        }
     }
 
     private companion object {

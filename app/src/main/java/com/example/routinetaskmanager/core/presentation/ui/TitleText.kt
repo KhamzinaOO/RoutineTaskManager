@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun TitleText(
@@ -15,6 +16,8 @@ fun TitleText(
         modifier = modifier,
         text = text,
         style = MaterialTheme.typography.bodyLarge,
-        fontWeight = FontWeight.SemiBold
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
     )
 }

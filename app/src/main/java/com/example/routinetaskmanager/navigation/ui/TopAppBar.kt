@@ -21,8 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 
 @Composable
 fun HomeTopBar(
@@ -41,12 +44,16 @@ fun HomeTopBar(
                 Text(
                     text = greeting,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = date,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         },
@@ -56,7 +63,7 @@ fun HomeTopBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Setting"
+                    contentDescription = stringResource(R.string.action_settings)
                 )
             }
         }
@@ -78,13 +85,15 @@ fun CommonTopAppBarWithArrowBack(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.action_back)
                 )
             }
         },
         title = {
             Text(
                 text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     )
@@ -107,13 +116,15 @@ fun CommonTopAppBarWithActionButtons(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.action_back)
                 )
             }
         },
         title = {
             Text(
                 text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         },
         actions = {
@@ -122,7 +133,7 @@ fun CommonTopAppBarWithActionButtons(
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit"
+                    contentDescription = stringResource(R.string.action_edit)
                 )
             }
             IconButton(
@@ -130,7 +141,7 @@ fun CommonTopAppBarWithActionButtons(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete"
+                    contentDescription = stringResource(R.string.action_delete)
                 )
             }
         }
@@ -149,7 +160,11 @@ fun CommonCalendarAppBar(
             containerColor = MaterialTheme.colorScheme.background
         ),
         title = {
-            Text(text = title)
+            Text(
+                text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         },
         navigationIcon = {
             IconButton(
@@ -157,7 +172,7 @@ fun CommonCalendarAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu"
+                    contentDescription = stringResource(R.string.action_menu)
                 )
             }
         },
@@ -167,7 +182,7 @@ fun CommonCalendarAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
+                    contentDescription = stringResource(R.string.action_search)
                 )
             }
             IconButton(
@@ -175,7 +190,7 @@ fun CommonCalendarAppBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.DateRange,
-                    contentDescription = "Calendar"
+                    contentDescription = stringResource(R.string.action_calendar)
                 )
             }
         }
@@ -193,16 +208,20 @@ fun CommonAppBarWithMenuButtonAndDropdown(
             containerColor = MaterialTheme.colorScheme.background
         ),
         title = {
-            Text(text = title)
+            Text(
+                text = title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         },
         navigationIcon = {
             IconButton(
                 onClick = onMenuButtonClick
             ) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu"
-                )
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = stringResource(R.string.action_menu)
+                    )
             }
         },
         actions = {
@@ -211,7 +230,7 @@ fun CommonAppBarWithMenuButtonAndDropdown(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
+                        contentDescription = stringResource(R.string.action_search)
                     )
                 }
         }

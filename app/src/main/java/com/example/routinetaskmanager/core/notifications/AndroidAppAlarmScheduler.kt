@@ -17,7 +17,8 @@ class AndroidAppAlarmScheduler(
         targetType: NotificationTargetType,
         targetId: Long,
         scheduledAtMillis: Long,
-        requestCode: Int
+        requestCode: Int,
+        precision: AlarmPrecision
     ): Boolean {
         if (scheduledAtMillis <= System.currentTimeMillis()) {
             return false
@@ -38,7 +39,8 @@ class AndroidAppAlarmScheduler(
 
         return scheduleSafely(
             triggerAtMillis = scheduledAtMillis,
-            pendingIntent = pendingIntent
+            pendingIntent = pendingIntent,
+            precision = precision
         )
     }
 
@@ -105,13 +107,28 @@ class AndroidAppAlarmScheduler(
 
     private fun scheduleSafely(
         triggerAtMillis: Long,
-        pendingIntent: PendingIntent
+        pendingIntent: PendingIntent,
+        precision: AlarmPrecision
     ): Boolean {
-        if (!permissionChecker.canScheduleExactAlarms()) {
-            return scheduleInexact(
+        return when (precision) {
+            AlarmPrecision.INEXACT -> scheduleInexact(
                 triggerAtMillis = triggerAtMillis,
                 pendingIntent = pendingIntent
             )
+
+            AlarmPrecision.EXACT -> scheduleExact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
+        }
+    }
+
+    private fun scheduleExact(
+        triggerAtMillis: Long,
+        pendingIntent: PendingIntent
+    ): Boolean {
+        if (!permissionChecker.canScheduleExactAlarms()) {
+            return false
         }
 
         return runCatching {
@@ -121,12 +138,7 @@ class AndroidAppAlarmScheduler(
                 pendingIntent
             )
             true
-        }.getOrElse {
-            scheduleInexact(
-                triggerAtMillis = triggerAtMillis,
-                pendingIntent = pendingIntent
-            )
-        }
+        }.getOrDefault(false)
     }
 
     private fun scheduleInexact(

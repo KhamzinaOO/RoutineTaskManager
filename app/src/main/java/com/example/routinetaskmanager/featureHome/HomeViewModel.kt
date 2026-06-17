@@ -2,7 +2,10 @@ package com.example.routinetaskmanager.featureHome
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
+import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundStartResult
+import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
@@ -62,19 +65,36 @@ class HomeViewModel(
             runCatching {
                 reminderCommandUseCase.startWorkSession()
             }.onSuccess { sessionState ->
-                sessionState.startedAtMillis?.let(workSessionForegroundController::start)
+                val foregroundStarted = sessionState.startedAtMillis
+                    ?.let { startedAtMillis ->
+                        handleForegroundServiceStart(
+                            startedAtMillis = startedAtMillis,
+                            rollbackSessionOnFailure = true
+                        )
+                    }
+                    ?: true
+
+                if (!foregroundStarted) {
+                    return@onSuccess
+                }
 
                 val message = when {
                     sessionState.scheduledNotificationCount == 0 -> {
-                        "Work session started. No session reminders scheduled"
+                        UiText.StringResource(R.string.work_session_started_no_session_reminders)
                     }
 
                     wasActive -> {
-                        "Work session reminders restarted: ${sessionState.scheduledNotificationCount}"
+                        UiText.PluralResource(
+                            R.plurals.work_session_restarted_count,
+                            sessionState.scheduledNotificationCount
+                        )
                     }
 
                     else -> {
-                        "Work session started. Scheduled reminders: ${sessionState.scheduledNotificationCount}"
+                        UiText.PluralResource(
+                            R.plurals.work_session_started_scheduled_count,
+                            sessionState.scheduledNotificationCount
+                        )
                     }
                 }
 
@@ -82,7 +102,8 @@ class HomeViewModel(
             }.onFailure { throwable ->
                 sendEffect(
                     HomeEffect.ShowMessage(
-                        throwable.message ?: "Failed to start work session"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
                     )
                 )
             }.also {
@@ -103,11 +124,12 @@ class HomeViewModel(
                 reminderCommandUseCase.endWorkSession()
             }.onSuccess {
                 workSessionForegroundController.stop()
-                sendEffect(HomeEffect.ShowMessage("Work session ended"))
+                sendEffect(HomeEffect.ShowMessage(UiText.StringResource(R.string.work_session_ended)))
             }.onFailure { throwable ->
                 sendEffect(
                     HomeEffect.ShowMessage(
-                        throwable.message ?: "Failed to end work session"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_end_work_session)
                     )
                 )
             }.also {
@@ -119,15 +141,7 @@ class HomeViewModel(
     fun onNotificationPermissionDenied() {
         sendEffect(
             HomeEffect.ShowMessage(
-                "Notifications are disabled. Enable them in settings to receive reminders"
-            )
-        )
-    }
-
-    fun onExactAlarmAccessDenied() {
-        sendEffect(
-            HomeEffect.ShowMessage(
-                "Exact alarm access is off. Reminders may arrive a little later"
+                UiText.StringResource(R.string.notifications_disabled_enable_settings)
             )
         )
     }
@@ -149,7 +163,41 @@ class HomeViewModel(
     private fun ensureForegroundServiceForActiveSession() {
         workSessionManager.state.value.startedAtMillis?.let { startedAtMillis ->
             if (workSessionManager.state.value.isActive) {
-                workSessionForegroundController.start(startedAtMillis)
+                viewModelScope.launch {
+                    handleForegroundServiceStart(
+                        startedAtMillis = startedAtMillis,
+                        rollbackSessionOnFailure = false
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun handleForegroundServiceStart(
+        startedAtMillis: Long,
+        rollbackSessionOnFailure: Boolean
+    ): Boolean {
+        return when (workSessionForegroundController.start(startedAtMillis)) {
+            WorkSessionForegroundStartResult.Started -> true
+            is WorkSessionForegroundStartResult.Failed -> {
+                if (rollbackSessionOnFailure) {
+                    runCatching {
+                        reminderCommandUseCase.endWorkSession()
+                    }
+                }
+
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        UiText.StringResource(
+                            if (rollbackSessionOnFailure) {
+                                R.string.error_failed_start_work_session_service
+                            } else {
+                                R.string.error_failed_restore_work_session_service
+                            }
+                        )
+                    )
+                )
+                false
             }
         }
     }
@@ -179,7 +227,8 @@ class HomeViewModel(
             }.onFailure { throwable ->
                 sendEffect(
                     HomeEffect.ShowMessage(
-                        throwable.message ?: "Failed to load reminders"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_load_reminders)
                     )
                 )
             }
@@ -214,14 +263,14 @@ class HomeViewModel(
         }
     }
 
-    private fun buildGreeting(): String {
+    private fun buildGreeting(): UiText {
         val hour = LocalTime.now().hour
 
         return when (hour) {
-            in 5..11 -> "Good morning!"
-            in 12..16 -> "Good afternoon!"
-            in 17..21 -> "Good evening!"
-            else -> "Good night!"
+            in 5..11 -> UiText.StringResource(R.string.greeting_morning)
+            in 12..16 -> UiText.StringResource(R.string.greeting_afternoon)
+            in 17..21 -> UiText.StringResource(R.string.greeting_evening)
+            else -> UiText.StringResource(R.string.greeting_night)
         }
     }
 
@@ -236,5 +285,5 @@ class HomeViewModel(
 }
 
 sealed interface HomeEffect {
-    data class ShowMessage(val message: String) : HomeEffect
+    data class ShowMessage(val message: UiText) : HomeEffect
 }

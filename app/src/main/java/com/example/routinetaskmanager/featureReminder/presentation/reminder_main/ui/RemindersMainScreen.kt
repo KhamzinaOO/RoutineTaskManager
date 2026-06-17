@@ -23,13 +23,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
 import com.example.routinetaskmanager.core.presentation.ui.dateTime.WeekCarousel
 import com.example.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
-import com.example.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
-import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureHome.ScheduleRow
@@ -58,38 +59,21 @@ fun RemindersMainScreen(
     val context = LocalContext.current
     val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
 
-    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
-        onGranted = {
-            onIntent(ReminderMainIntent.SessionButtonClick)
-        },
-        onDenied = {
-            onIntent(ReminderMainIntent.ExactAlarmAccessDenied)
-        },
-        onDeniedWithAction = {
-            showActionMessage(
-                "Exact alarm access is required to start a work session",
-                "Settings"
-            ) {
-                openExactAlarmSettings(context)
-            }
-        }
-    )
-
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
-            requestExactAlarmAccess()
+            onIntent(ReminderMainIntent.SessionButtonClick)
         },
         onDenied = {
             onIntent(ReminderMainIntent.NotificationPermissionDenied)
         },
         onDeniedWithAction = { action ->
             val actionLabel = when (action) {
-                PermissionDeniedAction.RetryRequest -> "Retry"
-                PermissionDeniedAction.OpenSettings -> "Settings"
+                PermissionDeniedAction.RetryRequest -> context.getString(R.string.action_retry)
+                PermissionDeniedAction.OpenSettings -> context.getString(R.string.action_settings)
             }
 
             showActionMessage(
-                "Notifications are required to start a work session",
+                context.getString(R.string.notifications_required_for_session),
                 actionLabel
             ) {
                 when (action) {
@@ -223,9 +207,11 @@ fun RemindersMainScreen(
                 modifier = Modifier
                     .padding(top = 16.dp)
                     .fillMaxWidth(),
-                text = "Reminders not found",
+                text = stringResource(R.string.empty_reminders),
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = MaterialTheme.colorScheme.outlineVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

@@ -1,5 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model
 
+import androidx.annotation.StringRes
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 
 data class ReminderFilter(
@@ -10,7 +12,7 @@ data class ReminderFilter(
 data class ReminderRepeatTypeUi(
     val id : Int,
     val repeatType : ReminderRepeatType?,
-    val repeatTypeName : String
+    @StringRes val repeatTypeNameRes : Int
 )
 
 fun ReminderRepeatType.toRepeatTypeUi(): ReminderRepeatTypeUi {
@@ -18,22 +20,22 @@ fun ReminderRepeatType.toRepeatTypeUi(): ReminderRepeatTypeUi {
         ReminderRepeatType.ON_SCHEDULE_PERIOD -> ReminderRepeatTypeUi(
             id = 0,
             repeatType = this,
-            repeatTypeName =  "On schedule (period)"
+            repeatTypeNameRes = R.string.repeat_type_on_schedule_period
         )
         ReminderRepeatType.ON_SCHEDULE_CERTAIN -> ReminderRepeatTypeUi(
             id = 1,
             repeatType = this,
-            repeatTypeName = "On schedule (certain time)"
+            repeatTypeNameRes = R.string.repeat_type_on_schedule_certain
         )
         ReminderRepeatType.DURING_SESSION_PERIOD -> ReminderRepeatTypeUi(
             id = 2,
             repeatType = this,
-            repeatTypeName = "During session"
+            repeatTypeNameRes = R.string.repeat_type_during_session
         )
         ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> ReminderRepeatTypeUi(
             id = 3,
             repeatType = this,
-            repeatTypeName = "After another activity"
+            repeatTypeNameRes = R.string.repeat_type_after_another
         )
     }
 }

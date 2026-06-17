@@ -3,6 +3,7 @@ package com.example.routinetaskmanager.core.notifications
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -12,6 +13,7 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
     private val appNotificationManager: AppNotificationManager by inject()
     private val notificationTriggerRouter: NotificationTriggerRouter by inject()
     private val scheduledNotificationDao: ScheduledNotificationDao by inject()
+    private val dispatcherProvider: DispatcherProvider by inject()
 
     override fun onReceive(
         context: Context,
@@ -52,11 +54,27 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             Int.MIN_VALUE
         )
 
-        goAsync {
+        goAsync(dispatcherProvider) {
+            val scheduledNotification = if (requestCode != Int.MIN_VALUE) {
+                scheduledNotificationDao.getByRequestCode(requestCode)
+            } else {
+                null
+            }
+
+            val occurrenceKind = scheduledNotification
+                ?.occurrenceKind
+                ?.let { value ->
+                    runCatching {
+                        NotificationOccurrenceKind.valueOf(value)
+                    }.getOrNull()
+                }
+                ?: NotificationOccurrenceKind.REGULAR
+
             val payload = notificationTriggerRouter.buildPayloadOrNull(
                 targetType = targetType,
                 targetId = targetId,
-                scheduledAtMillis = scheduledAtMillis
+                scheduledAtMillis = scheduledAtMillis,
+                occurrenceKind = occurrenceKind
             )
 
             if (payload != null) {
@@ -66,7 +84,8 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
                     notificationTriggerRouter.onNotificationShown(
                         targetType = targetType,
                         targetId = targetId,
-                        scheduledAtMillis = scheduledAtMillis
+                        scheduledAtMillis = scheduledAtMillis,
+                        occurrenceKind = occurrenceKind
                     )
                 }
             }

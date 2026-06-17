@@ -2,7 +2,10 @@ package com.example.routinetaskmanager.featureReminder.presentation.reminder_mai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
+import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundStartResult
+import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
@@ -72,7 +75,8 @@ class ReminderMainViewModel(
             }.onFailure { throwable ->
                 sendEffect(
                     ReminderMainEffect.ShowMessage(
-                        throwable.message ?: "Failed to load reminders"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_load_reminders)
                     )
                 )
             }
@@ -106,20 +110,13 @@ class ReminderMainViewModel(
             is ReminderMainIntent.EndSessionButtonClick -> {
                 endSession()
             }
-            is ReminderMainIntent.ExactAlarmAccessDenied -> {
-                sendEffect(
-                    ReminderMainEffect.ShowMessage(
-                        "Exact alarm access is off. Reminders may arrive a little later"
-                    )
-                )
-            }
             is ReminderMainIntent.MenuButtonClick -> {
                 sendEffect(ReminderMainEffect.OpenDrawer)
             }
             is ReminderMainIntent.NotificationPermissionDenied -> {
                 sendEffect(
                     ReminderMainEffect.ShowMessage(
-                        "Notifications are disabled. Enable them in settings to receive reminders"
+                        UiText.StringResource(R.string.notifications_disabled_enable_settings)
                     )
                 )
             }
@@ -159,7 +156,12 @@ class ReminderMainViewModel(
     private fun ensureForegroundServiceForActiveSession() {
         workSessionManager.state.value.startedAtMillis?.let { startedAtMillis ->
             if (workSessionManager.state.value.isActive) {
-                workSessionForegroundController.start(startedAtMillis)
+                viewModelScope.launch {
+                    handleForegroundServiceStart(
+                        startedAtMillis = startedAtMillis,
+                        rollbackSessionOnFailure = false
+                    )
+                }
             }
         }
     }
@@ -184,19 +186,36 @@ class ReminderMainViewModel(
             runCatching {
                 reminderCommandUseCase.startWorkSession()
             }.onSuccess { sessionState ->
-                sessionState.startedAtMillis?.let(workSessionForegroundController::start)
+                val foregroundStarted = sessionState.startedAtMillis
+                    ?.let { startedAtMillis ->
+                        handleForegroundServiceStart(
+                            startedAtMillis = startedAtMillis,
+                            rollbackSessionOnFailure = true
+                        )
+                    }
+                    ?: true
+
+                if (!foregroundStarted) {
+                    return@onSuccess
+                }
 
                 val message = when {
                     sessionState.scheduledNotificationCount == 0 -> {
-                        "Work session started. No session reminders scheduled"
+                        UiText.StringResource(R.string.work_session_started_no_session_reminders)
                     }
 
                     wasActive -> {
-                        "Work session reminders restarted: ${sessionState.scheduledNotificationCount}"
+                        UiText.PluralResource(
+                            R.plurals.work_session_restarted_count,
+                            sessionState.scheduledNotificationCount
+                        )
                     }
 
                     else -> {
-                        "Work session started. Scheduled reminders: ${sessionState.scheduledNotificationCount}"
+                        UiText.PluralResource(
+                            R.plurals.work_session_started_scheduled_count,
+                            sessionState.scheduledNotificationCount
+                        )
                     }
                 }
 
@@ -204,11 +223,41 @@ class ReminderMainViewModel(
             }.onFailure { throwable ->
                 sendEffect(
                     ReminderMainEffect.ShowMessage(
-                        throwable.message ?: "Failed to start work session"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
                     )
                 )
             }.also {
                 _uiState.update { it.copy(isSessionActionInProgress = false) }
+            }
+        }
+    }
+
+    private suspend fun handleForegroundServiceStart(
+        startedAtMillis: Long,
+        rollbackSessionOnFailure: Boolean
+    ): Boolean {
+        return when (workSessionForegroundController.start(startedAtMillis)) {
+            WorkSessionForegroundStartResult.Started -> true
+            is WorkSessionForegroundStartResult.Failed -> {
+                if (rollbackSessionOnFailure) {
+                    runCatching {
+                        reminderCommandUseCase.endWorkSession()
+                    }
+                }
+
+                sendEffect(
+                    ReminderMainEffect.ShowMessage(
+                        UiText.StringResource(
+                            if (rollbackSessionOnFailure) {
+                                R.string.error_failed_start_work_session_service
+                            } else {
+                                R.string.error_failed_restore_work_session_service
+                            }
+                        )
+                    )
+                )
+                false
             }
         }
     }
@@ -225,11 +274,16 @@ class ReminderMainViewModel(
                 reminderCommandUseCase.endWorkSession()
             }.onSuccess {
                 workSessionForegroundController.stop()
-                sendEffect(ReminderMainEffect.ShowMessage("Work session ended"))
+                sendEffect(
+                    ReminderMainEffect.ShowMessage(
+                        UiText.StringResource(R.string.work_session_ended)
+                    )
+                )
             }.onFailure { throwable ->
                 sendEffect(
                     ReminderMainEffect.ShowMessage(
-                        throwable.message ?: "Failed to end work session"
+                        throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_end_work_session)
                     )
                 )
             }.also {

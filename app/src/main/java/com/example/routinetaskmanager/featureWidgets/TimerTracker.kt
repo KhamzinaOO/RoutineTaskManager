@@ -15,7 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -45,7 +48,10 @@ fun TimerTracker(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -71,7 +77,7 @@ fun TimerTracker(
                             modifier = Modifier
                                 .size(35.dp),
                             icon = painterResource(R.drawable.ic_refresh),
-                            contentDescription = "refresh",
+                            contentDescription = stringResource(R.string.action_refresh),
                             color = MaterialTheme.colorScheme.surfaceDim,
                             onClick = onRepeatClick
                         )
@@ -86,7 +92,7 @@ fun TimerTracker(
                             modifier = Modifier
                                 .size(44.dp),
                             icon = painterResource(R.drawable.ic_play_arrow),
-                            contentDescription = "refresh",
+                            contentDescription = stringResource(R.string.action_start),
                             tint = MaterialTheme.colorScheme.onPrimary,
                             color = MaterialTheme.colorScheme.primary,
                             onClick = onStartClick
@@ -102,7 +108,7 @@ fun TimerTracker(
                             modifier = Modifier
                                 .size(35.dp),
                             icon = painterResource(R.drawable.ic_pause),
-                            contentDescription = "refresh",
+                            contentDescription = stringResource(R.string.action_stop),
                             color = MaterialTheme.colorScheme.surfaceDim,
                             onClick = onEndClick
                         )

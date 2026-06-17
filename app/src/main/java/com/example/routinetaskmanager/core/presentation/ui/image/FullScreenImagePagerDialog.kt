@@ -21,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil3.compose.AsyncImage
+import com.example.routinetaskmanager.R
 
 @Composable
 fun FullscreenImagePagerDialog(
@@ -82,7 +84,7 @@ fun FullscreenImagePagerDialog(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Закрыть",
+                    contentDescription = stringResource(R.string.action_close),
                     tint = Color.White
                 )
             }

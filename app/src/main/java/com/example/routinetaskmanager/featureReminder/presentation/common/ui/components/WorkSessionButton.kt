@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -25,10 +26,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 
@@ -43,18 +47,22 @@ fun WorkSessionButton(
     onStartClick: () -> Unit,
     onEndClick: () -> Unit
 ) {
-    val actionLabel = if (isActive) "Stop work session" else "Start work session"
+    val actionLabel = if (isActive) {
+        stringResource(R.string.work_session_stop)
+    } else {
+        stringResource(R.string.work_session_start)
+    }
 
     WorkSessionButtonContainer(
         modifier = modifier,
-        topText = if (isActive) timer else "Start work session",
+        topText = if (isActive) timer else stringResource(R.string.work_session_start),
         topTextStyle = if (isActive) {
             MaterialTheme.typography.titleLarge
         } else {
             MaterialTheme.typography.bodyMedium
         },
         bottomText = if (isActive) {
-            "work session"
+            stringResource(R.string.work_session_active_label)
         } else {
             pluralStringResource(
                 R.plurals.work_session_reminders_count,
@@ -105,6 +113,7 @@ fun WorkSessionButtonContainer(
 
     Card(
         modifier = modifier
+            .widthIn(max = 320.dp)
             .clip(shape)
             .clickable(
                 enabled = enabled,
@@ -131,15 +140,24 @@ fun WorkSessionButtonContainer(
             horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End)
         ) {
             Column(
+                modifier = Modifier.weight(1f, fill = false),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = topText,
-                    style = topTextStyle
+                    style = topTextStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false,
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = bottomText,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false,
+                    textAlign = TextAlign.Center
                 )
             }
 

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import androidx.core.content.edit
 
 class WorkSessionManager(
     context: Context,
@@ -51,6 +52,8 @@ class WorkSessionManager(
 
     suspend fun startOrRestartSession(): WorkSessionState {
         val startedAtMillis = _state.value.startedAtMillis ?: System.currentTimeMillis()
+        val expiresAtMillis = startedAtMillis + MAX_SESSION_DURATION_MILLIS
+
         val result = reminderSessionNotificationUseCase.startSession(
             startedAt = startedAtMillis.toLocalDateTime()
         )
@@ -58,6 +61,7 @@ class WorkSessionManager(
         val newState = WorkSessionState(
             isActive = true,
             startedAtMillis = startedAtMillis,
+            expiresAtMillis = expiresAtMillis,
             sessionReminderCount = result.sessionReminderCount,
             scheduledNotificationCount = result.scheduledNotificationCount
         )
@@ -98,25 +102,46 @@ class WorkSessionManager(
     private fun loadPersistedState(): WorkSessionState {
         val startedAtMillis = prefs.getLong(KEY_STARTED_AT_MILLIS, 0L)
             .takeIf { it > 0L }
+            ?: return WorkSessionState()
 
-        return if (startedAtMillis == null) {
-            WorkSessionState()
-        } else {
-            WorkSessionState(
-                isActive = true,
-                startedAtMillis = startedAtMillis
-            )
+        val savedExpiresAtMillis = prefs.getLong(KEY_EXPIRES_AT_MILLIS, 0L)
+            .takeIf { it > 0L }
+
+        val expiresAtMillis = savedExpiresAtMillis
+            ?: (startedAtMillis + MAX_SESSION_DURATION_MILLIS)
+
+        val now = System.currentTimeMillis()
+
+        if (now >= expiresAtMillis) {
+            clearPersistedState()
+            return WorkSessionState()
+        }
+
+        return WorkSessionState(
+            isActive = true,
+            startedAtMillis = startedAtMillis,
+            expiresAtMillis = expiresAtMillis
+        )
+    }
+
+
+    private fun persistState(state: WorkSessionState) {
+        prefs.edit {
+            if (state.isActive && state.startedAtMillis != null && state.expiresAtMillis != null) {
+                putLong(KEY_STARTED_AT_MILLIS, state.startedAtMillis)
+                putLong(KEY_EXPIRES_AT_MILLIS, state.expiresAtMillis)
+            } else {
+                remove(KEY_STARTED_AT_MILLIS)
+                remove(KEY_EXPIRES_AT_MILLIS)
+            }
         }
     }
 
-    private fun persistState(state: WorkSessionState) {
-        prefs.edit().apply {
-            if (state.isActive && state.startedAtMillis != null) {
-                putLong(KEY_STARTED_AT_MILLIS, state.startedAtMillis)
-            } else {
-                remove(KEY_STARTED_AT_MILLIS)
-            }
-        }.apply()
+    private fun clearPersistedState() {
+        prefs.edit {
+            remove(KEY_STARTED_AT_MILLIS)
+                .remove(KEY_EXPIRES_AT_MILLIS)
+        }
     }
 
     private fun Long.toLocalDateTime(): LocalDateTime {
@@ -128,12 +153,16 @@ class WorkSessionManager(
     private companion object {
         const val PREFS_NAME = "work_session"
         const val KEY_STARTED_AT_MILLIS = "started_at_millis"
+        const val KEY_EXPIRES_AT_MILLIS = "expires_at_millis"
+
+        val MAX_SESSION_DURATION_MILLIS: Long = java.time.Duration.ofHours(24).toMillis()
     }
 }
 
 data class WorkSessionState(
     val isActive: Boolean = false,
     val startedAtMillis: Long? = null,
+    val expiresAtMillis: Long? = null,
     val sessionReminderCount: Int = 0,
     val scheduledNotificationCount: Int = 0
 )

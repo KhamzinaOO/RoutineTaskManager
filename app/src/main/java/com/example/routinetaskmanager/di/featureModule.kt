@@ -23,7 +23,6 @@ val featureHomeModule = module {
 }
 
 val featureReminderModule = module {
-    viewModelOf(::CreateEditReminderViewModel)
     viewModelOf(::ReminderMainViewModel)
     viewModelOf(::AllRemindersViewModel)
     viewModel { (id : Long?)->

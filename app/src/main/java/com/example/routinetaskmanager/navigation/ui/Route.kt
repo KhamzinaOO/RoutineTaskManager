@@ -6,27 +6,27 @@ import kotlinx.serialization.Serializable
 sealed interface Route
 
 sealed interface TopRoute : Route {
-    val label : String
+    val labelRes : Int
     val icon : Int
 }
 
 data object Home : TopRoute {
-    override val label = "Home"
+    override val labelRes = R.string.nav_home
     override val icon = R.drawable.ic_home
 }
 
 data object Widgets : TopRoute {
-    override val label = "Widgets"
+    override val labelRes = R.string.nav_widgets
     override val icon = R.drawable.ic_dashboard
 }
 
 data object Reminders : TopRoute {
-    override val label = "Reminders"
+    override val labelRes = R.string.nav_reminders
     override val icon = R.drawable.ic_schedule
 }
 
 data object Tasks : TopRoute {
-    override val label = "Tasks"
+    override val labelRes = R.string.nav_tasks
     override val icon = R.drawable.ic_calendar
 }
 

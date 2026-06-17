@@ -24,10 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
 import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenu
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
+import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.mapper.toMiniCardUi
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersIntent
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersUiState
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.ui.components.ReminderMiniCard
@@ -52,7 +56,7 @@ fun AllRemindersScreen(
         chrome = AppChrome(
             topBar = {
                 CommonAppBarWithMenuButtonAndDropdown(
-                    title = "All reminders",
+                    title = stringResource(R.string.all_reminders_title),
                     onMenuButtonClick = { onIntent(AllRemindersIntent.OnMenuButtonClick)},
                     onSearchButtonClick = {
 
@@ -85,7 +89,7 @@ fun AllRemindersScreen(
             values = uiState.repeatTypeFilterList.map {
                 DropdownMenuItemUi(
                     id = it.id,
-                    name = it.repeatTypeName
+                    name = stringResource(it.repeatTypeNameRes)
                 )
             }
         )
@@ -111,7 +115,7 @@ fun AllRemindersScreen(
                                     openedReminderId = reminder.id
                                 }
                             ),
-                        reminder = reminder
+                        reminder = reminder.toMiniCardUi()
                     )
                     ReminderActionsMenu(
                         expanded = openedReminderId == reminder.id,
@@ -119,9 +123,9 @@ fun AllRemindersScreen(
                             openedReminderId = null
                         },
                         values = listOf(
-                            DropdownMenuItemUi(id = 0, name = "Open"),
-                            DropdownMenuItemUi(id = 1, name = "Edit"),
-                            DropdownMenuItemUi(id = 2, name = "Delete")
+                            DropdownMenuItemUi(id = 0, name = stringResource(R.string.action_open)),
+                            DropdownMenuItemUi(id = 1, name = stringResource(R.string.action_edit)),
+                            DropdownMenuItemUi(id = 2, name = stringResource(R.string.action_delete))
                         ),
                         onItemClick = { item ->
                             openedReminderId = null
@@ -161,7 +165,11 @@ fun ReminderActionsMenu(
         values.forEach { item ->
             DropdownMenuItem(
                 text = {
-                    Text(text = item.name)
+                    Text(
+                        text = item.name,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 },
                 onClick = {
                     onItemClick(item)

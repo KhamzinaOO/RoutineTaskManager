@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -22,8 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -51,6 +58,7 @@ fun InfoInstructionsTextField(
         placeholder = placeholder,
         value = value,
         onValueChange = onValueChange,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         checkboxTextFields = {
             if(isCheckboxEnabled){
                 CheckboxInstructions(
@@ -65,7 +73,7 @@ fun InfoInstructionsTextField(
         additionalBottomIcon = {
             CommonIconButton(
                 icon = painterResource(R.drawable.ic_check_box),
-                contentDescription = "Checkbox",
+                contentDescription = stringResource(R.string.task_checkbox),
                 tint = MaterialTheme.colorScheme.primary,
                 onClick = onCheckboxIconClick
             )
@@ -84,10 +92,13 @@ fun CheckboxInstructions(
     onAddCheckboxClick : () -> Unit,
     onDeleteClick : (CheckboxFiledValue) -> Unit
 ){
+    val focusManager = LocalFocusManager.current
+
     Column(
 
     ) {
-        values.forEach {value ->
+        values.forEachIndexed { index, value ->
+            val isLastField = index == values.lastIndex
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -104,6 +115,14 @@ fun CheckboxInstructions(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedContainerColor = MaterialTheme.colorScheme.background
                     ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = if (isLastField) ImeAction.Done else ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                        onDone = { focusManager.clearFocus() }
+                    ),
                     onValueChange = { newValue ->
                         onValueChange(value.copy(text = newValue))
                     }
@@ -112,7 +131,7 @@ fun CheckboxInstructions(
                 CommonIconButton(
                     icon = Icons.Default.Delete,
                     color = Color.Transparent,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.action_delete),
                     tint = MaterialTheme.colorScheme.secondary,
                     onClick = { onDeleteClick(value) }
                 )
@@ -134,14 +153,19 @@ fun CheckboxInstructions(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ){
-                Text("Add checkbox instruction")
+                Text(
+                    modifier = Modifier.weight(1f, fill = false),
+                    text = stringResource(R.string.task_add_checkbox_instruction),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Box(
                     modifier = Modifier.size(50.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        "Add"
+                        stringResource(R.string.action_add)
                     )
                 }
             }

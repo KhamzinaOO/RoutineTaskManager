@@ -7,17 +7,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 
 @Composable
 fun ReminderStatusLabel(
     isEnabled: Boolean
 ) {
     val text = if (isEnabled) {
-        "On"
+        stringResource(R.string.status_on)
     } else {
-        "Off"
+        stringResource(R.string.status_off)
     }
 
     val containerColor = if (isEnabled) {
@@ -44,7 +47,10 @@ fun ReminderStatusLabel(
             ),
             text = text,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }

@@ -30,6 +30,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -65,13 +67,16 @@ fun TimePicker(
                     Text(
                         modifier = Modifier.padding(4.dp),
                         text = startTime,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
                     )
                 }
 
                 Icon(
                     Icons.AutoMirrored.Default.ArrowForward,
-                    contentDescription = "Arrow Forward",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary
                 )
 
@@ -83,7 +88,10 @@ fun TimePicker(
                     Text(
                         modifier = Modifier.padding(4.dp),
                         text = endTime,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
                     )
                 }
             }
@@ -94,8 +102,10 @@ fun TimePicker(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "All day",
-                style = MaterialTheme.typography.bodyLarge
+                text = stringResource(R.string.time_all_day),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Checkbox(
@@ -136,7 +146,7 @@ fun DateTimePicker(
 
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowForward,
-                    contentDescription = "Arrow Forward",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(24.dp)
                 )
@@ -154,8 +164,10 @@ fun DateTimePicker(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "All day",
-                style = MaterialTheme.typography.bodyLarge
+                text = stringResource(R.string.time_all_day),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
             Checkbox(
@@ -182,14 +194,20 @@ private fun DateTimeBlock(
     ) {
         Text(
             text = date,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
 
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = time,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }
@@ -241,7 +259,10 @@ fun DayOfWeekBox(
     ) {
         Text(
             text = day,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+            softWrap = false
         )
     }
 }
@@ -261,13 +282,16 @@ fun SelectedTimeBox(
         ) {
             Text(
                 text = text,
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
             )
         }
 
         CommonIconButton(
             icon = painterResource(R.drawable.ic_clear),
-            contentDescription = "clear",
+            contentDescription = stringResource(R.string.action_clear),
             tint = MaterialTheme.colorScheme.primary,
             onClick = onClearClick,
             modifier = Modifier

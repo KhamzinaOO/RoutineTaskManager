@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
@@ -37,7 +38,7 @@ fun ReminderNotificationRow(
             text = if (notificationEnabled) {
                 notificationMode.toUiLabel()
             } else {
-                "Notifications off"
+                stringResource(R.string.notifications_off)
             }
         )
     }
@@ -77,10 +78,11 @@ private fun ReminderMetaChip(
     }
 }
 
+@Composable
 private fun NotificationMode.toUiLabel(): String {
     return when (this) {
-        NotificationMode.SOUND -> "Sound"
-        NotificationMode.VIBRATION -> "Vibration"
-        NotificationMode.MUTE -> "Silent"
+        NotificationMode.SOUND -> stringResource(R.string.notification_mode_sound)
+        NotificationMode.VIBRATION -> stringResource(R.string.notification_mode_vibration)
+        NotificationMode.MUTE -> stringResource(R.string.notification_mode_silent)
     }
 }

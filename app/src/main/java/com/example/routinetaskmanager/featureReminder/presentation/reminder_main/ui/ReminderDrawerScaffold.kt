@@ -19,7 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -57,7 +60,13 @@ fun RemindersDrawerScaffold(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 NavigationDrawerItem(
-                    label = { Text("Main") },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.drawer_main),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     selected = selectedItem == RemindersDrawerItem.Main,
                     onClick = {
                         closeDrawerAndNavigate(onMainClick)
@@ -65,7 +74,13 @@ fun RemindersDrawerScaffold(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("All Reminders") },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.drawer_all_reminders),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     selected = selectedItem == RemindersDrawerItem.AllReminders,
                     onClick = {
                         closeDrawerAndNavigate(onAllRemindersClick)

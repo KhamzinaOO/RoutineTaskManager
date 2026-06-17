@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
@@ -25,6 +28,8 @@ fun InstructionsTextField(
     onValueChange : (String) -> Unit,
     checkboxTextFields : @Composable (ColumnScope.() -> Unit) = {},
     additionalBottomIcon : @Composable (RowScope.() -> Unit) = {},
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     onTakePictureClick : () -> Unit
 ){
     Card(
@@ -41,6 +46,11 @@ fun InstructionsTextField(
                 placeholder = placeholder,
                 value = value,
                 onValueChange = onValueChange,
+                singleLine = false,
+                minLines = 3,
+                maxLines = 6,
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions
             )
 
             checkboxTextFields()
@@ -54,7 +64,7 @@ fun InstructionsTextField(
 
                 CommonIconButton(
                     icon = painterResource(R.drawable.ic_add_photo),
-                    contentDescription = "Add photo",
+                    contentDescription = stringResource(R.string.add_photo_content_description),
                     tint = MaterialTheme.colorScheme.primary,
                     onClick = onTakePictureClick
                 )
@@ -62,4 +72,3 @@ fun InstructionsTextField(
         }
     }
 }
-

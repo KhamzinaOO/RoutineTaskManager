@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
@@ -36,7 +37,7 @@ fun ImageThumbnail(
             .memoryCacheKey(imagePath)
             .build(),
         contentScale = ContentScale.Crop,
-        contentDescription = "Image",
+        contentDescription = stringResource(R.string.image_content_description),
         modifier = modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(12.dp))
@@ -62,7 +63,7 @@ fun ImageThumbnailWithClearIcon(
         )
         CommonIconButton(
             icon = painterResource(R.drawable.ic_clear),
-            contentDescription = "clear",
+            contentDescription = stringResource(R.string.action_clear),
             tint = MaterialTheme.colorScheme.primary,
             onClick = onClearClick,
             modifier = Modifier

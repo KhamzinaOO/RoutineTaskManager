@@ -1,6 +1,8 @@
 package com.example.routinetaskmanager.featureReminder.domain.useCase
 
+import com.example.routinetaskmanager.core.notifications.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.NotificationTargetType
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
@@ -85,7 +87,8 @@ class ReminderSessionNotificationUseCase(
                     targetType = NotificationTargetType.REMINDER,
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
-                    requestCode = requestCode
+                    requestCode = requestCode,
+                    precision = AlarmPrecision.INEXACT
                 )
 
                 if (!wasScheduled) {
@@ -98,7 +101,8 @@ class ReminderSessionNotificationUseCase(
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    channelId = occurrence.reminder.notificationMode.toReminderChannelId()
+                    channelId = occurrence.reminder.notificationMode.toReminderChannelId(),
+                    occurrenceKind = NotificationOccurrenceKind.SESSION.name
                 )
             }
 
@@ -131,18 +135,18 @@ class ReminderSessionNotificationUseCase(
 
     private suspend fun cancelSessionNotifications() {
         val sessionNotifications =
-            scheduledNotificationDao.getByTargetTypeAndOccurrenceKeyPrefix(
+            scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
                 targetType = NotificationTargetType.REMINDER.name,
-                occurrenceKeyPrefix = SESSION_OCCURRENCE_KEY_PREFIX
+                occurrenceKind = NotificationOccurrenceKind.SESSION.name
             )
 
         sessionNotifications.forEach { notification ->
             alarmScheduler.cancel(notification.requestCode)
         }
 
-        scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKeyPrefix(
+        scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKind(
             targetType = NotificationTargetType.REMINDER.name,
-            occurrenceKeyPrefix = SESSION_OCCURRENCE_KEY_PREFIX
+            occurrenceKind = NotificationOccurrenceKind.SESSION.name
         )
     }
 

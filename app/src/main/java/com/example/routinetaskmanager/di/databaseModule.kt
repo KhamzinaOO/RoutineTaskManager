@@ -3,6 +3,7 @@ package com.example.routinetaskmanager.di
 import androidx.room.Room
 import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.AppDatabase
+import com.example.routinetaskmanager.data.local.MIGRATION_3_4
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -20,6 +21,7 @@ val databaseModule = module {
                 println("SQL Query: $sqlQuery | Args: $bindArgs")
             }, Executors.newSingleThreadExecutor())
             .fallbackToDestructiveMigration(false)
+            .addMigrations(MIGRATION_3_4)
             .build()
     }
 

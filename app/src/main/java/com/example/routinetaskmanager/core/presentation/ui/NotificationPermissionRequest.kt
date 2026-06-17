@@ -22,6 +22,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.routinetaskmanager.R
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -93,10 +96,10 @@ fun rememberNotificationPermissionRequest(
                 onDeniedWithAction?.invoke(PermissionDeniedAction.RetryRequest) ?: onDenied()
             },
             title = {
-                Text(text = "Allow notifications?")
+                Text(text = stringResource(R.string.notification_permission_title))
             },
             text = {
-                Text(text = "Work sessions use notifications to remind you at the selected times.")
+                Text(text = stringResource(R.string.notification_permission_rationale))
             },
             confirmButton = {
                 TextButton(
@@ -105,7 +108,11 @@ fun rememberNotificationPermissionRequest(
                         launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                 ) {
-                    Text(text = "Allow")
+                    Text(
+                        text = stringResource(R.string.action_allow),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             },
             dismissButton = {
@@ -115,7 +122,11 @@ fun rememberNotificationPermissionRequest(
                         onDeniedWithAction?.invoke(PermissionDeniedAction.RetryRequest) ?: onDenied()
                     }
                 ) {
-                    Text(text = "Not now")
+                    Text(
+                        text = stringResource(R.string.action_not_now),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         )
@@ -199,10 +210,10 @@ fun rememberExactAlarmAccessRequest(
                 onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
             },
             title = {
-                Text(text = "Allow exact reminders?")
+                Text(text = stringResource(R.string.exact_alarm_permission_title))
             },
             text = {
-                Text(text = "Exact alarm access helps work-session reminders arrive at the selected minute.")
+                Text(text = stringResource(R.string.exact_alarm_permission_rationale))
             },
             confirmButton = {
                 TextButton(
@@ -211,7 +222,11 @@ fun rememberExactAlarmAccessRequest(
                         openExactAlarmSettings()
                     }
                 ) {
-                    Text(text = "Open settings")
+                    Text(
+                        text = stringResource(R.string.action_open_settings),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             },
             dismissButton = {
@@ -221,7 +236,11 @@ fun rememberExactAlarmAccessRequest(
                         onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
                     }
                 ) {
-                    Text(text = "Not now")
+                    Text(
+                        text = stringResource(R.string.action_not_now),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         )

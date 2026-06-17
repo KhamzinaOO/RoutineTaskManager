@@ -6,7 +6,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.model.asString
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderEffect
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
@@ -23,6 +25,7 @@ fun CreateEditReminderRoute(
     onBackClick : () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
             viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
@@ -62,7 +65,7 @@ fun CreateEditReminderRoute(
                 }
 
                 is CreateEditReminderEffect.ShowMessage -> {
-                    showMessage(effect.message)
+                    showMessage(effect.message.asString(context))
                 }
             }
         }

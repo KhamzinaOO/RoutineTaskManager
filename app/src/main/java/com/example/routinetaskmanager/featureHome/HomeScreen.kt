@@ -19,12 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.presentation.model.asString
 import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
 import com.example.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
-import com.example.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
-import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
@@ -51,38 +52,21 @@ fun HomeScreen(
     val context = LocalContext.current
     val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
 
-    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
-        onGranted = {
-            viewModel.onSessionButtonClick()
-        },
-        onDenied = {
-            viewModel.onExactAlarmAccessDenied()
-        },
-        onDeniedWithAction = {
-            showActionMessage(
-                "Exact alarm access is required to start a work session",
-                "Settings"
-            ) {
-                openExactAlarmSettings(context)
-            }
-        }
-    )
-
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
-            requestExactAlarmAccess()
+            viewModel.onSessionButtonClick()
         },
         onDenied = {
             viewModel.onNotificationPermissionDenied()
         },
         onDeniedWithAction = { action ->
             val actionLabel = when (action) {
-                PermissionDeniedAction.RetryRequest -> "Retry"
-                PermissionDeniedAction.OpenSettings -> "Settings"
+                PermissionDeniedAction.RetryRequest -> context.getString(R.string.action_retry)
+                PermissionDeniedAction.OpenSettings -> context.getString(R.string.action_settings)
             }
 
             showActionMessage(
-                "Notifications are required to start a work session",
+                context.getString(R.string.notifications_required_for_session),
                 actionLabel
             ) {
                 when (action) {
@@ -97,7 +81,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is HomeEffect.ShowMessage -> showMessage(effect.message)
+                is HomeEffect.ShowMessage -> showMessage(effect.message.asString(context))
             }
         }
     }
@@ -107,7 +91,7 @@ fun HomeScreen(
         chrome = AppChrome(
             topBar = {
                 HomeTopBar(
-                    greeting = uiState.greetingText,
+                    greeting = uiState.greetingText.asString(context),
                     date = uiState.dateText,
                     onSettingClick = {
 
@@ -163,14 +147,18 @@ fun HomeScreen(
             }?.let { reminder ->
                 NextReminderCard(
                     label = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
-                    outlinedButtonText = "Skip",
+                    outlinedButtonText = stringResource(R.string.action_skip),
                     onOutlinedButtonClick = {},
-                    filledButtonText = "Do now",
+                    filledButtonText = stringResource(R.string.action_do_now),
                     onFilledButtonClick = {}
                 )
             }
 
             var isLeftButtonPicked by remember { mutableStateOf(true) }
+            val sampleTask = stringResource(R.string.home_sample_task)
+            val sampleDescription = stringResource(R.string.home_sample_description)
+            val sampleLongDescription = stringResource(R.string.home_sample_long_description)
+            val allDay = stringResource(R.string.time_all_day)
             ScheduleItemsCard(
                 reminders = uiState.reminders.map { reminder ->
                     ReminderCardUi(
@@ -181,31 +169,31 @@ fun HomeScreen(
                 },
                 tasks = listOf(
                     TaskCardUi(
-                        text = "task",
+                        text = sampleTask,
                         status = true,
                         time = "10:00",
-                        duration = "All day",
-                        description = "description"
+                        duration = allDay,
+                        description = sampleDescription
                     ),
                     TaskCardUi(
-                        text = "task",
+                        text = sampleTask,
                         status = true,
                         time = "11:00",
                         duration = "11:00-15:00",
-                        description = "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescription"
+                        description = sampleLongDescription
                     ),
                     TaskCardUi(
-                        text = "task",
+                        text = sampleTask,
                         status = false,
                         time = "12:00",
-                        duration = "All day",
-                        description = "description"
+                        duration = allDay,
+                        description = sampleDescription
                     ),TaskCardUi(
-                        text = "task",
+                        text = sampleTask,
                         status = false,
                         time = "13:00",
-                        duration = "All day",
-                        description = "description"
+                        duration = allDay,
+                        description = sampleDescription
                     ),
 
                     ),
@@ -224,10 +212,10 @@ fun HomeScreen(
                         .weight(1f)
                         .fillMaxWidth()
                         .height(170.dp),
-                    title = "Drink water",
-                    progressText = "0.2/2L",
+                    title = stringResource(R.string.home_drink_water),
+                    progressText = stringResource(R.string.home_water_progress),
                     progress = 0.1f,
-                    textFieldHint = "ml",
+                    textFieldHint = stringResource(R.string.home_water_unit_ml),
                     onAddButtonClicked = {}
                 )
                 TimerTracker(
@@ -235,7 +223,7 @@ fun HomeScreen(
                         .weight(1f)
                         .fillMaxWidth()
                         .height(170.dp),
-                    title = "Pomodoro focus",
+                    title = stringResource(R.string.home_pomodoro_focus),
                     progressText = "00:00",
                     progress = 0f,
                     onStartClick = {},

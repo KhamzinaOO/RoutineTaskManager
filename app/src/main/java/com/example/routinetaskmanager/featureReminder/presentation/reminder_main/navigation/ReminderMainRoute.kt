@@ -3,7 +3,9 @@ package com.example.routinetaskmanager.featureReminder.presentation.reminder_mai
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.model.asString
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersMainScreen
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainViewModel
@@ -18,6 +20,7 @@ fun ReminderMainRoute(
     showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit){
         viewModel.effect.collect { effect ->
@@ -31,7 +34,7 @@ fun ReminderMainRoute(
                 }
 
                 is ReminderMainEffect.ShowMessage -> {
-                    showMessage(effect.message)
+                    showMessage(effect.message.asString(context))
                 }
             }
         }

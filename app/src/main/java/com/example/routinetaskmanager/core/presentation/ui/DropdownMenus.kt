@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
@@ -111,7 +112,7 @@ private fun CommonDropdownMenuBase(
             enabled = isEnabled,
             shape = RoundedCornerShape(32.dp),
             colors = buttonColors,
-            contentPadding = PaddingValues(start = 16.dp, end = 8.dp),
+            contentPadding = PaddingValues(start = 12.dp, end = 8.dp),
             onClick = { expanded = true }
         ) {
             DropdownButtonContent(
@@ -133,7 +134,11 @@ private fun CommonDropdownMenuBase(
 
                 DropdownMenuItem(
                     text = {
-                        Text(text = item.name)
+                        Text(
+                            text = item.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     trailingIcon = {
                         if (selected) {
@@ -167,6 +172,7 @@ private fun DropdownButtonContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -179,7 +185,13 @@ private fun DropdownButtonContent(
                     Spacer(modifier = Modifier.size(24.dp))
                 }
 
-                Text(text = text)
+                Text(
+                    text = text,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false
+                )
             }
 
             Icon(
@@ -192,7 +204,12 @@ private fun DropdownButtonContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = text)
+            Text(
+                text = text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
+            )
 
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,

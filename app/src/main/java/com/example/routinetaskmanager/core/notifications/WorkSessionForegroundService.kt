@@ -85,8 +85,8 @@ class WorkSessionForegroundService : Service(), KoinComponent {
             AppNotificationConstants.CHANNEL_WORK_SESSION_ID
         )
             .setSmallIcon(R.drawable.ic_schedule)
-            .setContentTitle("Work session")
-            .setContentText("Timer is running")
+            .setContentTitle(getString(R.string.work_session_title))
+            .setContentText(getString(R.string.work_session_running_text))
             .setContentIntent(contentIntent)
             .setWhen(startedAtMillis)
             .setUsesChronometer(true)
@@ -94,7 +94,7 @@ class WorkSessionForegroundService : Service(), KoinComponent {
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .addAction(R.drawable.ic_pause, "Stop", stopPendingIntent)
+            .addAction(R.drawable.ic_pause, getString(R.string.action_stop), stopPendingIntent)
             .build()
     }
 

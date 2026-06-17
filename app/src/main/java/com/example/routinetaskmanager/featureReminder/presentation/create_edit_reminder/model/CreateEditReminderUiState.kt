@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model
 
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
+import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
@@ -21,5 +22,5 @@ data class CreateEditReminderUiState(
     val duringSessionState: DuringSessionPeriodRepeatUi = DuringSessionPeriodRepeatUi(),
     val notificationMode: NotificationMode = NotificationMode.SOUND,
     val imagePaths: List<String> = emptyList(),
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )

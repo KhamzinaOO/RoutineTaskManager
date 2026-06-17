@@ -3,9 +3,12 @@ package com.example.routinetaskmanager.featureReminder.presentation.create_edit_
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -17,8 +20,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.DropdownMenuItemUi
 import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenuLarge
 import com.example.routinetaskmanager.core.presentation.ui.CommonTextFiled
@@ -55,6 +64,8 @@ fun CreateReminderScreen(
 
     val duringSessionState = uiState.duringSessionState
 
+    val focusManager = LocalFocusManager.current
+
     var selectedImageIndex by rememberSaveable {
         mutableStateOf<Int?>(null)
     }
@@ -68,8 +79,8 @@ fun CreateReminderScreen(
             topBar = {
                 CommonTopAppBarWithArrowBack(
                     title = when (uiState.screenMode) {
-                        is CreateEditReminderMode.Create -> "Create new reminder"
-                        is CreateEditReminderMode.Edit -> "Edit reminder"
+                        is CreateEditReminderMode.Create -> stringResource(R.string.reminder_create_title)
+                        is CreateEditReminderMode.Edit -> stringResource(R.string.reminder_edit_title)
                     },
                     onBackClick = { onIntent(CreateEditReminderIntent.BackClicked) }
                 )
@@ -84,24 +95,32 @@ fun CreateReminderScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         TitleText(
-            text = "Name"
+            text = stringResource(R.string.field_name)
         )
         CommonTextFiled(
-            placeholder = "Enter a reminder name",
+            placeholder = stringResource(R.string.field_reminder_name_placeholder),
             value = uiState.name,
             onValueChange = { value ->
                 onIntent(CreateEditReminderIntent.NameChanged(value))
-            }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            )
         )
         TitleText(
-            text = "Instructions"
+            text = stringResource(R.string.field_instructions)
         )
         InstructionsTextField(
-            placeholder = "Instructions",
+            placeholder = stringResource(R.string.field_instructions),
             value = uiState.instructions,
             onValueChange = { value ->
                 onIntent(CreateEditReminderIntent.InstructionsChanged(value))
             },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
             onTakePictureClick = {
                 onIntent(CreateEditReminderIntent.TakePictureClicked)
             }
@@ -126,7 +145,7 @@ fun CreateReminderScreen(
         }
 
         TitleText(
-            text = "Repeat type"
+            text = stringResource(R.string.field_repeat_type)
         )
         CommonDropdownMenuLarge(
             selectedId = uiState.repeatType.ordinal,
@@ -138,10 +157,10 @@ fun CreateReminderScreen(
             },
             values = repeatTypeDropdownValues(),
             icon = Icons.Default.Search,
-            contentDescription = "Search"
+            contentDescription = stringResource(R.string.action_search)
         )
         TitleText(
-            text = "Repeat time"
+            text = stringResource(R.string.field_repeat_time)
         )
 
         when (repeatType) {
@@ -204,7 +223,7 @@ fun CreateReminderScreen(
         }
 
         TitleText(
-            text = "Notification sound"
+            text = stringResource(R.string.field_notification_sound)
         )
 
         NotificationSegmentedButton(
@@ -219,31 +238,37 @@ fun CreateReminderScreen(
             contentAlignment = Alignment.Center
         ) {
             Button(
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 onClick = {
                     onIntent(CreateEditReminderIntent.SaveClicked)
                 }
             ) {
                 Text(
-                    text = "Save"
+                    text = stringResource(R.string.action_save),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    softWrap = false
                 )
             }
         }
     }
 }
 
+@Composable
 private fun repeatTypeDropdownValues(): List<DropdownMenuItemUi> {
     return listOf(
-        DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_PERIOD.ordinal, "On schedule (period)"),
-        DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_CERTAIN.ordinal, "On schedule (certain time)"),
-        DropdownMenuItemUi(ReminderRepeatType.DURING_SESSION_PERIOD.ordinal, "During session"),
-        DropdownMenuItemUi(ReminderRepeatType.AFTER_ANOTHER_ACTIVITY.ordinal, "After another activity")
+        DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_PERIOD.ordinal, stringResource(R.string.repeat_type_on_schedule_period)),
+        DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_CERTAIN.ordinal, stringResource(R.string.repeat_type_on_schedule_certain)),
+        DropdownMenuItemUi(ReminderRepeatType.DURING_SESSION_PERIOD.ordinal, stringResource(R.string.repeat_type_during_session)),
+        DropdownMenuItemUi(ReminderRepeatType.AFTER_ANOTHER_ACTIVITY.ordinal, stringResource(R.string.repeat_type_after_another))
     )
 }
 
+@Composable
 private fun repeatUnitDropdownValues(): List<DropdownMenuItemUi> {
     return listOf(
-        DropdownMenuItemUi(RepeatUnit.MINUTES.ordinal, "minutes"),
-        DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, "hours"),
-        DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, "days")
+        DropdownMenuItemUi(RepeatUnit.MINUTES.ordinal, stringResource(R.string.repeat_unit_minutes)),
+        DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, stringResource(R.string.repeat_unit_hours)),
+        DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, stringResource(R.string.repeat_unit_days))
     )
 }

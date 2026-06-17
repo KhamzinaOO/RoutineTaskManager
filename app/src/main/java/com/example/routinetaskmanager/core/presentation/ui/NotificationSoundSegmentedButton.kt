@@ -23,7 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 
 @Composable
@@ -49,7 +52,7 @@ fun NotificationSegmentedButton(
         NotificationButton(
             modifier = Modifier.weight(1f),
             isSelected = isSoundButtonActive,
-            text = "Sound",
+            text = stringResource(R.string.notification_mode_sound),
             contentColor = if(isSoundButtonActive) activeButtonContentColor else inactiveButtonContentColor,
             containerColor = if(isSoundButtonActive) activeButtonContainerColor else inactiveButtonContainerColor,
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 0.dp, bottomStart = 32.dp, bottomEnd = 0.dp)
@@ -60,7 +63,7 @@ fun NotificationSegmentedButton(
         NotificationButton(
             modifier = Modifier.weight(1f),
             isSelected = isVibrationButtonActive,
-            text = "Vibration",
+            text = stringResource(R.string.notification_mode_vibration),
             contentColor = if(isVibrationButtonActive) activeButtonContentColor else inactiveButtonContentColor,
             containerColor = if(isVibrationButtonActive) activeButtonContainerColor else inactiveButtonContainerColor,
             shape = RectangleShape
@@ -71,7 +74,7 @@ fun NotificationSegmentedButton(
         NotificationButton(
             modifier = Modifier.weight(1f),
             isSelected = isMuteButtonActive,
-            text = "Mute",
+            text = stringResource(R.string.notification_mode_mute),
             contentColor = if(isMuteButtonActive) activeButtonContentColor else inactiveButtonContentColor,
             containerColor = if(isMuteButtonActive) activeButtonContainerColor else inactiveButtonContainerColor,
             shape = RoundedCornerShape(topStart = 0.dp, topEnd = 32.dp, bottomStart = 0.dp, bottomEnd = 32.dp)
@@ -117,12 +120,15 @@ fun NotificationButton(
                 Icon(
                     modifier = Modifier.size(18.dp),
                     imageVector = Icons.Default.Check,
-                    contentDescription = "check"
+                    contentDescription = stringResource(R.string.action_check)
                 )
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                softWrap = false
             )
         }
     }

@@ -3,7 +3,9 @@ package com.example.routinetaskmanager.featureReminder.presentation.all_reminder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.routinetaskmanager.core.presentation.model.asString
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -18,6 +20,7 @@ fun AllRemindersRoute(
     showSnackBar : (String) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -39,7 +42,7 @@ fun AllRemindersRoute(
                     onReminderClick(effect.id)
                 }
                 is AllRemindersEffect.ShowMessage -> {
-                    showSnackBar(effect.message)
+                    showSnackBar(effect.message.asString(context))
                 }
             }
         }

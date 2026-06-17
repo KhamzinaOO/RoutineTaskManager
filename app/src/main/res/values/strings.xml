@@ -1,7 +1,175 @@
 <resources>
     <string name="app_name">RoutineTaskManager</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_widgets">Widgets</string>
+    <string name="nav_reminders">Reminders</string>
+    <string name="nav_tasks">Tasks</string>
+
+    <string name="action_add">Add</string>
+    <string name="action_allow">Allow</string>
+    <string name="action_back">Back</string>
+    <string name="action_calendar">Calendar</string>
+    <string name="action_check">Check</string>
+    <string name="action_checked">Checked</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_close">Close</string>
+    <string name="action_decrement">Decrement</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_do_now">Do now</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_increment">Increment</string>
+    <string name="action_menu">Menu</string>
+    <string name="action_not_now">Not now</string>
+    <string name="action_open">Open</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_save">Save</string>
+    <string name="action_search">Search</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="state_unchecked">Unchecked</string>
+
+    <string name="greeting_morning">Good morning!</string>
+    <string name="greeting_afternoon">Good afternoon!</string>
+    <string name="greeting_evening">Good evening!</string>
+    <string name="greeting_night">Good night!</string>
+
+    <string name="home_sample_task">task</string>
+    <string name="home_sample_description">description</string>
+    <string name="home_sample_long_description">descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescription</string>
+    <string name="home_drink_water">Drink water</string>
+    <string name="home_water_progress">0.2/2 L</string>
+    <string name="home_water_unit_ml">ml</string>
+    <string name="home_pomodoro_focus">Pomodoro focus</string>
+
+    <string name="tab_reminders">Reminders</string>
+    <string name="tab_tasks">Tasks</string>
+    <string name="task_checkbox">Checkbox</string>
+    <string name="task_add_checkbox_instruction">Add checkbox instruction</string>
+    <string name="empty_reminders">Reminders not found</string>
+    <string name="empty_tasks">Tasks not found</string>
+
+    <string name="all_reminders_title">All reminders</string>
+    <string name="drawer_main">Main</string>
+    <string name="drawer_all_reminders">All Reminders</string>
+    <string name="filter_all">All</string>
+    <string name="status_on">On</string>
+    <string name="status_off">Off</string>
+    <string name="notifications_off">Notifications off</string>
+
+    <string name="reminder_create_title">Create new reminder</string>
+    <string name="reminder_edit_title">Edit reminder</string>
+    <string name="field_name">Name</string>
+    <string name="field_reminder_name_placeholder">Enter a reminder name</string>
+    <string name="field_instructions">Instructions</string>
+    <string name="field_repeat_type">Repeat type</string>
+    <string name="field_repeat_time">Repeat time</string>
+    <string name="field_notification_sound">Notification sound</string>
+
+    <string name="repeat_type_on_schedule_period">On schedule (period)</string>
+    <string name="repeat_type_on_schedule_certain">On schedule (certain time)</string>
+    <string name="repeat_type_during_session">During session</string>
+    <string name="repeat_type_after_another">After another activity</string>
+    <string name="repeat_label_after_another_reminder">After another reminder</string>
+    <string name="repeat_label_on_schedule_period_compact">On schedule · Period</string>
+    <string name="repeat_label_on_schedule_certain_compact">On schedule · Certain time</string>
+    <string name="repeat_detail_after">After %1$d %2$s</string>
+    <string name="repeat_detail_every">Every %1$d %2$s · %3$s</string>
+    <string name="repeat_days_never">Never</string>
+    <string name="repeat_days_every_day">Every day</string>
+    <string name="repeat_days_weekdays">Weekdays</string>
+    <string name="repeat_days_weekend">Weekend</string>
+    <plurals name="repeat_times_count">
+        <item quantity="one">%d time · %s</item>
+        <item quantity="other">%d times · %s</item>
+    </plurals>
+    <plurals name="repeat_unit_minutes_count">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
+    <plurals name="repeat_unit_hours_count">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="repeat_unit_days_count">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
+    <string name="repeat_mode_default">Default</string>
+    <string name="repeat_mode_advanced">Advanced</string>
+    <string name="repeat_wait_time">Wait time</string>
+    <string name="repeat_every">Every</string>
+    <string name="repeat_notification_time">Notification time</string>
+    <string name="repeat_unit_minutes">minutes</string>
+    <string name="repeat_unit_hours">hours</string>
+    <string name="repeat_unit_days">days</string>
+    <string name="time_all_day">All day</string>
+
+    <string name="notification_mode_sound">Sound</string>
+    <string name="notification_mode_vibration">Vibration</string>
+    <string name="notification_mode_mute">Mute</string>
+    <string name="notification_mode_silent">Silent</string>
+
+    <string name="image_content_description">Image</string>
+    <string name="add_photo_content_description">Add photo</string>
+
+    <string name="next_reminder_label">next reminder</string>
+    <string name="work_session_title">Work session</string>
+    <string name="work_session_running_text">Timer is running</string>
+    <string name="work_session_start">Start work session</string>
+    <string name="work_session_active_label">work session</string>
+    <string name="work_session_stop">Stop work session</string>
+    <string name="work_session_started_no_session_reminders">Work session started. No session reminders scheduled</string>
+    <plurals name="work_session_restarted_count">
+        <item quantity="one">Work session reminder restarted: %d</item>
+        <item quantity="other">Work session reminders restarted: %d</item>
+    </plurals>
+    <plurals name="work_session_started_scheduled_count">
+        <item quantity="one">Work session started. Scheduled reminder: %d</item>
+        <item quantity="other">Work session started. Scheduled reminders: %d</item>
+    </plurals>
+    <string name="work_session_ended">Work session ended</string>
     <plurals name="work_session_reminders_count">
         <item quantity="one">%d reminder in today\'s session</item>
         <item quantity="other">%d reminders in today\'s session</item>
     </plurals>
+
+    <string name="notification_permission_title">Allow notifications?</string>
+    <string name="notification_permission_rationale">Work sessions use notifications to remind you at the selected times.</string>
+    <string name="exact_alarm_permission_title">Allow exact reminders?</string>
+    <string name="exact_alarm_permission_rationale">Exact alarm access lets selected reminders arrive at the exact minute.</string>
+    <string name="notifications_required_for_session">Notifications are required to start a work session</string>
+    <string name="notifications_disabled_enable_settings">Notifications are disabled. Enable them in settings to receive reminders</string>
+    <string name="notifications_disabled_saved_without_alerts">Notifications are disabled. Reminder was saved without scheduled alerts</string>
+
+    <string name="notification_channel_sound_name">notifications</string>
+    <string name="notification_channel_sound_description">Notification reminders with sound</string>
+    <string name="notification_channel_vibration_name">notifications vibration</string>
+    <string name="notification_channel_vibration_description">Notification reminders with vibration</string>
+    <string name="notification_channel_silent_name">notifications silent</string>
+    <string name="notification_channel_silent_description">Silent notification reminders</string>
+    <string name="notification_channel_work_session_name">work session</string>
+    <string name="notification_channel_work_session_description">Active work session timer</string>
+
+    <string name="error_failed_load_reminders">Failed to load reminders</string>
+    <string name="error_failed_start_work_session">Failed to start work session</string>
+    <string name="error_failed_start_work_session_service">Android blocked the foreground timer. Work session was not started. Please try again.</string>
+    <string name="error_failed_restore_work_session_service">Android blocked the foreground timer for the active work session.</string>
+    <string name="error_failed_end_work_session">Failed to end work session</string>
+    <string name="error_failed_save_reminder">Failed to save reminder</string>
+    <string name="error_failed_schedule_reminder_notifications">Failed to schedule reminder notifications</string>
+    <string name="error_failed_load_reminder">Failed to load reminder</string>
+    <string name="error_failed_delete_reminder">Failed to delete reminder</string>
+    <string name="error_enter_reminder_name">Enter reminder name</string>
+    <string name="error_repeat_interval_number">Repeat interval must be a number</string>
+    <string name="error_repeat_interval_positive">Repeat interval must be greater than zero</string>
+    <string name="error_time_window_valid">Time window must be valid</string>
+    <string name="error_start_before_end">Start time must be before end time</string>
+    <string name="error_add_valid_time">Add at least one valid time</string>
+    <string name="error_select_day">Select at least one day</string>
+    <string name="error_enable_day">Enable at least one day</string>
 </resources>

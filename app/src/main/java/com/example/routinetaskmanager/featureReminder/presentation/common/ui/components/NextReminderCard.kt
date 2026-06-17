@@ -15,9 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonButton
 import com.example.routinetaskmanager.core.presentation.ui.CommonOutlinedButton
 
@@ -48,15 +51,20 @@ fun NextReminderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "next reminder",
+                    text = stringResource(R.string.next_reminder_label),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 time?.let {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
                     )
                 }
             }
@@ -67,18 +75,22 @@ fun NextReminderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
-
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodyMedium,
                         textDecoration = TextDecoration.Underline,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (reminderTime != null) {
                         Text(
                             text = reminderTime,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

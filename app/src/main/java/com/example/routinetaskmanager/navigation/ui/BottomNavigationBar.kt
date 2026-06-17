@@ -26,7 +26,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 
@@ -54,12 +56,13 @@ fun BottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             items.forEach { item ->
+                val label = stringResource(item.labelRes)
                 BottomAppBarItem(
                     icon = painterResource(item.icon),
-                    contentDescription = item.label,
+                    contentDescription = label,
                     containerColor = if(selectedItem == item) selectedContainerColor else unselectedContainerColor,
                     contentColor = if(selectedItem == item) selectedContentColor else unselectedContentColor,
-                    text = item.label,
+                    text = label,
                     onClick = { onItemClick(item) }
                 )
             }
@@ -117,7 +120,10 @@ fun BottomAppBarItem(
             text = text,
             color = contentColor,
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            softWrap = false
         )
     }
 }
