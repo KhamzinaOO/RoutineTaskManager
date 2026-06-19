@@ -6,7 +6,7 @@ import android.content.Context
 class AppNotificationManager(
     private val context: Context,
     private val notificationFactory: AppNotificationFactory,
-    private val permissionChecker: AppNotificationPermissionChecker
+    private val permissionChecker: AppNotificationRuntimeAccessChecker
 ) {
 
     private val systemNotificationManager: NotificationManager =

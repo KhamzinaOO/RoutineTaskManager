@@ -1,8 +1,9 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.data.local.notifications
 
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
 
 @Entity(
     tableName = "scheduled_notifications",
@@ -15,13 +16,14 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ScheduledNotificationEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
     val requestCode: Int,
     val targetType: String,
     val targetId: Long,
     val scheduledAtMillis: Long,
     val occurrenceKey: String,
-    val channelId: String,
+//    val channelId: String,
     val occurrenceKind: String = NotificationOccurrenceKind.REGULAR.name,
     val createdAtMillis: Long = System.currentTimeMillis()
 )

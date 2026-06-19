@@ -30,12 +30,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.core.net.toUri
 
 enum class PermissionDeniedAction {
     RetryRequest,
     OpenSettings
 }
-
+//TODO(add "NotificationManagerCompat.from(context).areNotificationsEnabled()")
 @Composable
 fun rememberNotificationPermissionRequest(
     onGranted: () -> Unit,
@@ -164,7 +165,7 @@ fun rememberExactAlarmAccessRequest(
         awaitingSettingsResult = true
 
         val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-            data = Uri.parse("package:${context.packageName}")
+            data = "package:${context.packageName}".toUri()
         }
 
         runCatching {
@@ -250,15 +251,14 @@ fun rememberExactAlarmAccessRequest(
 }
 
 fun openAppNotificationSettings(context: Context) {
-    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
         }
-    } else {
-        appDetailsSettingsIntent(context)
-    }
 
-    context.startActivity(intent)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    runCatching {
+        context.startActivity(intent)
+    }
 }
 
 fun openExactAlarmSettings(context: Context) {
@@ -267,10 +267,14 @@ fun openExactAlarmSettings(context: Context) {
     }
 
     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-        data = Uri.parse("package:${context.packageName}")
+        data = "package:${context.packageName}".toUri()
     }
 
-    context.startActivity(intent)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    runCatching {
+        context.startActivity(intent)
+    }
 }
 
 private fun notifyNotificationPermissionDenied(
@@ -279,7 +283,7 @@ private fun notifyNotificationPermissionDenied(
     onDenied: () -> Unit,
     onDeniedWithAction: ((PermissionDeniedAction) -> Unit)?
 ) {
-    val action = if (canRequestNotificationPermissionAgain(context, activity)) {
+    val action = if (canRequestNotificationPermissionAgain(activity)) {
         PermissionDeniedAction.RetryRequest
     } else {
         PermissionDeniedAction.OpenSettings
@@ -289,7 +293,6 @@ private fun notifyNotificationPermissionDenied(
 }
 
 private fun canRequestNotificationPermissionAgain(
-    context: Context,
     activity: Activity?
 ): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -306,7 +309,7 @@ private fun canRequestNotificationPermissionAgain(
 
 private fun appDetailsSettingsIntent(context: Context): Intent {
     return Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = Uri.parse("package:${context.packageName}")
+        data = "package:${context.packageName}".toUri()
     }
 }
 

@@ -4,8 +4,8 @@ import com.example.routinetaskmanager.core.notifications.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.NotificationTargetType
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.core.notifications.toReminderChannelId
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
@@ -75,6 +75,7 @@ class RescheduleRemindersUseCase(
                     scheduledAtMillis = scheduledAtMillis
                 )
 
+                //IS NOT UNIQUE!!!
                 val requestCode = occurrenceKey.hashCode()
 
                 val reminder = reminders.first {
@@ -101,7 +102,7 @@ class RescheduleRemindersUseCase(
                     targetId = occurrence.reminderId,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    channelId = channelId,
+                    //channelId = channelId,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR.name
                 )
             }

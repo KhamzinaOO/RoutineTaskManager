@@ -4,8 +4,8 @@ import com.example.routinetaskmanager.core.notifications.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.NotificationTargetType
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.core.notifications.toReminderChannelId
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
@@ -101,7 +101,7 @@ class ReminderSessionNotificationUseCase(
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    channelId = occurrence.reminder.notificationMode.toReminderChannelId(),
+                    //channelId = occurrence.reminder.notificationMode.toReminderChannelId(),
                     occurrenceKind = NotificationOccurrenceKind.SESSION.name
                 )
             }

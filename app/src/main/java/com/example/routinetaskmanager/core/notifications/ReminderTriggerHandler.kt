@@ -1,5 +1,6 @@
 package com.example.routinetaskmanager.core.notifications
 
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager

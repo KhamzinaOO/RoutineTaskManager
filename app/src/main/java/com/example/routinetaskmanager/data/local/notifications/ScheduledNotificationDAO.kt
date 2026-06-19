@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.data.local.notifications
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -108,30 +108,6 @@ interface ScheduledNotificationDao {
     suspend fun deleteByTargetTypeAndOccurrenceKind(
         targetType: String,
         occurrenceKind: String
-    )
-
-    @Query(
-        """
-        DELETE FROM scheduled_notifications
-        WHERE targetType = :targetType
-        AND occurrenceKey LIKE :occurrenceKeyPrefix || '%'
-        """
-    )
-    suspend fun deleteByTargetTypeAndOccurrenceKeyPrefix(
-        targetType: String,
-        occurrenceKeyPrefix: String
-    )
-
-    @Query(
-        """
-        DELETE FROM scheduled_notifications
-        WHERE targetType = :targetType
-        AND occurrenceKey NOT LIKE :occurrenceKeyPrefix || '%'
-        """
-    )
-    suspend fun deleteByTargetTypeExceptOccurrenceKeyPrefix(
-        targetType: String,
-        occurrenceKeyPrefix: String
     )
 
     @Query(

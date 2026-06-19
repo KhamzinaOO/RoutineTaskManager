@@ -7,7 +7,7 @@ import android.content.Intent
 
 class AndroidAppAlarmScheduler(
     private val context: Context,
-    private val permissionChecker: AppNotificationPermissionChecker
+    private val permissionChecker: AppNotificationRuntimeAccessChecker
 ) : AppAlarmScheduler {
 
     private val alarmManager: AlarmManager =
@@ -23,7 +23,8 @@ class AndroidAppAlarmScheduler(
         if (scheduledAtMillis <= System.currentTimeMillis()) {
             return false
         }
-
+        //TODO(delegate to UseCase with adequate reason of stop)
+        //TODO(case: permission is recalled after reminder was created -> receiver should know how to recover)
         if (!permissionChecker.canPostNotifications()) {
             return false
         }
@@ -64,6 +65,7 @@ class AndroidAppAlarmScheduler(
         }
     }
 
+    //TODO(add occurrence kind)
     private fun createPendingIntent(
         targetType: NotificationTargetType,
         targetId: Long,
@@ -123,6 +125,7 @@ class AndroidAppAlarmScheduler(
         }
     }
 
+    // TODO: permission!!!!
     private fun scheduleExact(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
@@ -145,6 +148,7 @@ class AndroidAppAlarmScheduler(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
     ): Boolean {
+        //think about use smth instead of .setAndAllowWhileIdle for better battery live
         return runCatching {
             alarmManager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,

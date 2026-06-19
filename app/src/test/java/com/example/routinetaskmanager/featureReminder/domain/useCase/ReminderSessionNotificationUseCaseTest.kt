@@ -4,8 +4,8 @@ import android.net.Uri
 import com.example.routinetaskmanager.core.notifications.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.NotificationTargetType
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.core.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
+import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder

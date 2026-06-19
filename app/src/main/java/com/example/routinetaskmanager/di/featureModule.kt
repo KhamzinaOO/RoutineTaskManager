@@ -2,10 +2,16 @@ package com.example.routinetaskmanager.di
 
 import com.example.routinetaskmanager.data.storage.ImageStorage
 import com.example.routinetaskmanager.featureHome.HomeViewModel
+import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
+import com.example.routinetaskmanager.featureReminder.data.session.AndroidWorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveDayReminderOccurrencesUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
+import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveWorkSessionStateUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderSessionNotificationUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
@@ -38,6 +44,7 @@ val featureReminderModule = module {
 
     factory {
         ObserveReminderScheduleUseCase(
+            dispatcherProvider = get(),
             reminderRepository = get(),
             scheduleCalculator = get()
         )
@@ -87,6 +94,40 @@ val featureReminderModule = module {
             database = get(),
             reminderDao = get(),
             imageStorage = get()
+        )
+    }
+
+    factory {
+        ObserveWorkSessionStateUseCase(
+            workSessionManager = get()
+        )
+    }
+
+    factory {
+        ObserveDayReminderOccurrencesUseCase(
+            observeReminderScheduleUseCase = get(),
+            workSessionManager = get()
+        )
+    }
+
+    single<WorkSessionRuntimeController> {
+        AndroidWorkSessionRuntimeController(
+            foregroundController = get()
+        )
+    }
+
+    factory {
+        ToggleWorkSessionUseCase(
+            reminderCommandUseCase = get(),
+            workSessionManager = get(),
+            workSessionRuntimeController = get()
+        )
+    }
+
+    factory {
+        RestoreActiveWorkSessionRuntimeUseCase(
+            workSessionManager = get(),
+            runtimeController = get()
         )
     }
 }
