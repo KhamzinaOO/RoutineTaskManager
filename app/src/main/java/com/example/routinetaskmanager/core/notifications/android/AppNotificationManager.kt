@@ -1,7 +1,10 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.app.NotificationManager
 import android.content.Context
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationRuntimeAccessChecker
+import com.example.routinetaskmanager.core.notifications.api.NotificationPayload
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 
 class AppNotificationManager(
     private val context: Context,

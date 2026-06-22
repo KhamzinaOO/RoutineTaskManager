@@ -3,7 +3,7 @@ package com.example.routinetaskmanager.data.local.notifications
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 
 @Entity(
     tableName = "scheduled_notifications",

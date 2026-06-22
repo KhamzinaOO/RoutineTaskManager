@@ -1,9 +1,10 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
 
 class AppNotificationChannels(
     private val context: Context

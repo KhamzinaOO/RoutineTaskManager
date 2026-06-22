@@ -1,9 +1,13 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.featureReminder.application.notifications
 
+import com.example.routinetaskmanager.core.notifications.api.NotificationPayload
+import com.example.routinetaskmanager.core.notifications.api.NotificationTriggerHandler
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
+import com.example.routinetaskmanager.core.notifications.toReminderChannelId
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 import java.time.Duration
 
 class ReminderNotificationTriggerHandler(

@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.application.session
 
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeStartResult
 
 class RestoreActiveWorkSessionRuntimeUseCase(
     private val workSessionManager: WorkSessionManager,

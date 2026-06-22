@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.api
 
 data class NotificationPayload(
     val targetType : NotificationTargetType,

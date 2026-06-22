@@ -1,7 +1,7 @@
 package com.example.routinetaskmanager
 
 import android.app.Application
-import com.example.routinetaskmanager.core.notifications.AppNotificationChannels
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationChannels
 import com.example.routinetaskmanager.di.appModules
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext

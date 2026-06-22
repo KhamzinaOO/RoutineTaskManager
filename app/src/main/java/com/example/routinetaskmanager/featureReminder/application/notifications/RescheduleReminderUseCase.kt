@@ -1,9 +1,9 @@
-package com.example.routinetaskmanager.featureReminder.domain.useCase
+package com.example.routinetaskmanager.featureReminder.application.notifications
 
-import com.example.routinetaskmanager.core.notifications.AlarmPrecision
-import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
-import com.example.routinetaskmanager.core.notifications.NotificationTargetType
+import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
 import com.example.routinetaskmanager.core.notifications.toReminderChannelId

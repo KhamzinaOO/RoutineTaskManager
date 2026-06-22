@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.domain.useCase
+package com.example.routinetaskmanager.featureReminder.application.session
 
 import android.content.Context
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
@@ -14,6 +14,8 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import androidx.core.content.edit
+import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderSessionNotificationUseCase
+import java.time.Duration
 
 class WorkSessionManager(
     context: Context,
@@ -73,11 +75,15 @@ class WorkSessionManager(
     }
 
     suspend fun rescheduleActiveSessionIfNeeded(): Boolean {
+        val startedAtMillis = _state.value.startedAtMillis ?: return false
         if (!_state.value.isActive) {
             return false
         }
 
-        startOrRestartSession()
+        reminderSessionNotificationUseCase.startSession(
+            startedAt = startedAtMillis.toLocalDateTime(),
+            from = LocalDateTime.now()
+        )
 
         return true
     }
@@ -155,7 +161,7 @@ class WorkSessionManager(
         const val KEY_STARTED_AT_MILLIS = "started_at_millis"
         const val KEY_EXPIRES_AT_MILLIS = "expires_at_millis"
 
-        val MAX_SESSION_DURATION_MILLIS: Long = java.time.Duration.ofHours(24).toMillis()
+        val MAX_SESSION_DURATION_MILLIS: Long = Duration.ofHours(24).toMillis()
     }
 }
 

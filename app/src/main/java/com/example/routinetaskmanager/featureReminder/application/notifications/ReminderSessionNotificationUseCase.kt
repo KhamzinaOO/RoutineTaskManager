@@ -1,12 +1,11 @@
-package com.example.routinetaskmanager.featureReminder.domain.useCase
+package com.example.routinetaskmanager.featureReminder.application.notifications
 
-import com.example.routinetaskmanager.core.notifications.AlarmPrecision
-import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.NotificationOccurrenceKind
-import com.example.routinetaskmanager.core.notifications.NotificationTargetType
+import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
-import com.example.routinetaskmanager.core.notifications.toReminderChannelId
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
@@ -15,6 +14,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -36,13 +36,15 @@ class ReminderSessionNotificationUseCase(
     ): Flow<List<ReminderOccurrence>> {
         return reminderRepository.observeReminders()
             .map { reminders ->
+                val now = LocalDateTime.now()
                 val enabledReminders = reminders.filter { reminder ->
                     reminder.isEnabled && reminder.notificationEnabled
                 }
 
                 buildSessionOccurrences(
                     reminders = enabledReminders,
-                    startedAt = startedAt
+                    startedAt = startedAt,
+                    from = now
                 )
                     .take(MAX_SESSION_NOTIFICATIONS)
                     .map { it.toReminderOccurrence() }
@@ -50,7 +52,8 @@ class ReminderSessionNotificationUseCase(
     }
 
     suspend fun startSession(
-        startedAt: LocalDateTime = LocalDateTime.now()
+        startedAt: LocalDateTime = LocalDateTime.now(),
+        from: LocalDateTime = LocalDateTime.now()
     ): SessionScheduleResult {
         return withContext(Dispatchers.IO) {
             cancelSessionNotifications()
@@ -62,8 +65,11 @@ class ReminderSessionNotificationUseCase(
 
             val occurrences = buildSessionOccurrences(
                 reminders = reminders,
-                startedAt = startedAt
-            ).take(MAX_SESSION_NOTIFICATIONS)
+                startedAt = startedAt,
+                from = from
+            )
+                .filter { it.scheduledAt.isAfter(from) }
+                .take(MAX_SESSION_NOTIFICATIONS)
 
             val sessionReminderCount = reminders.count { reminder ->
                 reminder.hasSessionReminderFor(startedAt)
@@ -121,8 +127,8 @@ class ReminderSessionNotificationUseCase(
             reminderRepository.getAllRemindersSnapshot()
                 .count { reminder ->
                     reminder.isEnabled &&
-                        reminder.notificationEnabled &&
-                        reminder.hasSessionReminderFor(startedAt)
+                            reminder.notificationEnabled &&
+                            reminder.hasSessionReminderFor(startedAt)
                 }
         }
     }
@@ -152,26 +158,24 @@ class ReminderSessionNotificationUseCase(
 
     private fun buildSessionOccurrences(
         reminders: List<Reminder>,
-        startedAt: LocalDateTime
+        startedAt: LocalDateTime,
+        from : LocalDateTime
     ): List<SessionOccurrence> {
         val duringSession = reminders.flatMap { reminder ->
             buildDuringSessionOccurrences(
                 reminder = reminder,
-                startedAt = startedAt
+                startedAt = startedAt,
+                from = from
             )
         }
 
-        val afterAnother = buildAfterAnotherOccurrences(
-            reminders = reminders,
-            startedAt = startedAt
-        )
-
-        return (duringSession + afterAnother).sortedBy { it.scheduledAt }
+        return (duringSession).sortedBy { it.scheduledAt }
     }
 
     private fun buildDuringSessionOccurrences(
         reminder: Reminder,
-        startedAt: LocalDateTime
+        startedAt: LocalDateTime,
+        from: LocalDateTime
     ): List<SessionOccurrence> {
         val rule = reminder.repeatRule as? ReminderRepeatRule.DuringSessionPeriod
             ?: return emptyList()
@@ -187,6 +191,11 @@ class ReminderSessionNotificationUseCase(
         var current = startedAt.plus(step)
         var sequence = 0
 
+        while (!current.isAfter(from)){
+            current = current.plus(step)
+            sequence += 1
+        }
+
         while (!current.isAfter(sessionEnd) && result.size < MAX_OCCURRENCES_PER_SESSION_REMINDER) {
             result.add(
                 SessionOccurrence(
@@ -201,31 +210,6 @@ class ReminderSessionNotificationUseCase(
 
         return result
     }
-
-    private fun buildAfterAnotherOccurrences(
-        reminders: List<Reminder>,
-        startedAt: LocalDateTime
-    ): List<SessionOccurrence> {
-        var previousScheduledAt = startedAt
-
-        return reminders
-            .filter { reminder -> reminder.repeatRule is ReminderRepeatRule.AfterAnother }
-            .sortedBy { reminder -> reminder.id }
-            .mapIndexedNotNull { index, reminder ->
-                val rule = reminder.repeatRule as ReminderRepeatRule.AfterAnother
-                val waitDuration = rule.waitInterval.toDurationOrNull()
-                    ?: return@mapIndexedNotNull null
-
-                previousScheduledAt = previousScheduledAt.plus(waitDuration)
-
-                SessionOccurrence(
-                    reminder = reminder,
-                    scheduledAt = previousScheduledAt,
-                    sequence = index
-                )
-            }
-    }
-
     private fun Reminder.hasSessionReminderFor(
         startedAt: LocalDateTime
     ): Boolean {
@@ -245,7 +229,7 @@ class ReminderSessionNotificationUseCase(
         }
     }
 
-    private fun com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat<IntervalRepeat>.valueForDay(
+    private fun WeeklyRepeat<IntervalRepeat>.valueForDay(
         dayOfWeek: DayOfWeek
     ): IntervalRepeat? {
         return when (mode) {

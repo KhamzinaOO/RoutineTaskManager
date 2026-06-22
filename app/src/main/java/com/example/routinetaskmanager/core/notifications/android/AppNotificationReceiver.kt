@@ -1,16 +1,18 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.content.BroadcastReceiver
-import android.content.ContentValues.TAG
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
-import com.example.routinetaskmanager.core.notifications.AppNotificationConstants.EXTRA_REQUEST_CODE
+import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
+import com.example.routinetaskmanager.core.notifications.NotificationTriggerRouter
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
 
 class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
@@ -53,8 +55,8 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             return
         }
 
-        if (!intent.hasExtra(EXTRA_REQUEST_CODE)) return
-        val requestCode = intent.getIntExtra(EXTRA_REQUEST_CODE, 0)
+        if (!intent.hasExtra(AppNotificationConstants.EXTRA_REQUEST_CODE)) return
+        val requestCode = intent.getIntExtra(AppNotificationConstants.EXTRA_REQUEST_CODE, 0)
 
         goAsync(dispatcherProvider) {
             val scheduledNotification = if (requestCode != Int.MIN_VALUE) {
@@ -82,21 +84,21 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             if (payload != null) {
                 val wasShown = appNotificationManager.showNotification(payload)
                 //TODO: not the best delete case, need to rethink
-                if (wasShown) {
-                    notificationTriggerRouter.onNotificationShown(
-                        targetType = targetType,
-                        targetId = targetId,
-                        scheduledAtMillis = scheduledAtMillis,
-                        occurrenceKind = occurrenceKind
-                    )
-                    scheduledNotificationDao.deleteByRequestCode(requestCode)
-                }
+
+                notificationTriggerRouter.onNotificationTriggered(
+                    targetType = targetType,
+                    targetId = targetId,
+                    scheduledAtMillis = scheduledAtMillis,
+                    occurrenceKind = occurrenceKind
+                )
+                scheduledNotificationDao.deleteByRequestCode(requestCode)
+
                 if (!wasShown) {
-                    Log.w(TAG, "Notification was not shown: targetType=$targetType targetId=$targetId requestCode=$requestCode")
+                    Log.w(ContentValues.TAG, "Notification was not shown: targetType=$targetType targetId=$targetId requestCode=$requestCode")
                 }
             }
             if (payload == null) {
-                Log.w(TAG, "Notification payload is null: targetType=$targetType targetId=$targetId requestCode=$requestCode")
+                Log.w(ContentValues.TAG, "Notification payload is null: targetType=$targetType targetId=$targetId requestCode=$requestCode")
             }
         }
     }

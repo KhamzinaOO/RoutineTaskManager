@@ -1,7 +1,7 @@
 package com.example.routinetaskmanager.core.notifications
 
-import com.example.routinetaskmanager.featureReminder.domain.useCase.RescheduleRemindersUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
+import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 
 class RescheduleAllNotificationsUseCase(
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,

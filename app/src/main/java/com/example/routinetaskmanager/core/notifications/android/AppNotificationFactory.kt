@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -7,6 +7,8 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.example.routinetaskmanager.MainActivity
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
+import com.example.routinetaskmanager.core.notifications.api.NotificationPayload
 
 class AppNotificationFactory(
     private val context: Context

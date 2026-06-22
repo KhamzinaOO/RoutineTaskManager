@@ -1,9 +1,10 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
+import com.example.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 

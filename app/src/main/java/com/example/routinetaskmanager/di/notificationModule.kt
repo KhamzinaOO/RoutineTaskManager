@@ -1,16 +1,16 @@
 package com.example.routinetaskmanager.di
 
-import com.example.routinetaskmanager.core.notifications.AndroidAppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.AppNotificationChannels
-import com.example.routinetaskmanager.core.notifications.AppNotificationFactory
-import com.example.routinetaskmanager.core.notifications.AppNotificationManager
-import com.example.routinetaskmanager.core.notifications.AppNotificationRuntimeAccessChecker
+import com.example.routinetaskmanager.core.notifications.android.AndroidAppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationChannels
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationFactory
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationManager
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationRuntimeAccessChecker
 import com.example.routinetaskmanager.core.notifications.NotificationTriggerRouter
-import com.example.routinetaskmanager.core.notifications.ReminderNotificationTriggerHandler
+import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderNotificationTriggerHandler
 import com.example.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
-import com.example.routinetaskmanager.core.notifications.TaskNotificationTriggerHandler
-import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
+import com.example.routinetaskmanager.featureTask.TaskNotificationTriggerHandler
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundController
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 

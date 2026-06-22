@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.Manifest
 import android.app.AlarmManager
@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
+
 //TODO(Separate classes)
 class AppNotificationRuntimeAccessChecker(
     private val context: Context

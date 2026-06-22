@@ -1,14 +1,19 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.featureReminder.data.session
 
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
+import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.routinetaskmanager.MainActivity
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
+import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,14 +43,22 @@ class WorkSessionForegroundService : Service(), KoinComponent {
                     ?: workSessionManager.state.value.startedAtMillis
                     ?: System.currentTimeMillis()
 
-                startForeground(
-                    WORK_SESSION_NOTIFICATION_ID,
-                    createNotification(startedAtMillis)
-                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    startForeground(
+                        WORK_SESSION_NOTIFICATION_ID,
+                        createNotification(startedAtMillis),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                    )
+                }else{
+                    startForeground(
+                        WORK_SESSION_NOTIFICATION_ID,
+                        createNotification(startedAtMillis)
+                    )
+                }
             }
         }
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -56,7 +69,9 @@ class WorkSessionForegroundService : Service(), KoinComponent {
 
     private fun stopSession() {
         serviceScope.launch {
-            workSessionManager.endSession()
+            runCatching {
+                workSessionManager.endSession()
+            }.onFailure { Log.e(ContentValues.TAG, "Failed to end session", it) }
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }

@@ -16,9 +16,6 @@ val databaseModule = module {
             AppDatabase::class.java,
             "routine_task_manager.db"
         )
-            .setQueryCallback({ sqlQuery, bindArgs ->
-                println("SQL Query: $sqlQuery | Args: $bindArgs")
-            }, Executors.newSingleThreadExecutor())
             .fallbackToDestructiveMigration(false)
             .build()
     }

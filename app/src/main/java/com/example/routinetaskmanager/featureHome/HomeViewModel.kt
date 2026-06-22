@@ -3,14 +3,14 @@ package com.example.routinetaskmanager.featureHome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundController
-import com.example.routinetaskmanager.core.notifications.WorkSessionForegroundStartResult
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundController
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundStartResult
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

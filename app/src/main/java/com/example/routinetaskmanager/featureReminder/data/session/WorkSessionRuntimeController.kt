@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.featureReminder.application.session
+package com.example.routinetaskmanager.featureReminder.data.session
 
 interface WorkSessionRuntimeController {
     suspend fun start(startedAtMillis: Long): WorkSessionRuntimeStartResult

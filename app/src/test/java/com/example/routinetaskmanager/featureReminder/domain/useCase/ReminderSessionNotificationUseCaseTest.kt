@@ -1,11 +1,12 @@
 package com.example.routinetaskmanager.featureReminder.domain.useCase
 
 import android.net.Uri
-import com.example.routinetaskmanager.core.notifications.AlarmPrecision
-import com.example.routinetaskmanager.core.notifications.AppAlarmScheduler
-import com.example.routinetaskmanager.core.notifications.NotificationTargetType
+import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderSessionNotificationUseCase
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
@@ -254,24 +255,6 @@ class ReminderSessionNotificationUseCaseTest {
         ) {
             entities.removeAll {
                 it.targetType == targetType && it.occurrenceKind == occurrenceKind
-            }
-        }
-
-        override suspend fun deleteByTargetTypeAndOccurrenceKeyPrefix(
-            targetType: String,
-            occurrenceKeyPrefix: String
-        ) {
-            entities.removeAll {
-                it.targetType == targetType && it.occurrenceKey.startsWith(occurrenceKeyPrefix)
-            }
-        }
-
-        override suspend fun deleteByTargetTypeExceptOccurrenceKeyPrefix(
-            targetType: String,
-            occurrenceKeyPrefix: String
-        ) {
-            entities.removeAll {
-                it.targetType == targetType && !it.occurrenceKey.startsWith(occurrenceKeyPrefix)
             }
         }
 

@@ -1,9 +1,15 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationReceiver
+import com.example.routinetaskmanager.core.notifications.android.AppNotificationRuntimeAccessChecker
+import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 
 class AndroidAppAlarmScheduler(
     private val context: Context,
@@ -21,11 +27,6 @@ class AndroidAppAlarmScheduler(
         precision: AlarmPrecision
     ): Boolean {
         if (scheduledAtMillis <= System.currentTimeMillis()) {
-            return false
-        }
-        //TODO(delegate to UseCase with adequate reason of stop)
-        //TODO(case: permission is recalled after reminder was created -> receiver should know how to recover)
-        if (!permissionChecker.canPostNotifications()) {
             return false
         }
 

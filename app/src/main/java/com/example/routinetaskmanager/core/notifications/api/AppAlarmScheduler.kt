@@ -1,6 +1,8 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.api
 
-//TODO("add adequate failure result instead of Boolean false")
+import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
+
+//TODO : add adequate failure result instead of Boolean false
 interface AppAlarmScheduler {
 
     fun schedule(

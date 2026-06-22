@@ -1,7 +1,8 @@
 package com.example.routinetaskmanager.featureReminder.application.session
 
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeStartResult
 import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.WorkSessionManager
 
 class ToggleWorkSessionUseCase(
     private val reminderCommandUseCase: ReminderCommandUseCase,

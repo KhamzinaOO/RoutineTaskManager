@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.android
 
 import android.content.BroadcastReceiver
 import android.util.Log

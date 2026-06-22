@@ -1,5 +1,6 @@
-package com.example.routinetaskmanager.core.notifications
+package com.example.routinetaskmanager.core.notifications.api
 
+import com.example.routinetaskmanager.core.notifications.api.NotificationPayload
 
 interface NotificationTriggerHandler {
     // TODO: adequate sealed result instead of null
