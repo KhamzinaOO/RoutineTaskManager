@@ -16,7 +16,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "routine_task_manager.db"
         )
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration(true)
             .build()
     }
 

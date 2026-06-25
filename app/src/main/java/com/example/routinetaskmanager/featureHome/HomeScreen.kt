@@ -1,5 +1,6 @@
 package com.example.routinetaskmanager.featureHome
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.asString
 import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
@@ -40,24 +40,23 @@ import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
 import kotlinx.coroutines.delay
 import java.time.format.DateTimeFormatter
-import org.koin.androidx.compose.koinViewModel
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = koinViewModel(),
-    showMessage: (String) -> Unit,
+    uiState : HomeUiState,
+    onIntent: (HomeUiIntent) -> Unit,
     showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
 
     val requestNotificationPermission = rememberNotificationPermissionRequest(
         onGranted = {
-            viewModel.onSessionButtonClick()
+            onIntent(HomeUiIntent.OnSessionButtonClick)
         },
         onDenied = {
-            viewModel.onNotificationPermissionDenied()
+            onIntent(HomeUiIntent.NotificationPermissionDenied)
         },
         onDeniedWithAction = { action ->
             val actionLabel = when (action) {
@@ -77,14 +76,6 @@ fun HomeScreen(
         }
     )
     notificationPermissionRequestRef[0] = requestNotificationPermission
-
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                is HomeEffect.ShowMessage -> showMessage(effect.message.asString(context))
-            }
-        }
-    }
 
     AppChromeEffect(
         owner = Home,
@@ -133,7 +124,7 @@ fun HomeScreen(
                 timer = timerText,
                 isActive = uiState.isSessionActive,
                 isLoading = uiState.isSessionActionInProgress,
-                onEndClick = { viewModel.onEndSessionButtonClick() },
+                onEndClick = { onIntent(HomeUiIntent.OnSessionButtonClick) },
                 onStartClick = { requestNotificationPermission() }
             )
         }

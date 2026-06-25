@@ -1,27 +1,24 @@
-package com.example.routinetaskmanager.featureReminder.domain.useCase
+package com.example.routinetaskmanager.featureReminder.application.command
 
 import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
 import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
-import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
-import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionState
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.withContext
 
 class ReminderCommandUseCase(
     private val reminderRepository: ReminderRepository,
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
-    private val workSessionManager: WorkSessionManager,
     private val dispatcherProvider: DispatcherProvider
 ) {
 
     suspend fun createReminder(
-        data: ReminderSaveData
+        draft: ReminderDraft
     ): Long {
         return withContext(dispatcherProvider.io) {
-            val reminderId = reminderRepository.createReminder(data)
+            val reminderId = reminderRepository.createReminder(draft)
             rescheduleRemindersUseCase()
             reminderId
         }
@@ -29,12 +26,12 @@ class ReminderCommandUseCase(
 
     suspend fun updateReminder(
         reminderId: Long,
-        data: ReminderSaveData
+        draft: ReminderDraft
     ) {
         withContext(dispatcherProvider.io) {
             reminderRepository.updateReminder(
-                id = reminderId,
-                data = data
+                reminderId = reminderId,
+                draft = draft
             )
             rescheduleRemindersUseCase()
         }
@@ -99,16 +96,8 @@ class ReminderCommandUseCase(
     }
 
     suspend fun getReminderById(id : Long) : Reminder?{
-        return withContext(dispatcherProvider.io){
+        return withContext(dispatcherProvider.io) {
             reminderRepository.getReminderById(id)
         }
-    }
-
-    suspend fun startWorkSession(): WorkSessionState {
-        return workSessionManager.startOrRestartSession()
-    }
-
-    suspend fun endWorkSession() {
-        workSessionManager.endSession()
     }
 }

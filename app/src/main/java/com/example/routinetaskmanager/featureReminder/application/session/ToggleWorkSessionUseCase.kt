@@ -2,10 +2,8 @@ package com.example.routinetaskmanager.featureReminder.application.session
 
 import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeStartResult
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
 
 class ToggleWorkSessionUseCase(
-    private val reminderCommandUseCase: ReminderCommandUseCase,
     private val workSessionManager: WorkSessionManager,
     private val workSessionRuntimeController: WorkSessionRuntimeController
 ) {
@@ -13,13 +11,13 @@ class ToggleWorkSessionUseCase(
     suspend operator fun invoke(): ToggleWorkSessionResult {
         return runCatching {
             if (workSessionManager.state.value.isActive) {
-                reminderCommandUseCase.endWorkSession()
+                workSessionManager.endSession()
                 workSessionRuntimeController.stop()
                 return ToggleWorkSessionResult.Ended
             }
 
             val wasActive = workSessionManager.state.value.isActive
-            val sessionState = reminderCommandUseCase.startWorkSession()
+            val sessionState = workSessionManager.startOrRestartSession()
             val startedAtMillis = sessionState.startedAtMillis
 
             if (startedAtMillis != null) {
@@ -30,7 +28,7 @@ class ToggleWorkSessionUseCase(
 
                     is WorkSessionRuntimeStartResult.Failed -> {
                         runCatching {
-                            reminderCommandUseCase.endWorkSession()
+                            workSessionManager.endSession()
                         }
 
                         return ToggleWorkSessionResult.ForegroundStartBlocked

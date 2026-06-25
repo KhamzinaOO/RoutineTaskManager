@@ -1,11 +1,9 @@
 package com.example.routinetaskmanager.featureReminder.domain.model
 
-import android.net.Uri
-
-data class ReminderSaveData(
+data class ReminderDraft(
     val name: String,
     val instructionsText: String?,
     val repeatRule: ReminderRepeatRule,
     val notificationMode: NotificationMode,
-    val imageUris: List<Uri>
+    val images: List<ReminderImageInput>
 )

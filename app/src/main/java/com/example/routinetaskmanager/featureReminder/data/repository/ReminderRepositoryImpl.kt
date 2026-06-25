@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.featureReminder.data.repository
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.room.withTransaction
 import com.example.routinetaskmanager.data.local.AppDatabase
 import com.example.routinetaskmanager.data.storage.ImageStorage
@@ -9,12 +10,11 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEntity
 import com.example.routinetaskmanager.featureReminder.data.mapper.ReminderRepeatRuleJsonMapper
 import com.example.routinetaskmanager.featureReminder.data.mapper.toDomain
-import com.example.routinetaskmanager.featureReminder.data.mapper.toEntity
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderImageInput
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -59,40 +59,41 @@ class ReminderRepositoryImpl(
     }
 
     override suspend fun createReminder(
-        data: ReminderSaveData
+        draft: ReminderDraft
     ): Long {
         val now = System.currentTimeMillis()
-        val savedImagePaths = mutableListOf<String>()
 
-        try {
-            return database.withTransaction {
-                val reminderEntity = ReminderEntity(
-                    id = 0,
-                    name = data.name.trim(),
-                    instructionsText = data.instructionsText
-                        ?.trim()
-                        ?.takeIf { it.isNotBlank() },
-                    repeatType = data.repeatRule.toRepeatType(),
-                    repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(data.repeatRule),
-                    notificationMode = data.notificationMode.name,
-                    createdAt = now,
-                    updatedAt = now
+        val preparedImages = try {
+            prepareNewImages(
+                images = draft.images,
+                fileNamePrefix = "reminder_new_$now"
+            )
+        } catch (throwable: Throwable) {
+            throw throwable
+        }
+
+        return try {
+            database.withTransaction {
+                val reminderId = reminderDao.insertReminder(
+                    ReminderEntity(
+                        id = 0,
+                        name = draft.name.trim(),
+                        instructionsText = draft.instructionsText
+                            ?.trim()
+                            ?.takeIf { it.isNotBlank() },
+                        repeatType = draft.repeatRule.toRepeatType(),
+                        repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(draft.repeatRule),
+                        notificationMode = draft.notificationMode.name,
+                        createdAt = now,
+                        updatedAt = now
+                    )
                 )
 
-                val reminderId = reminderDao.insertReminder(reminderEntity)
-
-                val imageEntities = data.imageUris.mapIndexed { index, uri ->
-                    val imagePath = imageStorage.saveImageToInternalStorage(
-                        sourceUri = uri,
-                        fileName = "reminder_${reminderId}_${System.currentTimeMillis()}_$index.jpg"
-                    )
-
-                    savedImagePaths.add(imagePath)
-
+                val imageEntities = preparedImages.mapIndexed { index, image ->
                     ReminderImageEntity(
                         id = 0,
                         reminderId = reminderId,
-                        imagePath = imagePath,
+                        imagePath = image.path,
                         sortOrder = index,
                         createdAt = now
                     )
@@ -104,97 +105,82 @@ class ReminderRepositoryImpl(
 
                 reminderId
             }
-        } catch (e: Exception) {
-            savedImagePaths.forEach { imagePath ->
-                runCatching {
-                    imageStorage.deleteImage(imagePath)
+        } catch (throwable: Throwable) {
+            preparedImages.forEach { image ->
+                if (image.isNewFile) {
+                    runCatching {
+                        imageStorage.deleteImage(image.path)
+                    }
                 }
             }
 
-            throw e
+            throw throwable
         }
     }
 
     override suspend fun updateReminder(
-        id: Long,
-        data: ReminderSaveData
+        reminderId: Long,
+        draft: ReminderDraft
     ) {
         val now = System.currentTimeMillis()
 
-        val savedNewImagePaths = mutableListOf<String>()
+        val currentReminder = reminderDao.getReminderById(reminderId)
+            ?: throw IllegalArgumentException("Reminder not found")
+
+        val currentImages = reminderDao.getImagesByReminderId(reminderId)
+
+        val plan = try {
+            buildImagesUpdatePlan(
+                reminderId = reminderId,
+                currentImages = currentImages,
+                inputImages = draft.images,
+                now = now
+            )
+        } catch (throwable: Throwable) {
+            throw throwable
+        }
 
         try {
             database.withTransaction {
-                val currentReminder = reminderDao.getReminderById(id)
-                    ?: throw IllegalArgumentException("Reminder not found")
-
-                val currentImages = reminderDao.getImagesByReminderId(id)
-                val currentImagePaths = currentImages.map { it.imagePath }.toSet()
-                val currentImagesByPath = currentImages.associateBy { it.imagePath }
-                val finalImagePaths = data.imageUris.mapIndexed { index, uri ->
-                    val existingImagePath = findExistingImagePath(
-                        uri = uri,
-                        currentImagePaths = currentImagePaths
+                reminderDao.updateReminder(
+                    currentReminder.copy(
+                        name = draft.name.trim(),
+                        instructionsText = draft.instructionsText
+                            ?.trim()
+                            ?.takeIf { it.isNotBlank() },
+                        repeatType = draft.repeatRule.toRepeatType(),
+                        repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(draft.repeatRule),
+                        notificationMode = draft.notificationMode.name,
+                        updatedAt = now
                     )
-
-                    if (existingImagePath != null) {
-                        existingImagePath
-                    } else {
-                        val imagePath = imageStorage.saveImageToInternalStorage(
-                            sourceUri = uri,
-                            fileName = "reminder_${id}_${System.currentTimeMillis()}_$index.jpg"
-                        )
-
-                        savedNewImagePaths.add(imagePath)
-
-                        imagePath
-                    }
-                }
-
-                val updatedReminderEntity = currentReminder.copy(
-                    name = data.name.trim(),
-                    instructionsText = data.instructionsText
-                        ?.trim()
-                        ?.takeIf { it.isNotBlank() },
-                    repeatType = data.repeatRule.toRepeatType(),
-                    repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(data.repeatRule),
-                    notificationMode = data.notificationMode.name,
-                    updatedAt = now
                 )
 
-                val imageEntities = finalImagePaths.mapIndexed { index, imagePath ->
-                    ReminderImageEntity(
-                        id = currentImagesByPath[imagePath]?.id ?: 0,
-                        reminderId = id,
-                        imagePath = imagePath,
-                        sortOrder = index,
-                        createdAt = currentImagesByPath[imagePath]?.createdAt ?: now
-                    )
-                }
-                reminderDao.updateReminder(updatedReminderEntity)
-
-                reminderDao.deleteImagesByReminderId(id)
-
-                if (imageEntities.isNotEmpty()) {
-                    reminderDao.insertReminderImages(imageEntities)
+                if (plan.imagesToUpdate.isNotEmpty()) {
+                    reminderDao.updateReminderImages(plan.imagesToUpdate)
                 }
 
-                val removedImagePaths = currentImagePaths - finalImagePaths.toSet()
+                if (plan.imagesToInsert.isNotEmpty()) {
+                    reminderDao.insertReminderImages(plan.imagesToInsert)
+                }
 
-                removedImagePaths.forEach { imagePath ->
-                    runCatching {
-                        imageStorage.deleteImage(imagePath)
-                    }
+                plan.imageIdsToDelete.forEach { imageId ->
+                    reminderDao.deleteImageById(imageId)
                 }
             }
-        } catch (e: Exception) {
-            savedNewImagePaths.forEach { imagePath ->
+
+            plan.filePathsToDeleteAfterTransaction.forEach { path ->
                 runCatching {
-                    imageStorage.deleteImage(imagePath)
+                    imageStorage.deleteImage(path)
+                }
+            }
+        } catch (throwable: Throwable) {
+            plan.filePathsToCleanupOnFailure.forEach { path ->
+                runCatching {
+                    imageStorage.deleteImage(path)
                 }
             }
 
-            throw e
+            throw throwable
         }
     }
 
@@ -215,53 +201,6 @@ class ReminderRepositoryImpl(
             runCatching {
                 imageStorage.deleteImage(imagePath)
             }
-        }
-    }
-
-    override suspend fun addImageToReminder(
-        reminderId: Long,
-        imageUri: Uri
-    ) {
-        val currentImages = reminderDao.getImagesByReminderId(reminderId)
-
-        val nextSortOrder = currentImages.maxOfOrNull { it.sortOrder }
-            ?.plus(1)
-            ?: 0
-
-        val imagePath = imageStorage.saveImageToInternalStorage(
-            sourceUri = imageUri,
-            fileName = "reminder_${reminderId}_${System.currentTimeMillis()}.jpg"
-        )
-
-        try {
-            reminderDao.insertReminderImage(
-                ReminderImageEntity(
-                    reminderId = reminderId,
-                    imagePath = imagePath,
-                    sortOrder = nextSortOrder,
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-        } catch (e: Exception) {
-            imageStorage.deleteImage(imagePath)
-            throw e
-        }
-    }
-
-    override suspend fun deleteImage(
-        imageId: Long
-    ) {
-        val imagePath = database.withTransaction {
-            val image = reminderDao.getImageById(imageId)
-                ?: return@withTransaction null
-
-            reminderDao.deleteImageById(imageId)
-
-            image.imagePath
-        } ?: return
-
-        runCatching {
-            imageStorage.deleteImage(imagePath)
         }
     }
 
@@ -295,15 +234,101 @@ class ReminderRepositoryImpl(
         )
     }
 
-    private fun findExistingImagePath(
-        uri: Uri,
-        currentImagePaths: Set<String>
-    ): String? {
-        val uriString = uri.toString()
-        val uriPath = uri.path
+    private data class ReminderImagesUpdatePlan(
+        val imagesToInsert: List<ReminderImageEntity>,
+        val imagesToUpdate: List<ReminderImageEntity>,
+        val imageIdsToDelete: List<Long>,
+        val filePathsToDeleteAfterTransaction: List<String>,
+        val filePathsToCleanupOnFailure: List<String>
+    )
 
-        return currentImagePaths.firstOrNull { imagePath ->
-            imagePath == uriString || imagePath == uriPath
+    private data class PreparedReminderImage(
+        val path: String,
+        val isNewFile: Boolean
+    )
+
+    private fun prepareNewImages(
+        images: List<ReminderImageInput>,
+        fileNamePrefix: String
+    ): List<PreparedReminderImage> {
+        return images.mapIndexed { index, image ->
+            when (image) {
+                is ReminderImageInput.Existing -> {
+                    PreparedReminderImage(
+                        path = image.path,
+                        isNewFile = false
+                    )
+                }
+
+                is ReminderImageInput.NewExternal -> {
+                    val path = imageStorage.saveImageToInternalStorage(
+                        sourceUri = image.uriString.toUri(),
+                        fileName = "${fileNamePrefix}_$index.jpg"
+                    )
+
+                    PreparedReminderImage(
+                        path = path,
+                        isNewFile = true
+                    )
+                }
+            }
         }
+    }
+    private fun buildImagesUpdatePlan(
+        reminderId: Long,
+        currentImages: List<ReminderImageEntity>,
+        inputImages: List<ReminderImageInput>,
+        now: Long
+    ): ReminderImagesUpdatePlan {
+        val currentById = currentImages.associateBy { it.id }
+        val keptIds = mutableSetOf<Long>()
+        val imagesToInsert = mutableListOf<ReminderImageEntity>()
+        val imagesToUpdate = mutableListOf<ReminderImageEntity>()
+        val savedNewPaths = mutableListOf<String>()
+
+        inputImages.forEachIndexed { index, input ->
+            when (input) {
+                is ReminderImageInput.Existing -> {
+                    val current = currentById[input.id]
+                        ?: return@forEachIndexed
+
+                    keptIds += current.id
+
+                    if (current.sortOrder != index || current.imagePath != input.path) {
+                        imagesToUpdate += current.copy(
+                            imagePath = input.path,
+                            sortOrder = index
+                        )
+                    }
+                }
+
+                is ReminderImageInput.NewExternal -> {
+                    val savedPath = imageStorage.saveImageToInternalStorage(
+                        sourceUri = input.uriString.toUri(),
+                        fileName = "reminder_${reminderId}_${System.currentTimeMillis()}_$index.jpg"
+                    )
+
+                    savedNewPaths += savedPath
+
+                    imagesToInsert += ReminderImageEntity(
+                        id = 0,
+                        reminderId = reminderId,
+                        imagePath = savedPath,
+                        sortOrder = index,
+                        createdAt = now
+                    )
+                }
+            }
+        }
+
+        val imagesToDelete = currentImages.filter { it.id !in keptIds }
+
+        return ReminderImagesUpdatePlan(
+            imagesToInsert = imagesToInsert,
+            imagesToUpdate = imagesToUpdate,
+            imageIdsToDelete = imagesToDelete.map { it.id },
+            filePathsToDeleteAfterTransaction = imagesToDelete.map { it.imagePath },
+            filePathsToCleanupOnFailure = savedNewPaths
+        )
     }
 }

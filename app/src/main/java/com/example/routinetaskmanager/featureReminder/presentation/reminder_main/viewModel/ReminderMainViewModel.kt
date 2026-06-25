@@ -8,8 +8,8 @@ import com.example.routinetaskmanager.featureReminder.application.session.Restor
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreWorkSessionRuntimeResult
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionResult
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveDayReminderOccurrencesUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveWorkSessionStateUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.ObserveWorkSessionStateUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainIntent
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainUiState
@@ -65,8 +65,7 @@ class ReminderMainViewModel(
                 selectDate(intent.date)
             }
 
-            ReminderMainIntent.SessionButtonClick,
-            ReminderMainIntent.EndSessionButtonClick -> {
+            ReminderMainIntent.SessionButtonClick -> {
                 toggleWorkSession()
             }
 

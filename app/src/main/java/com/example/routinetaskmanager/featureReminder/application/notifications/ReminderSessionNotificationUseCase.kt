@@ -1,5 +1,6 @@
 package com.example.routinetaskmanager.featureReminder.application.notifications
 
+import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
 import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
@@ -26,6 +27,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 class ReminderSessionNotificationUseCase(
+    private val dispatcherProvider: DispatcherProvider,
     private val reminderRepository: ReminderRepository,
     private val alarmScheduler: AppAlarmScheduler,
     private val scheduledNotificationDao: ScheduledNotificationDao
@@ -55,7 +57,7 @@ class ReminderSessionNotificationUseCase(
         startedAt: LocalDateTime = LocalDateTime.now(),
         from: LocalDateTime = LocalDateTime.now()
     ): SessionScheduleResult {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcherProvider.io) {
             cancelSessionNotifications()
 
             val reminders = reminderRepository.getAllRemindersSnapshot()
@@ -123,7 +125,7 @@ class ReminderSessionNotificationUseCase(
     suspend fun countSessionReminders(
         startedAt: LocalDateTime = LocalDateTime.now()
     ): Int {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcherProvider.io) {
             reminderRepository.getAllRemindersSnapshot()
                 .count { reminder ->
                     reminder.isEnabled &&
@@ -134,7 +136,7 @@ class ReminderSessionNotificationUseCase(
     }
 
     suspend fun endSession() {
-        withContext(Dispatchers.IO) {
+        withContext(dispatcherProvider.io) {
             cancelSessionNotifications()
         }
     }

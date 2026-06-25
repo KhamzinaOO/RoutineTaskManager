@@ -3,20 +3,18 @@ package com.example.routinetaskmanager.featureHome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundController
-import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundStartResult
 import com.example.routinetaskmanager.core.presentation.model.UiText
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
-import com.example.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
-import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
+import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.ObserveWorkSessionStateUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionResult
+import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
+import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -29,10 +27,11 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 class HomeViewModel(
-    private val observeReminderScheduleUseCase: ObserveReminderScheduleUseCase,
+    private val observeDayReminderOccurrencesUseCase: ObserveDayReminderOccurrencesUseCase,
     private val reminderCommandUseCase: ReminderCommandUseCase,
-    private val workSessionManager: WorkSessionManager,
-    private val workSessionForegroundController: WorkSessionForegroundController
+    private val observeWorkSessionStateUseCase: ObserveWorkSessionStateUseCase,
+    private val restoreActiveWorkSessionRuntimeUseCase: RestoreActiveWorkSessionRuntimeUseCase,
+    private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -47,215 +46,64 @@ class HomeViewModel(
     val effect = _effect.receiveAsFlow()
 
     init {
-        observeWorkSession()
         observeTodayReminders()
-        refreshSessionReminderCount()
-        ensureForegroundServiceForActiveSession()
+        observeWorkSession()
     }
 
-    fun onSessionButtonClick() {
-        viewModelScope.launch {
-            if (_uiState.value.isSessionActionInProgress) {
-                return@launch
-            }
-
-            val wasActive = _uiState.value.isSessionActive
-            _uiState.update { it.copy(isSessionActionInProgress = true) }
-
-            runCatching {
-                reminderCommandUseCase.startWorkSession()
-            }.onSuccess { sessionState ->
-                val foregroundStarted = sessionState.startedAtMillis
-                    ?.let { startedAtMillis ->
-                        handleForegroundServiceStart(
-                            startedAtMillis = startedAtMillis,
-                            rollbackSessionOnFailure = true
-                        )
-                    }
-                    ?: true
-
-                if (!foregroundStarted) {
-                    return@onSuccess
-                }
-
-                val message = when {
-                    sessionState.scheduledNotificationCount == 0 -> {
-                        UiText.StringResource(R.string.work_session_started_no_session_reminders)
-                    }
-
-                    wasActive -> {
-                        UiText.PluralResource(
-                            R.plurals.work_session_restarted_count,
-                            sessionState.scheduledNotificationCount
-                        )
-                    }
-
-                    else -> {
-                        UiText.PluralResource(
-                            R.plurals.work_session_started_scheduled_count,
-                            sessionState.scheduledNotificationCount
-                        )
-                    }
-                }
-
-                sendEffect(HomeEffect.ShowMessage(message))
-            }.onFailure { throwable ->
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
-                    )
-                )
-            }.also {
-                _uiState.update { it.copy(isSessionActionInProgress = false) }
+    fun onIntent(intent : HomeUiIntent){
+        when (intent) {
+            is HomeUiIntent.AddReminderClick -> TODO()
+            is HomeUiIntent.AddTaskClick -> TODO()
+            is HomeUiIntent.DateClick -> TODO()
+            is HomeUiIntent.NotificationPermissionDenied -> TODO()
+            is HomeUiIntent.OnSessionButtonClick -> {
+                toggleWorkSession()
             }
         }
     }
 
-    fun onEndSessionButtonClick() {
+    private fun observeTodayReminders(){
         viewModelScope.launch {
-            if (_uiState.value.isSessionActionInProgress) {
-                return@launch
-            }
-
-            _uiState.update { it.copy(isSessionActionInProgress = true) }
-
-            runCatching {
-                reminderCommandUseCase.endWorkSession()
-            }.onSuccess {
-                workSessionForegroundController.stop()
-                sendEffect(HomeEffect.ShowMessage(UiText.StringResource(R.string.work_session_ended)))
-            }.onFailure { throwable ->
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_end_work_session)
-                    )
-                )
-            }.also {
-                _uiState.update { it.copy(isSessionActionInProgress = false) }
-            }
-        }
-    }
-
-    fun onNotificationPermissionDenied() {
-        sendEffect(
-            HomeEffect.ShowMessage(
-                UiText.StringResource(R.string.notifications_disabled_enable_settings)
-            )
-        )
-    }
-
-    private fun observeWorkSession() {
-        workSessionManager.state
-            .onEach { sessionState ->
+            observeDayReminderOccurrencesUseCase(date = LocalDate.now()).onEach { reminders ->
                 _uiState.update {
                     it.copy(
-                        isSessionActive = sessionState.isActive,
-                        sessionStartedAtMillis = sessionState.startedAtMillis,
-                        sessionReminderCount = sessionState.sessionReminderCount
+                        reminders = reminders
                     )
                 }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun ensureForegroundServiceForActiveSession() {
-        workSessionManager.state.value.startedAtMillis?.let { startedAtMillis ->
-            if (workSessionManager.state.value.isActive) {
-                viewModelScope.launch {
-                    handleForegroundServiceStart(
-                        startedAtMillis = startedAtMillis,
-                        rollbackSessionOnFailure = false
-                    )
-                }
-            }
+            }.launchIn(viewModelScope)
         }
     }
 
-    private suspend fun handleForegroundServiceStart(
-        startedAtMillis: Long,
-        rollbackSessionOnFailure: Boolean
-    ): Boolean {
-        return when (workSessionForegroundController.start(startedAtMillis)) {
-            WorkSessionForegroundStartResult.Started -> true
-            is WorkSessionForegroundStartResult.Failed -> {
-                if (rollbackSessionOnFailure) {
-                    runCatching {
-                        reminderCommandUseCase.endWorkSession()
-                    }
-                }
-
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        UiText.StringResource(
-                            if (rollbackSessionOnFailure) {
-                                R.string.error_failed_start_work_session_service
-                            } else {
-                                R.string.error_failed_restore_work_session_service
-                            }
-                        )
-                    )
-                )
-                false
-            }
-        }
-    }
-
-    private fun observeTodayReminders() {
-        viewModelScope.launch {
-            runCatching {
-                val today = LocalDate.now()
-
-                combine(
-                    observeReminderScheduleUseCase(range = dayRange(today)),
-                    workSessionManager.observeActiveSessionOccurrences()
-                ) { scheduledReminders, sessionReminders ->
-                    mergeReminderOccurrences(
-                        scheduledReminders = scheduledReminders,
-                        sessionReminders = sessionReminders,
-                        date = today
-                    )
-                }
-            }.onSuccess { remindersFlow ->
-                remindersFlow.distinctUntilChanged().collect { reminders ->
-                    _uiState.update {
-                        it.copy(reminders = reminders)
-                    }
-                    refreshSessionReminderCount()
-                }
-            }.onFailure { throwable ->
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_load_reminders)
-                    )
+    private fun observeWorkSession(){
+        observeWorkSessionStateUseCase().onEach { state ->
+            _uiState.update {
+                it.copy(
+                    isSessionActive = state.isActive,
+                    sessionStartedAtMillis = state.startedAtMillis,
+                    sessionReminderCount = state.sessionReminderCount
                 )
             }
-        }
+        }.launchIn(viewModelScope)
     }
 
-    private fun mergeReminderOccurrences(
-        scheduledReminders: List<ReminderOccurrence>,
-        sessionReminders: List<ReminderOccurrence>,
-        date: LocalDate
-    ): List<ReminderOccurrence> {
-        return (scheduledReminders + sessionReminders.filter { occurrence ->
-            occurrence.scheduledAt.toLocalDate() == date
-        })
-            .distinctBy { occurrence ->
-                "${occurrence.reminderId}-${occurrence.scheduledAt}-${occurrence.repeatType}"
-            }
-            .sortedBy { occurrence -> occurrence.scheduledAt }
-    }
-
-    private fun refreshSessionReminderCount() {
+    private fun toggleWorkSession(){
         viewModelScope.launch {
-            runCatching {
-                workSessionManager.refreshSessionReminderCount()
+            if (_uiState.value.isSessionActionInProgress) return@launch
+
+            _uiState.update { it.copy(isSessionActionInProgress = true) }
+
+            val result = runCatching {
+                toggleWorkSessionUseCase()
+            }.getOrElse { throwable ->
+                ToggleWorkSessionResult.Failed(throwable)
             }
+
+            handleToggleWorkSessionResult(result)
+
+            _uiState.update { it.copy(isSessionActionInProgress = false) }
         }
     }
+
 
     private fun sendEffect(effect: HomeEffect) {
         viewModelScope.launch {
@@ -282,8 +130,59 @@ class HomeViewModel(
 
         return "$dayOfWeek, $dateText"
     }
-}
 
-sealed interface HomeEffect {
-    data class ShowMessage(val message: UiText) : HomeEffect
+    private fun handleToggleWorkSessionResult(
+        result: ToggleWorkSessionResult
+    ) {
+        when (result) {
+            is ToggleWorkSessionResult.Started -> {
+                val message = if (result.wasRestart) {
+                    UiText.PluralResource(
+                        R.plurals.work_session_restarted_count,
+                        result.scheduledNotificationCount
+                    )
+                } else {
+                    UiText.PluralResource(
+                        R.plurals.work_session_started_scheduled_count,
+                        result.scheduledNotificationCount
+                    )
+                }
+
+                sendEffect(HomeEffect.ShowMessage(message))
+            }
+
+            ToggleWorkSessionResult.StartedWithoutReminders -> {
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        UiText.StringResource(R.string.work_session_started_no_session_reminders)
+                    )
+                )
+            }
+
+            ToggleWorkSessionResult.Ended -> {
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        UiText.StringResource(R.string.work_session_ended)
+                    )
+                )
+            }
+
+            ToggleWorkSessionResult.ForegroundStartBlocked -> {
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        UiText.StringResource(R.string.error_failed_start_work_session_service)
+                    )
+                )
+            }
+
+            is ToggleWorkSessionResult.Failed -> {
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        result.throwable.message?.let(UiText::DynamicString)
+                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
+                    )
+                )
+            }
+        }
+    }
 }

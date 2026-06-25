@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.featureReminder.domain.model.schedule
 
-import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.model.OnSchedulePeriodDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
@@ -8,6 +7,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.type
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -198,10 +198,12 @@ class ReminderScheduleCalculator {
         range: ScheduleRange,
         action: (LocalDate) -> Unit
     ) {
-        var currentDate = range.start.toLocalDate()
-        val endDateExclusive = range.endExclusive.toLocalDate()
+        if (!range.start.isBefore(range.endExclusive)) return
 
-        while (currentDate.isBefore(endDateExclusive)) {
+        var currentDate = range.start.toLocalDate()
+        val lastDate = range.endExclusive.minusNanos(1).toLocalDate()
+
+        while (!currentDate.isAfter(lastDate)) {
             action(currentDate)
             currentDate = currentDate.plusDays(1)
         }
@@ -225,7 +227,7 @@ class ReminderScheduleCalculator {
             reminderName = name,
             instructionsText = instructionsText,
             scheduledAt = scheduledAt,
-            repeatType = repeatRule.toRepeatTypeDomain()
+            repeatType = repeatRule.type
         )
     }
 

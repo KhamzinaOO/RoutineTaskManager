@@ -28,7 +28,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.example.routinetaskmanager.featureHome.HomeScreen
+import com.example.routinetaskmanager.featureHome.HomeRoute
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.CreateEditReminderRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.navigation.ReminderMainRoute
@@ -166,7 +166,7 @@ fun AppNavigation() {
                     ),
                     entryProvider = entryProvider {
                         entry<Home> {
-                            HomeScreen(
+                            HomeRoute(
                                 showMessage = { message ->
                                     scope.launch {
                                         snackbarHostState.showSnackbar(message)

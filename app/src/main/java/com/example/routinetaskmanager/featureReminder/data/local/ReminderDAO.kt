@@ -168,4 +168,9 @@ interface ReminderDao {
         notificationMode: String,
         updatedAt: Long = System.currentTimeMillis()
     )
+
+    @Update
+    suspend fun updateReminderImages(
+        images: List<ReminderImageEntity>
+    )
 }

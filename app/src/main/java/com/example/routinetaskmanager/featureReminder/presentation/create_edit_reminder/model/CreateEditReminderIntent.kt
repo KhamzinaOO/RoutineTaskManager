@@ -47,7 +47,7 @@ sealed interface CreateEditReminderIntent {
     ) : CreateEditReminderIntent
 
     data class ImageRemoved(
-        val path: String
+        val key: String
     ) : CreateEditReminderIntent
 
     data object TakePictureClicked : CreateEditReminderIntent

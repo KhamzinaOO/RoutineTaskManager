@@ -21,6 +21,6 @@ data class CreateEditReminderUiState(
     val onScheduleCertainState: OnScheduleCertainRepeatUi = OnScheduleCertainRepeatUi(),
     val duringSessionState: DuringSessionPeriodRepeatUi = DuringSessionPeriodRepeatUi(),
     val notificationMode: NotificationMode = NotificationMode.SOUND,
-    val imagePaths: List<String> = emptyList(),
+    val images: List<ReminderImageUi> = emptyList(),
     val errorMessage: UiText? = null
 )

@@ -5,11 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.UiText
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderImageInput
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
-import com.example.routinetaskmanager.featureReminder.domain.model.ReminderSaveData
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
+import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.parseHourMinuteOrNull
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toRepeatRule
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiStateBundle
@@ -25,6 +26,7 @@ import com.example.routinetaskmanager.featureReminder.presentation.create_edit_r
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderMode
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderUiState
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.ReminderImageUi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -143,16 +145,20 @@ class CreateEditReminderViewModel(
             is CreateEditReminderIntent.ImageAdded -> {
                 _uiState.update {
                     it.copy(
-                        imagePaths = it.imagePaths + intent.path,
+                        images = it.images + ReminderImageUi.Picked(
+                            uriString = intent.path
+                        ),
                         errorMessage = null
                     )
                 }
             }
 
             is CreateEditReminderIntent.ImageRemoved -> {
-                _uiState.update {
-                    it.copy(
-                        imagePaths = it.imagePaths - intent.path,
+                _uiState.update { state ->
+                    state.copy(
+                        images = state.images.filterNot { image ->
+                            image.key == intent.key
+                        },
                         errorMessage = null
                     )
                 }
@@ -208,7 +214,7 @@ class CreateEditReminderViewModel(
                 when (state.screenMode) {
                     is CreateEditReminderMode.Create -> {
                         commandUseCase.createReminder(
-                            buildSaveData(state)
+                            buildDraft(state)
                         )
                     }
 
@@ -216,7 +222,7 @@ class CreateEditReminderViewModel(
                         id?.let {
                             commandUseCase.updateReminder(
                                 reminderId = it,
-                                buildSaveData(state)
+                                buildDraft(state)
                             )
                         }
                     }
@@ -267,16 +273,24 @@ class CreateEditReminderViewModel(
         }
     }
 
-    private fun buildSaveData(
+    private fun buildDraft(
         state: CreateEditReminderUiState
-    ): ReminderSaveData {
-        return ReminderSaveData(
+    ): ReminderDraft {
+        return ReminderDraft(
             name = state.name,
             instructionsText = state.instructions,
             repeatRule = buildRepeatRule(state),
             notificationMode = state.notificationMode,
-            imageUris = state.imagePaths.map {
-                it.toUri()
+            images = state.images.map { image ->
+                if (image is ReminderImageUi.Saved) {
+                    ReminderImageInput.Existing(
+                        id = image.id,
+                        path = image.path,
+                        sortOrder = image.sortOrder
+                    )
+                } else {
+                    ReminderImageInput.NewExternal(uriString = (image as ReminderImageUi.Picked).uriString)
+                }
             }
         )
     }
@@ -348,8 +362,12 @@ class CreateEditReminderViewModel(
                             onScheduleCertainState = repeatUiState.onScheduleCertainState,
                             duringSessionState = repeatUiState.duringSessionState,
                             notificationMode = reminder.notificationMode,
-                            imagePaths = reminder.images.map { image ->
-                                image.imagePath
+                            images = reminder.images.map { image ->
+                                ReminderImageUi.Saved(
+                                    id = image.id,
+                                    path = image.imagePath,
+                                    sortOrder = image.sortOrder
+                                )
                             }
                         )
                     }

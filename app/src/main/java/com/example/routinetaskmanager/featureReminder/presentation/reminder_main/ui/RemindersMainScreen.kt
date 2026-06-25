@@ -156,7 +156,7 @@ fun RemindersMainScreen(
                 timer = timerText,
                 isActive = uiState.isSessionActive,
                 isLoading = uiState.isSessionActionInProgress,
-                onEndClick = { onIntent(ReminderMainIntent.EndSessionButtonClick) },
+                onEndClick = { onIntent(ReminderMainIntent.SessionButtonClick) },
                 onStartClick = { requestNotificationPermission() }
             )
         }

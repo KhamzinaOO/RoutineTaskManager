@@ -9,10 +9,10 @@ import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRe
 import com.example.routinetaskmanager.featureReminder.data.session.AndroidWorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveDayReminderOccurrencesUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveReminderScheduleUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ObserveWorkSessionStateUseCase
-import com.example.routinetaskmanager.featureReminder.domain.useCase.ReminderCommandUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveReminderScheduleUseCase
+import com.example.routinetaskmanager.featureReminder.application.session.ObserveWorkSessionStateUseCase
+import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderSessionNotificationUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
@@ -63,7 +63,8 @@ val featureReminderModule = module {
         ReminderSessionNotificationUseCase(
             reminderRepository = get(),
             alarmScheduler = get(),
-            scheduledNotificationDao = get()
+            scheduledNotificationDao = get(),
+            dispatcherProvider = get()
         )
     }
 
@@ -78,7 +79,6 @@ val featureReminderModule = module {
         ReminderCommandUseCase(
             reminderRepository = get(),
             rescheduleRemindersUseCase = get(),
-            workSessionManager = get(),
             dispatcherProvider = get()
         )
     }
@@ -106,7 +106,8 @@ val featureReminderModule = module {
     factory {
         ObserveDayReminderOccurrencesUseCase(
             observeReminderScheduleUseCase = get(),
-            workSessionManager = get()
+            workSessionManager = get(),
+            dispatcherProvider = get()
         )
     }
 
@@ -118,7 +119,6 @@ val featureReminderModule = module {
 
     factory {
         ToggleWorkSessionUseCase(
-            reminderCommandUseCase = get(),
             workSessionManager = get(),
             workSessionRuntimeController = get()
         )

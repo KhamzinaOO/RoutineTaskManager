@@ -34,7 +34,6 @@ import com.example.routinetaskmanager.core.presentation.ui.CommonTextFiled
 import com.example.routinetaskmanager.core.presentation.ui.NotificationSegmentedButton
 import com.example.routinetaskmanager.core.presentation.ui.TitleText
 import com.example.routinetaskmanager.core.presentation.ui.image.FullscreenImagePagerDialog
-import com.example.routinetaskmanager.core.presentation.ui.image.ImagesRow
 import com.example.routinetaskmanager.core.presentation.ui.image.ImagesRowWithClearIcons
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
@@ -42,6 +41,7 @@ import com.example.routinetaskmanager.featureReminder.presentation.create_edit_r
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderUiState
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderMode
+import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.ReminderImageUi
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
@@ -127,18 +127,30 @@ fun CreateReminderScreen(
         )
 
         ImagesRowWithClearIcons(
-            imagePaths = uiState.imagePaths,
+            imagePaths = uiState.images.map {
+                when (it){
+                    is ReminderImageUi.Picked -> it.uriString
+                    is ReminderImageUi.Saved -> it.path
+                }
+            },
             onImageClick = { index ->
                 selectedImageIndex = index
             },
             onDeleteClick = { index ->
-                onIntent(CreateEditReminderIntent.ImageRemoved(uiState.imagePaths[index]))
+                onIntent(CreateEditReminderIntent.ImageRemoved(uiState.images.map {
+                    it.key
+                }[index]))
             }
         )
 
         selectedImageIndex?.let { path ->
             FullscreenImagePagerDialog(
-                imagePaths = uiState.imagePaths,
+                imagePaths = uiState.images.map {
+                    when (it) {
+                        is ReminderImageUi.Picked -> it.uriString
+                        is ReminderImageUi.Saved -> it.path
+                    }
+                },
                 initialIndex = path,
                 onDismiss = { selectedImageIndex = null }
             )
