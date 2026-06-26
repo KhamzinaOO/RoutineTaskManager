@@ -22,7 +22,7 @@ fun Route.toSavedString(): String {
         is EditReminder -> "edit_reminder:$reminderId"
 
         is ReminderInfo -> {
-            val id = reminderId?.toString().orEmpty()
+            val id = reminderId.toString()
             "reminder_info:$id"
         }
     }
@@ -45,7 +45,7 @@ fun String.toRouteOrNull(): Route? {
         startsWith("reminder_info:") -> {
             val rawId = substringAfter("reminder_info:")
             val id = rawId.takeIf { it.isNotBlank() }?.toLongOrNull()
-            ReminderInfo(id)
+            id?.let { ReminderInfo(it) }
         }
 
         else -> null

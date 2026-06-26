@@ -53,6 +53,27 @@ class ReminderSessionNotificationUseCase(
             }
     }
 
+    fun observeSessionOccurrenceOfReminderById(
+        reminderId: Long,
+        startedAt: LocalDateTime
+    ): Flow<List<ReminderOccurrence>?> {
+        return reminderRepository.observeReminderById(reminderId)
+            .map { reminder ->
+                reminder?.takeIf { it.isEnabled }
+                    ?.let {
+                        val now = LocalDateTime.now()
+                        buildSessionOccurrences(
+                            reminders = listOf(reminder),
+                            startedAt = startedAt,
+                            from = now
+                        )
+                            .take(MAX_SESSION_NOTIFICATIONS)
+                            .map { it.toReminderOccurrence() }
+                    }
+            }
+    }
+
+
     suspend fun startSession(
         startedAt: LocalDateTime = LocalDateTime.now(),
         from: LocalDateTime = LocalDateTime.now()

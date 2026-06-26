@@ -4,7 +4,7 @@ import com.example.routinetaskmanager.data.storage.ImageStorage
 import com.example.routinetaskmanager.featureHome.HomeViewModel
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
-import com.example.routinetaskmanager.featureReminder.data.session.WorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.data.session.AndroidWorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
@@ -15,9 +15,12 @@ import com.example.routinetaskmanager.featureReminder.application.session.Observ
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderSessionNotificationUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceByIdUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveReminderOccurrenceUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel.AllRemindersViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.viewModel.CreateEditReminderViewModel
+import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.ReminderInfoViewModel
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.viewModel.ReminderMainViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -38,8 +41,32 @@ val featureReminderModule = module {
         )
     }
 
+    viewModel{ (id: Long) ->
+        ReminderInfoViewModel(
+            reminderId = id,
+            commandUseCase = get(),
+            observeNextReminderOccurrenceById = get()
+        )
+    }
+
     single {
         ReminderScheduleCalculator()
+    }
+
+    factory {
+        ObserveNextReminderOccurrenceByIdUseCase(
+            dispatcherProvider = get(),
+            workSessionManager = get(),
+            observeReminderOccurrenceUseCase = get()
+        )
+    }
+
+    factory {
+        ObserveReminderOccurrenceUseCase(
+            dispatcherProvider = get(),
+            reminderRepository = get(),
+            scheduleCalculator = get()
+        )
     }
 
     factory {

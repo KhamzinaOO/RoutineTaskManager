@@ -31,6 +31,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.example.routinetaskmanager.featureHome.HomeRoute
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.CreateEditReminderRoute
+import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.ReminderInfoRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.navigation.ReminderMainRoute
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerItem
 import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerScaffold
@@ -285,8 +286,17 @@ fun AppNavigation() {
                             )
                         }
 
-                        entry<ReminderInfo> {
-
+                        entry<ReminderInfo> { args ->
+                            ReminderInfoRoute(
+                                reminderId = args.reminderId,
+                                showMessage = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(it)
+                                    }
+                                },
+                                onBackClick = {branches.pop()},
+                                onEditClick = {branches.push(route = EditReminder(it))}
+                            )
                         }
 
                         entry<Tasks> {

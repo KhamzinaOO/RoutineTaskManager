@@ -23,7 +23,7 @@ class ObserveDayReminderOccurrencesUseCase(
             observeReminderScheduleUseCase(range = dayRange(date)),
             workSessionManager.observeActiveSessionOccurrences()
         ) { scheduledReminders, sessionReminders ->
-            mergeOccurrences(
+            mergeDayOccurrences(
                 scheduledReminders = scheduledReminders,
                 sessionReminders = sessionReminders,
                 date = date
@@ -33,7 +33,7 @@ class ObserveDayReminderOccurrencesUseCase(
             .distinctUntilChanged()
     }
 
-    private fun mergeOccurrences(
+    fun mergeDayOccurrences(
         scheduledReminders: List<ReminderOccurrence>,
         sessionReminders: List<ReminderOccurrence>,
         date: LocalDate

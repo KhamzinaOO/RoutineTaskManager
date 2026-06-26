@@ -110,7 +110,12 @@
     <string name="repeat_mode_default">Обычно</string>
     <string name="repeat_mode_advanced">Расширенно</string>
     <string name="repeat_wait_time">Время ожидания</string>
-    <string name="repeat_every">Каждые</string>
+    <plurals name="repeat_every">
+        <item quantity="one">Каждый</item>
+        <item quantity="few">Каждые</item>
+        <item quantity="many">Каждые</item>
+        <item quantity="other">Каждые</item>
+    </plurals>
     <string name="repeat_notification_time">Время уведомления</string>
     <string name="repeat_unit_minutes">минут</string>
     <string name="repeat_unit_hours">часов</string>
@@ -186,4 +191,9 @@
     <string name="error_add_valid_time">Добавьте хотя бы одно корректное время</string>
     <string name="error_select_day">Выберите хотя бы один день</string>
     <string name="error_enable_day">Включите хотя бы один день</string>
+    <string name="next_reminder">Следующее напоминание</string>
+    <string name="skip">Пропустить</string>
+    <string name="do_now">Сделать</string>
+    <string name="skip_for_today">Пропустить на сегодня</string>
+    <string name="no_reminders_found_for_this_week">Не найдены напоминания на этой неделе</string>
 </resources>

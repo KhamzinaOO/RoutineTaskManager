@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -371,12 +372,19 @@ fun DuringSessionContent(
     onValueChange: (IntervalRepeatUi) -> Unit,
     dropdownValues: List<DropdownMenuItemUi>
 ) {
-    IntervalRow(
-        label = stringResource(R.string.repeat_every),
-        interval = value.interval,
-        onIntervalChange = { onValueChange(value.copy(interval = it)) },
-        dropdownValues = dropdownValues
-    )
+    value.interval.value.toIntOrNull()?.let {
+        IntervalRow(
+            label = pluralStringResource(
+                id = R.plurals.repeat_every,
+                count = it
+            ),
+            interval = value.interval,
+            onIntervalChange = { interval ->
+                onValueChange(value.copy(interval = interval))
+            },
+            dropdownValues = dropdownValues
+        )
+    }
 }
 
 @Composable
@@ -390,14 +398,19 @@ fun OnSchedulePeriodContent(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        IntervalRow(
-            label = stringResource(R.string.repeat_every),
-            interval = value.interval,
-            onIntervalChange = { interval ->
-                onValueChange(value.copy(interval = interval))
-            },
-            dropdownValues = dropdownValues
-        )
+        value.interval.value.toIntOrNull()?.let {
+            IntervalRow(
+                label = pluralStringResource(
+                    id = R.plurals.repeat_every,
+                    count = it
+                ),
+                interval = value.interval,
+                onIntervalChange = { interval ->
+                    onValueChange(value.copy(interval = interval))
+                },
+                dropdownValues = dropdownValues
+            )
+        }
 
         TimePicker(
             startTime = value.timeWindow.startTime,
@@ -438,6 +451,7 @@ fun OnScheduleCertainContent(
     }
 }
 
+//TODO: Russian correct localization
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun IntervalRow(

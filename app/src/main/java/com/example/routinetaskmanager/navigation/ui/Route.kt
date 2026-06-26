@@ -41,5 +41,5 @@ data class EditReminder(
 ): Route
 @Serializable
 data class ReminderInfo(
-    val reminderId : Long? = null
+    val reminderId : Long
 ): Route

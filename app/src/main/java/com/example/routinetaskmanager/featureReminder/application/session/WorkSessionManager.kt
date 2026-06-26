@@ -42,6 +42,22 @@ class WorkSessionManager(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observeReminderInSessionById(reminderId: Long): Flow<List<ReminderOccurrence>?> {
+        return state.flatMapLatest { sessionState ->
+            val startedAtMillis = sessionState.startedAtMillis
+
+            if (!sessionState.isActive || startedAtMillis == null) {
+                flowOf(emptyList())
+            } else {
+                reminderSessionNotificationUseCase.observeSessionOccurrenceOfReminderById(
+                    reminderId = reminderId,
+                    startedAt = startedAtMillis.toLocalDateTime()
+                )
+            }
+        }
+    }
+
     suspend fun refreshSessionReminderCount() {
         val count = reminderSessionNotificationUseCase.countSessionReminders(
             startedAt = _state.value.startedAtMillis?.toLocalDateTime() ?: LocalDateTime.now()

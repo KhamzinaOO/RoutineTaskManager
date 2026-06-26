@@ -102,7 +102,10 @@
     <string name="repeat_mode_default">Default</string>
     <string name="repeat_mode_advanced">Advanced</string>
     <string name="repeat_wait_time">Wait time</string>
-    <string name="repeat_every">Every</string>
+    <plurals name="repeat_every">
+        <item quantity="one">Every</item>
+        <item quantity="other">Every</item>
+    </plurals>
     <string name="repeat_notification_time">Notification time</string>
     <string name="repeat_unit_minutes">minutes</string>
     <string name="repeat_unit_hours">hours</string>
@@ -172,4 +175,9 @@
     <string name="error_add_valid_time">Add at least one valid time</string>
     <string name="error_select_day">Select at least one day</string>
     <string name="error_enable_day">Enable at least one day</string>
+    <string name="next_reminder">Next reminder</string>
+    <string name="skip">Skip</string>
+    <string name="do_now">Do now</string>
+    <string name="skip_for_today">Skip for today</string>
+    <string name="no_reminders_found_for_this_week">No reminders found for this week</string>
 </resources>
