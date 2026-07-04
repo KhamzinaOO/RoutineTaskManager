@@ -6,6 +6,10 @@ import com.example.routinetaskmanager.featureReminder.domain.model.NotificationM
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 class ReminderCommandUseCase(
@@ -14,6 +18,11 @@ class ReminderCommandUseCase(
     private val dispatcherProvider: DispatcherProvider
 ) {
 
+    fun observeReminders() : Flow<List<Reminder>> {
+        return reminderRepository.observeReminders()
+            .distinctUntilChanged()
+            .flowOn(dispatcherProvider.io)
+    }
     suspend fun createReminder(
         draft: ReminderDraft
     ): Long {
@@ -99,5 +108,11 @@ class ReminderCommandUseCase(
         return withContext(dispatcherProvider.io) {
             reminderRepository.getReminderById(id)
         }
+    }
+
+    fun observeReminderById(id: Long) : Flow<Reminder?>{
+        return reminderRepository.observeReminderById(reminderId = id)
+            .distinctUntilChanged()
+            .flowOn(dispatcherProvider.io)
     }
 }

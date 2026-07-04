@@ -19,11 +19,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker as MaterialDatePicker
+import androidx.compose.material3.DatePickerDialog as MaterialDatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker as MaterialTimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +47,157 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonIconButton
+import java.time.Instant
 import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.time.format.TextStyle
 import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommonTimePickerDialog(
+    initialTime: LocalTime,
+    onTimeSelected: (LocalTime) -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    is24Hour: Boolean = true
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
+        is24Hour = is24Hour
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = {
+            Text(text = title ?: stringResource(R.string.time_picker_title))
+        },
+        text = {
+            Box(
+                modifier = modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                MaterialTimePicker(state = timePickerState)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onTimeSelected(LocalTime.of(timePickerState.hour, timePickerState.minute))
+                }
+            ) {
+                Text(text = stringResource(R.string.action_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(R.string.action_cancel))
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommonDatePickerDialog(
+    initialDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null
+) {
+    val initialDateMillis = initialDate.toUtcStartOfDayMillis()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDateMillis,
+        initialDisplayedMonthMillis = initialDateMillis
+    )
+
+    MaterialDatePickerDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis
+                        ?.toUtcLocalDate()
+                        ?.let(onDateSelected)
+                }
+            ) {
+                Text(text = stringResource(R.string.action_ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(R.string.action_cancel))
+            }
+        }
+    ) {
+        Column(modifier = modifier.fillMaxWidth()) {
+            title?.let {
+                Text(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                    text = it,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            MaterialDatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+fun CommonDateTimePickerDialog(
+    initialDateTime: LocalDateTime,
+    onDateTimeSelected: (LocalDateTime) -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    dateTitle: String? = null,
+    timeTitle: String? = null,
+    is24Hour: Boolean = true
+) {
+    var step by rememberSaveable { mutableStateOf(DateTimePickerStep.Date) }
+    var selectedDateEpochDay by rememberSaveable {
+        mutableStateOf(initialDateTime.toLocalDate().toEpochDay())
+    }
+
+    when (step) {
+        DateTimePickerStep.Date -> {
+            CommonDatePickerDialog(
+                initialDate = LocalDate.ofEpochDay(selectedDateEpochDay),
+                onDateSelected = { date ->
+                    selectedDateEpochDay = date.toEpochDay()
+                    step = DateTimePickerStep.Time
+                },
+                onDismissRequest = onDismissRequest,
+                modifier = modifier,
+                title = dateTitle ?: stringResource(R.string.date_picker_title)
+            )
+        }
+
+        DateTimePickerStep.Time -> {
+            CommonTimePickerDialog(
+                initialTime = initialDateTime.toLocalTime(),
+                onTimeSelected = { time ->
+                    onDateTimeSelected(
+                        LocalDateTime.of(
+                            LocalDate.ofEpochDay(selectedDateEpochDay),
+                            time
+                        )
+                    )
+                },
+                onDismissRequest = onDismissRequest,
+                modifier = modifier,
+                title = timeTitle ?: stringResource(R.string.time_picker_title),
+                is24Hour = is24Hour
+            )
+        }
+    }
+}
 
 @Composable
 fun TimePicker(
@@ -299,4 +459,21 @@ fun SelectedTimeBox(
                 .align(Alignment.TopEnd)
         )
     }
+}
+
+private enum class DateTimePickerStep {
+    Date,
+    Time
+}
+
+private fun LocalDate.toUtcStartOfDayMillis(): Long {
+    return atStartOfDay(ZoneOffset.UTC)
+        .toInstant()
+        .toEpochMilli()
+}
+
+private fun Long.toUtcLocalDate(): LocalDate {
+    return Instant.ofEpochMilli(this)
+        .atZone(ZoneOffset.UTC)
+        .toLocalDate()
 }

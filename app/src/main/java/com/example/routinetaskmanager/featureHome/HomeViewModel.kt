@@ -3,6 +3,8 @@ package com.example.routinetaskmanager.featureHome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.toAppError
+import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
@@ -178,8 +180,9 @@ class HomeViewModel(
             is ToggleWorkSessionResult.Failed -> {
                 sendEffect(
                     HomeEffect.ShowMessage(
-                        result.throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
+                        result.throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_start_work_session)
+                        )
                     )
                 )
             }

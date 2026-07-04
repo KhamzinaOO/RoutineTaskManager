@@ -178,7 +178,12 @@ fun AppNavigation() {
                         }
 
                         entry<Widgets> {
+                            AppChromeEffect(
+                                owner = Widgets,
+                                chrome = AppChrome{
 
+                                }
+                            )
                         }
 
                         entry<Reminders> {
@@ -300,7 +305,12 @@ fun AppNavigation() {
                         }
 
                         entry<Tasks> {
+                            AppChromeEffect(
+                                owner = Tasks,
+                                chrome = AppChrome{
 
+                                }
+                            )
                         }
                     }
                 )

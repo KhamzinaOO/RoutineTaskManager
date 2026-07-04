@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.core.presentation.ui
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -79,7 +80,8 @@ fun HandleValueChangeTimeTextFiled(
     hoursKeyboardActions: KeyboardActions = KeyboardActions.Default,
     minutesKeyboardActions: KeyboardActions = KeyboardActions.Default,
     hoursImeAction: ImeAction = ImeAction.Next,
-    minutesImeAction: ImeAction = ImeAction.Done
+    minutesImeAction: ImeAction = ImeAction.Done,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -101,7 +103,8 @@ fun HandleValueChangeTimeTextFiled(
             hoursKeyboardActions = hoursKeyboardActions,
             minutesKeyboardActions = minutesKeyboardActions,
             hoursImeAction = hoursImeAction,
-            minutesImeAction = minutesImeAction
+            minutesImeAction = minutesImeAction,
+            onClick = onClick
         )
 
         CommonIconButton(
@@ -186,27 +189,41 @@ fun OvalTimeField(
     hoursKeyboardActions: KeyboardActions = KeyboardActions.Default,
     minutesKeyboardActions: KeyboardActions = KeyboardActions.Default,
     hoursImeAction: ImeAction = ImeAction.Next,
-    minutesImeAction: ImeAction = ImeAction.Done
+    minutesImeAction: ImeAction = ImeAction.Done,
+    onClick: (() -> Unit)? = null
 ) {
+    val fieldModifier = modifier
+        .height(34.dp)
+        .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = CircleShape
+        )
+        .then(
+            if (onClick != null) {
+                Modifier.clickable(onClick = onClick)
+            } else {
+                Modifier
+            }
+        )
+        .padding(horizontal = 10.dp, vertical = 4.dp)
+
     Row(
-        modifier = modifier
-            .height(34.dp)
-            .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline,
-                shape = CircleShape
-            )
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+        modifier = fieldModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        TimePartField(
-            value = hours,
-            onValueChange = onHoursChange,
-            keyboardActions = hoursKeyboardActions,
-            imeAction = hoursImeAction,
-            modifier = Modifier.width(24.dp)
-        )
+        if (onClick == null) {
+            TimePartField(
+                value = hours,
+                onValueChange = onHoursChange,
+                keyboardActions = hoursKeyboardActions,
+                imeAction = hoursImeAction,
+                modifier = Modifier.width(24.dp)
+            )
+        } else {
+            TimePartText(value = hours)
+        }
 
         Text(
             text = ":",
@@ -214,14 +231,34 @@ fun OvalTimeField(
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        TimePartField(
-            value = minutes,
-            onValueChange = onMinutesChange,
-            keyboardActions = minutesKeyboardActions,
-            imeAction = minutesImeAction,
-            modifier = Modifier.width(24.dp)
-        )
+        if (onClick == null) {
+            TimePartField(
+                value = minutes,
+                onValueChange = onMinutesChange,
+                keyboardActions = minutesKeyboardActions,
+                imeAction = minutesImeAction,
+                modifier = Modifier.width(24.dp)
+            )
+        } else {
+            TimePartText(value = minutes)
+        }
     }
+}
+
+@Composable
+private fun TimePartText(
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        modifier = modifier.width(24.dp),
+        text = value,
+        style = MaterialTheme.typography.bodyLarge,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        softWrap = false
+    )
 }
 
 @Composable

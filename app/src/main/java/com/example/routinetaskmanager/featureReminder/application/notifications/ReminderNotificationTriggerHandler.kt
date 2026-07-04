@@ -8,7 +8,6 @@ import com.example.routinetaskmanager.core.notifications.toReminderChannelId
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
-import java.time.Duration
 
 class ReminderNotificationTriggerHandler(
     private val reminderRepository: ReminderRepository,
@@ -30,13 +29,6 @@ class ReminderNotificationTriggerHandler(
                 targetType = NotificationTargetType.REMINDER.name,
                 targetId = targetId
             )
-            return null
-        }
-
-        val delayMillis = System.currentTimeMillis() - scheduledAtMillis
-
-        if (delayMillis > MAX_ALLOWED_DELAY.toMillis()) {
-            rescheduleByOccurrenceKind(occurrenceKind)
             return null
         }
 
@@ -70,9 +62,5 @@ class ReminderNotificationTriggerHandler(
                 workSessionManager.rescheduleActiveSessionIfNeeded()
             }
         }
-    }
-
-    private companion object {
-        val MAX_ALLOWED_DELAY: Duration = Duration.ofMinutes(15)
     }
 }

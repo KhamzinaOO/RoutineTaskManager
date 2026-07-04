@@ -3,6 +3,8 @@ package com.example.routinetaskmanager.featureReminder.presentation.reminder_mai
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.toAppError
+import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreWorkSessionRuntimeResult
@@ -215,8 +217,9 @@ class ReminderMainViewModel(
             is ToggleWorkSessionResult.Failed -> {
                 sendEffect(
                     ReminderMainEffect.ShowMessage(
-                        result.throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_start_work_session)
+                        result.throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_start_work_session)
+                        )
                     )
                 )
             }
@@ -228,8 +231,9 @@ class ReminderMainViewModel(
     ) {
         sendEffect(
             ReminderMainEffect.ShowMessage(
-                throwable.message?.let(UiText::DynamicString)
-                    ?: UiText.StringResource(R.string.error_failed_load_reminders)
+                throwable.toAppError().toUiText(
+                    defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                )
             )
         )
     }

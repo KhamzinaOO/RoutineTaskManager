@@ -7,4 +7,6 @@ sealed interface ReminderInfoIntent {
     data object OnSkipButtonClick : ReminderInfoIntent
     data object OnDoButtonClick : ReminderInfoIntent
     data object OnSkipAllForTodayClick : ReminderInfoIntent
+
+    data object OnBackClick: ReminderInfoIntent
 }

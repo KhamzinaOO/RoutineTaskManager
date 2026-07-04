@@ -39,6 +39,8 @@ import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
 import kotlinx.coroutines.delay
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @SuppressLint("LocalContextGetResourceValueCall")
@@ -137,7 +139,9 @@ fun HomeScreen(
                 reminder.status == ReminderOccurrenceStatus.PLANNED
             }?.let { reminder ->
                 NextReminderCard(
-                    label = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
+                    time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
+                    label = reminder.reminderName,
+                    reminderTime = formatStartsIn(LocalDateTime.now(), reminder.scheduledAt),
                     outlinedButtonText = stringResource(R.string.action_skip),
                     onOutlinedButtonClick = {},
                     filledButtonText = stringResource(R.string.action_do_now),
@@ -224,4 +228,22 @@ fun HomeScreen(
             }
         }
     }
+}
+
+//TODO: localization
+private fun formatStartsIn(
+    now: LocalDateTime,
+    scheduledAt: LocalDateTime
+): String {
+    val duration = Duration.between(now, scheduledAt)
+
+    if (duration.isNegative || duration.isZero) {
+        return "Started"
+    }
+
+    val days = if(duration.toDays()>0) "${duration.toDays()}d" else ""
+    val hours = if(duration.toHours() % 24 >0) "${duration.toHours() % 24}h" else ""
+    val minutes = if(duration.toMinutes() % 60 >0) "${duration.toMinutes() % 60}m" else ""
+
+    return "Starts in $days $hours $minutes"
 }

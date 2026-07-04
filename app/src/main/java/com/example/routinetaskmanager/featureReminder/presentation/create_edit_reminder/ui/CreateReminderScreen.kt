@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -33,10 +34,15 @@ import com.example.routinetaskmanager.core.presentation.ui.CommonDropdownMenuLar
 import com.example.routinetaskmanager.core.presentation.ui.CommonTextFiled
 import com.example.routinetaskmanager.core.presentation.ui.NotificationSegmentedButton
 import com.example.routinetaskmanager.core.presentation.ui.TitleText
+import com.example.routinetaskmanager.core.presentation.ui.dateTime.CommonTimePickerDialog
 import com.example.routinetaskmanager.core.presentation.ui.image.FullscreenImagePagerDialog
 import com.example.routinetaskmanager.core.presentation.ui.image.ImagesRowWithClearIcons
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainDayUi
+import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainRepeatUi
+import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
+import com.example.routinetaskmanager.featureReminder.presentation.common.model.TimeWindowUi
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderUiState
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.InstructionsTextField
@@ -47,6 +53,11 @@ import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithArrowBack
 import com.example.routinetaskmanager.navigation.ui.CreateReminder
 import com.example.routinetaskmanager.navigation.ui.EditReminder
+import java.time.DayOfWeek
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
+private val UiTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
 @Composable
 fun CreateReminderScreen(
@@ -68,6 +79,14 @@ fun CreateReminderScreen(
 
     var selectedImageIndex by rememberSaveable {
         mutableStateOf<Int?>(null)
+    }
+
+    var timePickerTarget by remember {
+        mutableStateOf<TimePickerTarget?>(null)
+    }
+
+    var certainTimePickerTarget by remember {
+        mutableStateOf<CertainTimePickerTarget?>(null)
     }
 
     AppChromeEffect(
@@ -187,8 +206,18 @@ fun CreateReminderScreen(
                         )
                     },
                     dropdownValues = repeatUnitDropdownValues(),
-                    onStartClick = {},
-                    onEndClick = {}
+                    onStartClick = { day ->
+                        timePickerTarget = TimePickerTarget(
+                            day = day,
+                            field = TimeWindowField.Start
+                        )
+                    },
+                    onEndClick = { day ->
+                        timePickerTarget = TimePickerTarget(
+                            day = day,
+                            field = TimeWindowField.End
+                        )
+                    }
                 )
             }
 
@@ -201,6 +230,9 @@ fun CreateReminderScreen(
                                 it
                             )
                         )
+                    },
+                    onTimeClick = { day ->
+                        certainTimePickerTarget = CertainTimePickerTarget(day = day)
                     }
                 )
             }
@@ -264,6 +296,48 @@ fun CreateReminderScreen(
             }
         }
     }
+
+    timePickerTarget?.let { target ->
+        CommonTimePickerDialog(
+            initialTime = onSchedulePeriodState.timeWindowFor(target.day)
+                .timeFor(target.field)
+                .toLocalTimeOrDefault(),
+            onTimeSelected = { time ->
+                onIntent(
+                    CreateEditReminderIntent.OnSchedulePeriodStateChanged(
+                        onSchedulePeriodState.updateTimeWindow(target.day) { timeWindow ->
+                            timeWindow.withTime(target.field, time.format(UiTimeFormatter))
+                        }
+                    )
+                )
+                timePickerTarget = null
+            },
+            onDismissRequest = {
+                timePickerTarget = null
+            }
+        )
+    }
+
+    certainTimePickerTarget?.let { target ->
+        CommonTimePickerDialog(
+            initialTime = onScheduleCertainState.certainTimeFor(target.day)
+                .toLocalTimeOrDefault(),
+            onTimeSelected = { time ->
+                onIntent(
+                    CreateEditReminderIntent.OnScheduleCertainStateChanged(
+                        onScheduleCertainState.updateCertainTime(
+                            day = target.day,
+                            time = time
+                        )
+                    )
+                )
+                certainTimePickerTarget = null
+            },
+            onDismissRequest = {
+                certainTimePickerTarget = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -283,4 +357,131 @@ private fun repeatUnitDropdownValues(): List<DropdownMenuItemUi> {
         DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, stringResource(R.string.repeat_unit_hours)),
         DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, stringResource(R.string.repeat_unit_days))
     )
+}
+
+private data class TimePickerTarget(
+    val day: DayOfWeek?,
+    val field: TimeWindowField
+)
+
+private data class CertainTimePickerTarget(
+    val day: DayOfWeek?
+)
+
+private enum class TimeWindowField {
+    Start,
+    End
+}
+
+private fun OnSchedulePeriodRepeatUi.timeWindowFor(day: DayOfWeek?): TimeWindowUi {
+    return if (day == null) {
+        schedule.defaultValue.timeWindow
+    } else {
+        schedule.advancedEntries
+            .firstOrNull { it.day == day }
+            ?.value
+            ?.timeWindow
+            ?: schedule.defaultValue.timeWindow
+    }
+}
+
+private fun OnSchedulePeriodRepeatUi.updateTimeWindow(
+    day: DayOfWeek?,
+    transform: (TimeWindowUi) -> TimeWindowUi
+): OnSchedulePeriodRepeatUi {
+    return if (day == null) {
+        copy(
+            schedule = schedule.copy(
+                defaultValue = schedule.defaultValue.copy(
+                    timeWindow = transform(schedule.defaultValue.timeWindow)
+                )
+            )
+        )
+    } else {
+        copy(
+            schedule = schedule.copy(
+                advancedEntries = schedule.advancedEntries.map { entry ->
+                    if (entry.day == day) {
+                        entry.copy(
+                            value = entry.value.copy(
+                                timeWindow = transform(entry.value.timeWindow)
+                            )
+                        )
+                    } else {
+                        entry
+                    }
+                }
+            )
+        )
+    }
+}
+
+private fun TimeWindowUi.timeFor(field: TimeWindowField): String {
+    return when (field) {
+        TimeWindowField.Start -> startTime
+        TimeWindowField.End -> endTime
+    }
+}
+
+private fun TimeWindowUi.withTime(
+    field: TimeWindowField,
+    time: String
+): TimeWindowUi {
+    return when (field) {
+        TimeWindowField.Start -> copy(startTime = time)
+        TimeWindowField.End -> copy(endTime = time)
+    }
+}
+
+private fun OnScheduleCertainRepeatUi.certainTimeFor(day: DayOfWeek?): OnScheduleCertainDayUi {
+    return if (day == null) {
+        schedule.defaultValue
+    } else {
+        schedule.advancedEntries
+            .firstOrNull { it.day == day }
+            ?.value
+            ?: schedule.defaultValue
+    }
+}
+
+private fun OnScheduleCertainRepeatUi.updateCertainTime(
+    day: DayOfWeek?,
+    time: LocalTime
+): OnScheduleCertainRepeatUi {
+    return if (day == null) {
+        copy(
+            schedule = schedule.copy(
+                defaultValue = schedule.defaultValue.withTime(time)
+            )
+        )
+    } else {
+        copy(
+            schedule = schedule.copy(
+                advancedEntries = schedule.advancedEntries.map { entry ->
+                    if (entry.day == day) {
+                        entry.copy(value = entry.value.withTime(time))
+                    } else {
+                        entry
+                    }
+                }
+            )
+        )
+    }
+}
+
+private fun OnScheduleCertainDayUi.withTime(time: LocalTime): OnScheduleCertainDayUi {
+    return copy(
+        hours = time.format(DateTimeFormatter.ofPattern("HH")),
+        minutes = time.format(DateTimeFormatter.ofPattern("mm"))
+    )
+}
+
+private fun OnScheduleCertainDayUi.toLocalTimeOrDefault(): LocalTime {
+    return "$hours:$minutes".toLocalTimeOrDefault()
+}
+
+private fun String.toLocalTimeOrDefault(): LocalTime {
+    return runCatching {
+        LocalTime.parse(this, UiTimeFormatter)
+    }.getOrDefault(LocalTime.of(9, 0))
 }

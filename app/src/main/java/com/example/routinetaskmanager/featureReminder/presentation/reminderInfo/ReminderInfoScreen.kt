@@ -6,35 +6,85 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
-import com.example.routinetaskmanager.core.presentation.ui.CommonButton
-import com.example.routinetaskmanager.core.presentation.ui.CommonOutlinedButton
 import com.example.routinetaskmanager.core.presentation.ui.TitleText
+import com.example.routinetaskmanager.core.presentation.ui.image.FullscreenImagePagerDialog
+import com.example.routinetaskmanager.core.presentation.ui.image.ImagePagerWithThumbnail
+import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
+import com.example.routinetaskmanager.featureReminder.domain.model.OnSchedulePeriodDayRepeat
+import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderImage
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.TimeWindow
+import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.ReminderActionButtons
+import com.example.routinetaskmanager.featureReminder.presentation.mapper.toRepeatLabel
+import com.example.routinetaskmanager.featureReminder.presentation.mapper.toShortDetailsLabel
 import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoIntent
 import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoUiState
+import com.example.routinetaskmanager.navigation.ui.AppChrome
+import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
+import com.example.routinetaskmanager.navigation.ui.AppScaffoldState
+import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithActionButtons
+import com.example.routinetaskmanager.navigation.ui.LocalAppScaffoldState
+import com.example.routinetaskmanager.navigation.ui.LocalCurrentRoute
+import com.example.routinetaskmanager.navigation.ui.ReminderInfo
+import com.example.routinetaskmanager.ui.theme.RoutineTaskManagerTheme
+import java.time.DayOfWeek
+import java.time.LocalTime
 
 @Composable
 fun ReminderInfoScreen(
     uiState: ReminderInfoUiState,
     onIntent : (ReminderInfoIntent) -> Unit
 ) {
+    val imagePaths = uiState.reminder?.images.orEmpty().map { image -> image.imagePath }
+    var fullscreenImageIndex by remember(imagePaths) {
+        mutableStateOf<Int?>(null)
+    }
+
+    AppChromeEffect(
+        owner = ReminderInfo(uiState.reminder?.id ?: 0),
+        chrome = AppChrome(
+            topBar = {
+                CommonTopAppBarWithActionButtons(
+                    title = uiState.reminder?.name ?: "Error",
+                    onBackClick = { onIntent(ReminderInfoIntent.OnBackClick) },
+                    onEditClick = { onIntent(ReminderInfoIntent.OnReminderEdit) },
+                    onDeleteClick = { onIntent(ReminderInfoIntent.OnReminderDelete) }
+                )
+            }
+        )
+    )
+    
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -51,6 +101,174 @@ fun ReminderInfoScreen(
         } ?: Text(
             text = stringResource(R.string.no_reminders_found_for_this_week)
         )
+
+        if (uiState.reminder?.instructionsText != null || imagePaths.isNotEmpty()){
+            InstructionsBlock(
+                instructions = uiState.reminder?.instructionsText,
+                imagePaths = imagePaths,
+                onImageClick = { imageIndex ->
+                    fullscreenImageIndex = imageIndex
+                }
+            )
+        }
+
+        uiState.reminder?.repeatRule?.let {
+            RepeatBlock(
+                repeatRule = it
+            )
+        }
+
+    }
+
+    fullscreenImageIndex?.let { imageIndex ->
+        FullscreenImagePagerDialog(
+            imagePaths = imagePaths,
+            initialIndex = imageIndex,
+            onDismiss = {
+                fullscreenImageIndex = null
+            }
+        )
+    }
+}
+
+
+@Preview(
+    name = "ReminderInfoScreen"
+)
+@Composable
+private fun ReminderInfoScreenPreview(){
+    val reminder = remember {
+        Reminder(
+            id = 1,
+            name = "Drink water",
+            instructionsText = " - Keep a glass nearby. \n - Drink water",
+            images = listOf(
+                ReminderImage(
+                    reminderId = 1,
+                    imagePath = "android.resource://com.example.routinetaskmanager/drawable/ic_launcher_foreground",
+                    sortOrder = 0
+                ),
+                ReminderImage(
+                    reminderId = 1,
+                    imagePath = "android.resource://com.example.routinetaskmanager/drawable/ic_add_photo",
+                    sortOrder = 1
+                )
+            ),
+
+            repeatRule = ReminderRepeatRule.OnSchedulePeriod(
+                schedule = WeeklyRepeat(
+                    mode = RepeatScheduleMode.DEFAULT,
+                    selectedDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
+                    defaultValue = OnSchedulePeriodDayRepeat(
+                        interval = RepeatInterval(
+                            30,
+                            RepeatUnit.MINUTES
+                        ),
+                        timeWindow = TimeWindow(
+                            startTime = LocalTime.NOON,
+                            endTime = LocalTime.MIDNIGHT,
+                            allDayEnabled = false
+                        )
+                    ),
+                    advancedEntries = emptyList(),
+                )),
+            notificationMode = NotificationMode.SOUND,
+            createdAt = 0L,
+            updatedAt = 0L
+        )
+    }
+    val route = remember { ReminderInfo(reminder.id) }
+    val scaffoldState = remember { AppScaffoldState() }
+
+    RoutineTaskManagerTheme {
+        CompositionLocalProvider(
+            LocalAppScaffoldState provides scaffoldState,
+            LocalCurrentRoute provides route
+        ) {
+            Scaffold(
+                topBar = {
+                    scaffoldState.chrome.topBar?.invoke()
+                }
+            ) { paddingValues ->
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    ReminderInfoScreen(
+                        uiState = ReminderInfoUiState(
+                            reminder = reminder,
+                            nextReminderDateTime = "Today, 18:00"
+                        ),
+                        onIntent = {}
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RepeatBlock(
+    repeatRule: ReminderRepeatRule
+){
+    TitleText(
+        text = stringResource(R.string.field_repeat_type)
+    )
+
+    Row(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ){
+        Icon(
+            painter = painterResource(R.drawable.ic_schedule),
+            "Schedule"
+        )
+
+        Text(
+            text = repeatRule.toRepeatLabel()
+        )
+    }
+
+    TitleText(
+        text = stringResource(R.string.field_repeat_time)
+    )
+
+    repeatRule.toShortDetailsLabel()?.let {
+        Text(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            text = it
+        )
+    }
+
+}
+@Composable
+fun InstructionsBlock(
+    instructions: String?,
+    imagePaths: List<String>,
+    onImageClick: (Int) -> Unit
+){
+    Column(
+
+    ) {
+        TitleText(
+            text = stringResource(R.string.field_instructions)
+        )
+
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            instructions?.let{
+                Text(text = instructions)
+            }
+
+            if (imagePaths.isNotEmpty()) {
+                ImagePagerWithThumbnail(
+                    modifier = Modifier.fillMaxWidth(),
+                    imagePaths = imagePaths,
+                    onClick = onImageClick
+                )
+            }
+        }
+
     }
 }
 
@@ -62,7 +280,7 @@ fun NextReminderBlock(
     onSkipForTodayClick: () -> Unit
 ){
     Column(
-
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         TitleText(
             text = stringResource(R.string.next_reminder)
@@ -72,12 +290,14 @@ fun NextReminderBlock(
             onOutlinedButtonClick = onSkipClick,
             onFilledButtonClick = onDoNowClick
         )
-    }
-    Button(
-        contentPadding = PaddingValues(vertical = 2.dp),
-        onClick = onSkipForTodayClick
-    ){
-        Text(stringResource(R.string.skip_for_today))
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onSkipForTodayClick,
+            contentPadding = PaddingValues(vertical = 0.dp, horizontal = 4.dp)
+        ){
+            Text(stringResource(R.string.skip_for_today))
+        }
     }
 }
 
@@ -113,29 +333,15 @@ fun NextReminderInfoCard(
                 )
             }
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CommonOutlinedButton(
-                        onClick = onOutlinedButtonClick,
-                        text = stringResource(R.string.skip),
-                        contentPadding = PaddingValues(
-                            8.dp
-                        )
-                    )
-                    CommonButton(
-                        onClick = onFilledButtonClick,
-                        text = stringResource(R.string.do_now),
-                        contentPadding = PaddingValues(
-                            8.dp
-                        )
-                    )
-                }
+                ReminderActionButtons(
+                    skipText = stringResource(R.string.skip),
+                    onSkipClick = onOutlinedButtonClick,
+                    doNowText = stringResource(R.string.do_now),
+                    onDoNowClick = onFilledButtonClick
+                )
             }
         }
     }

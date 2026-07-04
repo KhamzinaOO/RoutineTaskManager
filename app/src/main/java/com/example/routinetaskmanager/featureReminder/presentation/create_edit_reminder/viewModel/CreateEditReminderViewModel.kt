@@ -4,6 +4,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.onErrorMessage
+import com.example.routinetaskmanager.core.error.onSuccess
+import com.example.routinetaskmanager.core.error.runAppCatching
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderImageInput
@@ -210,7 +213,7 @@ class CreateEditReminderViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
 
-            runCatching {
+            runAppCatching {
                 when (state.screenMode) {
                     is CreateEditReminderMode.Create -> {
                         commandUseCase.createReminder(
@@ -239,10 +242,9 @@ class CreateEditReminderViewModel(
                         sendEffect(CreateEditReminderEffect.NavigateBack)
                     }
                 }
-            }.onFailure { throwable ->
-                val message = throwable.message?.let(UiText::DynamicString)
-                    ?: UiText.StringResource(R.string.error_failed_save_reminder)
-
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_save_reminder)
+            ) { message ->
                 _uiState.update {
                     it.copy(
                         isSaving = false,
@@ -257,16 +259,15 @@ class CreateEditReminderViewModel(
 
     private fun rescheduleNotificationsAfterPermissionGrant() {
         viewModelScope.launch {
-            runCatching {
+            runAppCatching {
                 commandUseCase.rescheduleReminderNotifications()
             }.onSuccess {
                 sendEffect(CreateEditReminderEffect.NavigateBack)
-            }.onFailure { throwable ->
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_schedule_reminder_notifications)
+            ) { message ->
                 sendEffect(
-                    CreateEditReminderEffect.ShowMessage(
-                        throwable.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_schedule_reminder_notifications)
-                    )
+                    CreateEditReminderEffect.ShowMessage(message)
                 )
                 sendEffect(CreateEditReminderEffect.NavigateBack)
             }
@@ -345,7 +346,7 @@ class CreateEditReminderViewModel(
 
     fun loadReminder(){
         viewModelScope.launch {
-            runCatching {
+            runAppCatching {
                 id?.let { commandUseCase.getReminderById(it) }
             }.onSuccess { result ->
                 result?.let { reminder ->
@@ -372,13 +373,10 @@ class CreateEditReminderViewModel(
                         )
                     }
                 }
-            }.onFailure { throwable ->
-                val message = throwable.message?.let(UiText::DynamicString)
-                    ?: UiText.StringResource(R.string.error_failed_load_reminder)
-
-                _effect.send(
-                    CreateEditReminderEffect.ShowMessage(message)
-                )
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminder)
+            ) { message ->
+                sendEffect(CreateEditReminderEffect.ShowMessage(message))
             }
         }
     }

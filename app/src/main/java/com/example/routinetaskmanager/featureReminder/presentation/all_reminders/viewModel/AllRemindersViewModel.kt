@@ -3,7 +3,10 @@ package com.example.routinetaskmanager.featureReminder.presentation.all_reminder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.onErrorMessage
+import com.example.routinetaskmanager.core.error.runAppCatching
 import com.example.routinetaskmanager.core.presentation.model.UiText
+import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
@@ -22,7 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class AllRemindersViewModel(
-    private val reminderRepository: ReminderRepository
+    private val remindersCommand : ReminderCommandUseCase
 ) : ViewModel() {
 
     private val _effect = Channel<AllRemindersEffect>(Channel.BUFFERED)
@@ -88,8 +91,7 @@ class AllRemindersViewModel(
                 it.copy(isLoading = true)
             }
 
-            reminderRepository.observeReminders()
-                .distinctUntilChanged()
+            remindersCommand.observeReminders()
                 .collect { reminders ->
                     _uiState.update { state ->
                         val newState = state.copy(
@@ -107,16 +109,15 @@ class AllRemindersViewModel(
 
     private fun deleteReminder(id: Long) {
         viewModelScope.launch {
-            runCatching {
+            runAppCatching {
                 withContext(Dispatchers.IO) {
-                    reminderRepository.deleteReminder(id)
+                    remindersCommand.deleteReminder(id)
                 }
-            }.onFailure { error ->
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_delete_reminder)
+            ) { message ->
                 sendEffect(
-                    AllRemindersEffect.ShowMessage(
-                        error.message?.let(UiText::DynamicString)
-                            ?: UiText.StringResource(R.string.error_failed_delete_reminder)
-                    )
+                    AllRemindersEffect.ShowMessage(message)
                 )
             }
         }

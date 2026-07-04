@@ -126,13 +126,15 @@ class AndroidAppAlarmScheduler(
         }
     }
 
-    // TODO: permission!!!!
     private fun scheduleExact(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
     ): Boolean {
         if (!permissionChecker.canScheduleExactAlarms()) {
-            return false
+            return scheduleInexact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
         }
 
         return runCatching {
@@ -142,7 +144,12 @@ class AndroidAppAlarmScheduler(
                 pendingIntent
             )
             true
-        }.getOrDefault(false)
+        }.getOrElse {
+            scheduleInexact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
+        }
     }
 
     private fun scheduleInexact(

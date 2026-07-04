@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.routinetaskmanager.core.presentation.model.asString
+import com.example.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderEffect
 import com.example.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
@@ -26,9 +27,18 @@ fun CreateEditReminderRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val requestNotificationPermission = rememberNotificationPermissionRequest(
+    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = {
             viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
+        },
+        onDenied = {
+            viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
+        }
+    )
+
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = {
+            requestExactAlarmAccess()
         },
         onDenied = {
             viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionDenied)

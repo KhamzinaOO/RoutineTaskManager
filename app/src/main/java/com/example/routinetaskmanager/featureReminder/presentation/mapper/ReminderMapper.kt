@@ -1,16 +1,24 @@
-package com.example.routinetaskmanager.featureReminder.presentation.all_reminders.mapper
+package com.example.routinetaskmanager.featureReminder.presentation.mapper
 
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.ConfigurationCompat
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.TimeWindow
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderMiniCardUi
 import java.time.DayOfWeek
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun Reminder.toMiniCardUi(): ReminderMiniCardUi {
@@ -26,7 +34,7 @@ fun Reminder.toMiniCardUi(): ReminderMiniCardUi {
 }
 
 @Composable
-private fun ReminderRepeatRule.toRepeatLabel(): String {
+fun ReminderRepeatRule.toRepeatLabel(): String {
     return when (this) {
         is ReminderRepeatRule.AfterAnother -> {
             stringResource(R.string.repeat_label_after_another_reminder)
@@ -47,37 +55,31 @@ private fun ReminderRepeatRule.toRepeatLabel(): String {
 }
 
 @Composable
-private fun ReminderRepeatRule.toShortDetailsLabel(): String? {
+fun ReminderRepeatRule.toShortDetailsLabel(): String? {
     return when (this) {
         is ReminderRepeatRule.AfterAnother -> {
-            stringResource(
-                R.string.repeat_detail_after,
-                waitInterval.value,
-                waitInterval.unit.toLabel(waitInterval.value)
-            )
+            waitInterval.unit.toAfterDetailLabel(waitInterval.value)
         }
 
         is ReminderRepeatRule.DuringSessionPeriod -> {
             val days = schedule.selectedDays.toShortDaysLabel()
             val interval = schedule.defaultValue.interval
 
-            stringResource(
-                R.string.repeat_detail_every,
-                interval.value,
-                interval.unit.toLabel(interval.value),
-                days
+            interval.unit.toEveryDetailLabel(
+                value = interval.value,
+                days = days
             )
         }
 
         is ReminderRepeatRule.OnSchedulePeriod -> {
+            val time = schedule.defaultValue.timeWindow
             val days = schedule.selectedDays.toShortDaysLabel()
             val interval = schedule.defaultValue.interval
 
-            stringResource(
-                R.string.repeat_detail_every,
-                interval.value,
-                interval.unit.toLabel(interval.value),
-                days
+            time.toTimeIntervalLabel() + "\n" +
+            interval.unit.toEveryDetailLabel(
+                value = interval.value,
+                days = days
             )
         }
 
@@ -99,7 +101,7 @@ private fun ReminderRepeatRule.toShortDetailsLabel(): String? {
 }
 
 @Composable
-private fun Set<DayOfWeek>.toShortDaysLabel(): String {
+fun Set<DayOfWeek>.toShortDaysLabel(): String {
     if (isEmpty()) return stringResource(R.string.repeat_days_never)
 
     if (size == DayOfWeek.entries.size) {
@@ -131,12 +133,51 @@ private fun Set<DayOfWeek>.toShortDaysLabel(): String {
 }
 
 @Composable
-private fun RepeatUnit.toLabel(
-    value: Int
+fun RepeatUnit.toAfterDetailLabel(value: Int): String {
+    return when (this) {
+        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_detail_after_minutes, value, value)
+        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_detail_after_hours, value, value)
+        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_detail_after_days, value, value)
+    }
+}
+
+@Composable
+fun RepeatUnit.toEveryDetailLabel(
+    value: Int,
+    days: String
 ): String {
     return when (this) {
-        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_unit_minutes_count, value)
-        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_unit_hours_count, value)
-        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_unit_days_count, value)
+        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_detail_every_minutes, value, value, days)
+        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_detail_every_hours, value, value, days)
+        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_detail_every_days, value, value, days)
+    }
+}
+
+@Composable
+fun TimeWindow.toTimeIntervalLabel(): String {
+    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+
+    val locale = remember(configuration) {
+        ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
+    }
+
+    val is24HourFormat = DateFormat.is24HourFormat(context)
+
+    val timeFormatter = remember(locale, is24HourFormat) {
+        val skeleton = if (is24HourFormat) "Hm" else "hm"
+        val pattern = DateFormat.getBestDateTimePattern(locale, skeleton)
+
+        DateTimeFormatter.ofPattern(pattern, locale)
+    }
+
+    return when {
+        allDayEnabled -> stringResource(R.string.time_all_day)
+        else -> {
+            val start = startTime.format(timeFormatter)
+            val end = endTime.format(timeFormatter)
+
+            "$start - $end"
+        }
     }
 }

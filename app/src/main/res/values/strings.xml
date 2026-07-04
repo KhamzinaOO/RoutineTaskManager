@@ -14,6 +14,7 @@
     <string name="action_checked">Checked</string>
     <string name="action_clear">Clear</string>
     <string name="action_close">Close</string>
+    <string name="action_cancel">Cancel</string>
     <string name="action_decrement">Decrement</string>
     <string name="action_delete">Delete</string>
     <string name="action_do_now">Do now</string>
@@ -77,8 +78,30 @@
     <string name="repeat_label_after_another_reminder">After another reminder</string>
     <string name="repeat_label_on_schedule_period_compact">On schedule · Period</string>
     <string name="repeat_label_on_schedule_certain_compact">On schedule · Certain time</string>
-    <string name="repeat_detail_after">After %1$d %2$s</string>
-    <string name="repeat_detail_every">Every %1$d %2$s · %3$s</string>
+    <plurals name="repeat_detail_after_minutes">
+        <item quantity="one">After %d minute</item>
+        <item quantity="other">After %d minutes</item>
+    </plurals>
+    <plurals name="repeat_detail_after_hours">
+        <item quantity="one">After %d hour</item>
+        <item quantity="other">After %d hours</item>
+    </plurals>
+    <plurals name="repeat_detail_after_days">
+        <item quantity="one">After %d day</item>
+        <item quantity="other">After %d days</item>
+    </plurals>
+    <plurals name="repeat_detail_every_minutes">
+        <item quantity="one">Every %1$d minute · %2$s</item>
+        <item quantity="other">Every %1$d minutes · %2$s</item>
+    </plurals>
+    <plurals name="repeat_detail_every_hours">
+        <item quantity="one">Every %1$d hour · %2$s</item>
+        <item quantity="other">Every %1$d hours · %2$s</item>
+    </plurals>
+    <plurals name="repeat_detail_every_days">
+        <item quantity="one">Every %1$d day · %2$s</item>
+        <item quantity="other">Every %1$d days · %2$s</item>
+    </plurals>
     <string name="repeat_days_never">Never</string>
     <string name="repeat_days_every_day">Every day</string>
     <string name="repeat_days_weekdays">Weekdays</string>
@@ -99,10 +122,30 @@
         <item quantity="one">day</item>
         <item quantity="other">days</item>
     </plurals>
+    <plurals name="repeat_every_unit_minutes_count">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
+    <plurals name="repeat_every_unit_hours_count">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="repeat_every_unit_days_count">
+        <item quantity="one">day</item>
+        <item quantity="other">days</item>
+    </plurals>
     <string name="repeat_mode_default">Default</string>
     <string name="repeat_mode_advanced">Advanced</string>
     <string name="repeat_wait_time">Wait time</string>
-    <plurals name="repeat_every">
+    <plurals name="repeat_every_minutes">
+        <item quantity="one">Every</item>
+        <item quantity="other">Every</item>
+    </plurals>
+    <plurals name="repeat_every_hours">
+        <item quantity="one">Every</item>
+        <item quantity="other">Every</item>
+    </plurals>
+    <plurals name="repeat_every_days">
         <item quantity="one">Every</item>
         <item quantity="other">Every</item>
     </plurals>
@@ -110,7 +153,10 @@
     <string name="repeat_unit_minutes">minutes</string>
     <string name="repeat_unit_hours">hours</string>
     <string name="repeat_unit_days">days</string>
+    <string name="date_picker_title">Select date</string>
+    <string name="time_picker_title">Select time</string>
     <string name="time_all_day">All day</string>
+    <string name="action_ok">OK</string>
 
     <string name="notification_mode_sound">Sound</string>
     <string name="notification_mode_vibration">Vibration</string>
@@ -175,6 +221,16 @@
     <string name="error_add_valid_time">Add at least one valid time</string>
     <string name="error_select_day">Select at least one day</string>
     <string name="error_enable_day">Enable at least one day</string>
+    <string name="error_invalid_input">Check the entered data</string>
+    <string name="error_unknown">Something went wrong</string>
+    <string name="error_operation_cancelled">Operation cancelled</string>
+    <string name="error_item_not_found">Item not found</string>
+    <string name="error_storage">Failed to access files</string>
+    <string name="error_database">Failed to save data</string>
+    <string name="error_permission_denied">Permission denied</string>
+    <string name="error_notification_permission_denied">Notifications are disabled</string>
+    <string name="error_exact_alarm_permission_denied">Exact alarm access is disabled</string>
+    <string name="error_alarm_scheduling_failed">Failed to schedule notification</string>
     <string name="next_reminder">Next reminder</string>
     <string name="skip">Skip</string>
     <string name="do_now">Do now</string>

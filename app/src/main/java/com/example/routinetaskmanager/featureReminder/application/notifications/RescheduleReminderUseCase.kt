@@ -89,7 +89,7 @@ class RescheduleRemindersUseCase(
                     targetId = occurrence.reminderId,
                     scheduledAtMillis = scheduledAtMillis,
                     requestCode = requestCode,
-                    precision = AlarmPrecision.INEXACT
+                    precision = AlarmPrecision.EXACT
                 )
 
                 if (!wasScheduled) {
