@@ -3,6 +3,7 @@ package com.example.routinetaskmanager.featureReminder.domain.model.schedule
 import com.example.routinetaskmanager.featureReminder.domain.model.OnSchedulePeriodDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceKeyFactory
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
@@ -12,6 +13,7 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 
 class ReminderScheduleCalculator {
 
@@ -222,12 +224,22 @@ class ReminderScheduleCalculator {
     private fun Reminder.toOccurrence(
         scheduledAt: LocalDateTime
     ): ReminderOccurrence {
+        val scheduledAtMillis = scheduledAt
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
         return ReminderOccurrence(
             reminderId = id,
             reminderName = name,
             instructionsText = instructionsText,
             scheduledAt = scheduledAt,
-            repeatType = repeatRule.type
+            repeatType = repeatRule.type,
+            occurrenceKey = ReminderOccurrenceKeyFactory.regular(
+                reminderId = id,
+                scheduledAtMillis = scheduledAtMillis
+            ),
+            scheduledAtMillis = scheduledAtMillis
         )
     }
 

@@ -4,18 +4,20 @@ import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
+import com.example.routinetaskmanager.core.utills.toEpochMillis
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
-import com.example.routinetaskmanager.core.notifications.toReminderChannelId
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
+import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
-import java.time.ZoneId
 
 class RescheduleRemindersUseCase(
+    private val reminderOccurrenceRepository: ReminderOccurrenceRepository,
     private val reminderRepository: ReminderRepository,
     private val scheduleCalculator: ReminderScheduleCalculator,
     private val alarmScheduler: AppAlarmScheduler,
@@ -50,13 +52,28 @@ class RescheduleRemindersUseCase(
                 endExclusive = now.plusDays(SCHEDULE_LOOK_AHEAD_DAYS)
             )
 
+            val statesByKey = reminderOccurrenceRepository.getByRange(
+                startMillis = range.start.toEpochMillis(),
+                endMillis = range.endExclusive.toEpochMillis()
+            ).associateBy { it.occurrenceKey }
+
             val nextOccurrences = scheduleCalculator
                 .buildOccurrences(
                     reminders = reminders,
                     range = range
-                )
+                ).map { occurrence ->
+                    val state = statesByKey[occurrence.occurrenceKey]
+
+                    if(state == null){
+                        occurrence
+                    }else{
+                        occurrence.copy(
+                            status = state.status
+                        )
+                    }
+                }
                 .filter { occurrence ->
-                    occurrence.scheduledAt.isAfter(now)
+                    occurrence.scheduledAt.isAfter(now) && occurrence.status == ReminderOccurrenceStatus.PLANNED
                 }
                 .sortedBy { occurrence ->
                     occurrence.scheduledAt
@@ -64,25 +81,11 @@ class RescheduleRemindersUseCase(
                 .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
 
             val entities = nextOccurrences.mapNotNull { occurrence ->
-                val scheduledAtMillis = occurrence.scheduledAt
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli()
-
-                val occurrenceKey = buildOccurrenceKey(
-                    targetType = NotificationTargetType.REMINDER,
-                    targetId = occurrence.reminderId,
-                    scheduledAtMillis = scheduledAtMillis
-                )
+                val scheduledAtMillis = occurrence.scheduledAtMillis
+                val occurrenceKey = occurrence.occurrenceKey
 
                 //IS NOT UNIQUE!!!
                 val requestCode = occurrenceKey.hashCode()
-
-                val reminder = reminders.first {
-                    it.id == occurrence.reminderId
-                }
-
-                val channelId = reminder.notificationMode.toReminderChannelId()
 
                 val wasScheduled = alarmScheduler.schedule(
                     targetType = NotificationTargetType.REMINDER,
@@ -102,21 +105,12 @@ class RescheduleRemindersUseCase(
                     targetId = occurrence.reminderId,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    //channelId = channelId,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR.name
                 )
             }
 
             scheduledNotificationDao.insertAll(entities)
         }
-    }
-
-    private fun buildOccurrenceKey(
-        targetType: NotificationTargetType,
-        targetId: Long,
-        scheduledAtMillis: Long
-    ): String {
-        return "${targetType.name}-$targetId-$scheduledAtMillis"
     }
 
     private companion object {

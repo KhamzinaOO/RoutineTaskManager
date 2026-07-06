@@ -8,5 +8,9 @@ sealed interface ReminderInfoIntent {
     data object OnDoButtonClick : ReminderInfoIntent
     data object OnSkipAllForTodayClick : ReminderInfoIntent
 
+    data class OnSetEnabled(
+        val enabled: Boolean
+    ) : ReminderInfoIntent
+
     data object OnBackClick: ReminderInfoIntent
 }

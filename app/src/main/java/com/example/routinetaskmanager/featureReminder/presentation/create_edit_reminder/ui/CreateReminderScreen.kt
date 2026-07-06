@@ -136,10 +136,6 @@ fun CreateReminderScreen(
             onValueChange = { value ->
                 onIntent(CreateEditReminderIntent.InstructionsChanged(value))
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
-            ),
             onTakePictureClick = {
                 onIntent(CreateEditReminderIntent.TakePictureClicked)
             }
@@ -282,6 +278,7 @@ fun CreateReminderScreen(
             contentAlignment = Alignment.Center
         ) {
             Button(
+                modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 onClick = {
                     onIntent(CreateEditReminderIntent.SaveClicked)

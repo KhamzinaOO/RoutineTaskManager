@@ -4,4 +4,6 @@ import com.example.routinetaskmanager.core.presentation.model.UiText
 
 sealed interface HomeEffect{
     data class ShowMessage(val message: UiText) : HomeEffect
+    data object NavigateCreateReminder : HomeEffect
+    data object NavigateTasks : HomeEffect
 }

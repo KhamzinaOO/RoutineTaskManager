@@ -12,11 +12,12 @@ import com.example.routinetaskmanager.featureReminder.application.session.Observ
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionResult
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
-import com.example.routinetaskmanager.featureReminder.presentation.reminder_main.model.ReminderMainEffect
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -54,10 +55,32 @@ class HomeViewModel(
 
     fun onIntent(intent : HomeUiIntent){
         when (intent) {
-            is HomeUiIntent.AddReminderClick -> TODO()
-            is HomeUiIntent.AddTaskClick -> TODO()
-            is HomeUiIntent.DateClick -> TODO()
-            is HomeUiIntent.NotificationPermissionDenied -> TODO()
+            is HomeUiIntent.AddReminderClick -> {
+                sendEffect(HomeEffect.NavigateCreateReminder)
+            }
+
+            is HomeUiIntent.AddTaskClick -> {
+                sendEffect(HomeEffect.NavigateTasks)
+            }
+
+            is HomeUiIntent.DateClick -> Unit
+
+            is HomeUiIntent.NotificationPermissionDenied -> {
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        UiText.StringResource(R.string.error_notification_permission_denied)
+                    )
+                )
+            }
+
+            is HomeUiIntent.OnNextReminderDoneClick -> {
+                completeOccurrence(intent.occurrence)
+            }
+
+            is HomeUiIntent.OnNextReminderSkipClick -> {
+                skipOccurrence(intent.occurrence)
+            }
+
             is HomeUiIntent.OnSessionButtonClick -> {
                 toggleWorkSession()
             }
@@ -65,15 +88,24 @@ class HomeViewModel(
     }
 
     private fun observeTodayReminders(){
-        viewModelScope.launch {
-            observeDayReminderOccurrencesUseCase(date = LocalDate.now()).onEach { reminders ->
+        observeDayReminderOccurrencesUseCase(date = LocalDate.now())
+            .onEach { reminders ->
                 _uiState.update {
                     it.copy(
                         reminders = reminders
                     )
                 }
-            }.launchIn(viewModelScope)
-        }
+            }
+            .catch { throwable ->
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                        )
+                    )
+                )
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeWorkSession(){
@@ -103,6 +135,42 @@ class HomeViewModel(
             handleToggleWorkSessionResult(result)
 
             _uiState.update { it.copy(isSessionActionInProgress = false) }
+        }
+    }
+
+    private fun completeOccurrence(
+        occurrence: ReminderOccurrence
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                reminderCommandUseCase.completeOccurrence(occurrence)
+            }.onFailure { throwable ->
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
+                        )
+                    )
+                )
+            }
+        }
+    }
+
+    private fun skipOccurrence(
+        occurrence: ReminderOccurrence
+    ) {
+        viewModelScope.launch {
+            runCatching {
+                reminderCommandUseCase.skipOccurrence(occurrence)
+            }.onFailure { throwable ->
+                sendEffect(
+                    HomeEffect.ShowMessage(
+                        throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
+                        )
+                    )
+                )
+            }
         }
     }
 

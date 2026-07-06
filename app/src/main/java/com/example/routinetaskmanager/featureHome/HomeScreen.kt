@@ -31,7 +31,6 @@ import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.NextReminderCard
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
-import com.example.routinetaskmanager.featureTask.ui.TaskCardUi
 import com.example.routinetaskmanager.featureWidgets.AmountTracker
 import com.example.routinetaskmanager.featureWidgets.TimerTracker
 import com.example.routinetaskmanager.navigation.ui.AppChrome
@@ -135,25 +134,27 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            uiState.reminders.firstOrNull { reminder ->
+            val nextReminder = uiState.reminders.firstOrNull { reminder ->
                 reminder.status == ReminderOccurrenceStatus.PLANNED
-            }?.let { reminder ->
+            }
+
+            nextReminder?.let { reminder ->
                 NextReminderCard(
                     time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
                     label = reminder.reminderName,
                     reminderTime = formatStartsIn(LocalDateTime.now(), reminder.scheduledAt),
                     outlinedButtonText = stringResource(R.string.action_skip),
-                    onOutlinedButtonClick = {},
+                    onOutlinedButtonClick = {
+                        onIntent(HomeUiIntent.OnNextReminderSkipClick(reminder))
+                    },
                     filledButtonText = stringResource(R.string.action_do_now),
-                    onFilledButtonClick = {}
+                    onFilledButtonClick = {
+                        onIntent(HomeUiIntent.OnNextReminderDoneClick(reminder))
+                    }
                 )
             }
 
             var isLeftButtonPicked by remember { mutableStateOf(true) }
-            val sampleTask = stringResource(R.string.home_sample_task)
-            val sampleDescription = stringResource(R.string.home_sample_description)
-            val sampleLongDescription = stringResource(R.string.home_sample_long_description)
-            val allDay = stringResource(R.string.time_all_day)
             ScheduleItemsCard(
                 reminders = uiState.reminders.map { reminder ->
                     ReminderCardUi(
@@ -162,40 +163,17 @@ fun HomeScreen(
                         text = reminder.reminderName
                     )
                 },
-                tasks = listOf(
-                    TaskCardUi(
-                        text = sampleTask,
-                        status = true,
-                        time = "10:00",
-                        duration = allDay,
-                        description = sampleDescription
-                    ),
-                    TaskCardUi(
-                        text = sampleTask,
-                        status = true,
-                        time = "11:00",
-                        duration = "11:00-15:00",
-                        description = sampleLongDescription
-                    ),
-                    TaskCardUi(
-                        text = sampleTask,
-                        status = false,
-                        time = "12:00",
-                        duration = allDay,
-                        description = sampleDescription
-                    ),TaskCardUi(
-                        text = sampleTask,
-                        status = false,
-                        time = "13:00",
-                        duration = allDay,
-                        description = sampleDescription
-                    ),
-
-                    ),
+                tasks = emptyList(),
                 isLeftButtonPicked,
                 {isLeftButtonPicked = true},
                 {isLeftButtonPicked = false},
-                {}
+                {
+                    if (isLeftButtonPicked) {
+                        onIntent(HomeUiIntent.AddReminderClick)
+                    } else {
+                        onIntent(HomeUiIntent.AddTaskClick)
+                    }
+                }
             )
 
             Row(
@@ -230,7 +208,7 @@ fun HomeScreen(
     }
 }
 
-//TODO: localization
+@Composable
 private fun formatStartsIn(
     now: LocalDateTime,
     scheduledAt: LocalDateTime
@@ -238,12 +216,27 @@ private fun formatStartsIn(
     val duration = Duration.between(now, scheduledAt)
 
     if (duration.isNegative || duration.isZero) {
-        return "Started"
+        return stringResource(R.string.home_reminder_started)
     }
 
-    val days = if(duration.toDays()>0) "${duration.toDays()}d" else ""
-    val hours = if(duration.toHours() % 24 >0) "${duration.toHours() % 24}h" else ""
-    val minutes = if(duration.toMinutes() % 60 >0) "${duration.toMinutes() % 60}m" else ""
+    val parts = buildList {
+        val days = duration.toDays()
+        val hours = duration.toHours() % 24
+        val minutes = duration.toMinutes() % 60
 
-    return "Starts in $days $hours $minutes"
+        if (days > 0) {
+            add(stringResource(R.string.duration_days_short, days))
+        }
+
+        if (hours > 0) {
+            add(stringResource(R.string.duration_hours_short, hours))
+        }
+
+        if (minutes > 0 || isEmpty()) {
+            val visibleMinutes = if (minutes > 0) minutes else 1
+            add(stringResource(R.string.duration_minutes_short, visibleMinutes))
+        }
+    }
+
+    return stringResource(R.string.home_reminder_starts_in, parts.joinToString(" "))
 }

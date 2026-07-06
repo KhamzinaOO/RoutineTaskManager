@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager.core.utills
 
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -13,4 +14,10 @@ fun formatTime(timeMillis: Long): String {
 
 fun LocalDateTime.formatDateTimeToWeekDayAndTime(): String{
     return this.format(DateTimeFormatter.ofPattern("EEEE, HH:mm"))
+}
+
+fun LocalDateTime.toEpochMillis(): Long {
+    return atZone(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli()
 }

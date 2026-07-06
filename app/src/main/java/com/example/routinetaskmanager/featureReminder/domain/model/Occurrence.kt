@@ -1,5 +1,6 @@
 package com.example.routinetaskmanager.featureReminder.domain.model
 
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import java.time.LocalDateTime
 
 data class ReminderOccurrence(
@@ -8,7 +9,10 @@ data class ReminderOccurrence(
     val instructionsText: String?,
     val scheduledAt: LocalDateTime,
     val repeatType: ReminderRepeatType,
-    val status: ReminderOccurrenceStatus = ReminderOccurrenceStatus.PLANNED
+    val status: ReminderOccurrenceStatus = ReminderOccurrenceStatus.PLANNED,
+    val occurrenceKey: String,
+    val scheduledAtMillis: Long,
+    val occurrenceKind: NotificationOccurrenceKind = NotificationOccurrenceKind.REGULAR
 )
 
 enum class ReminderOccurrenceStatus {

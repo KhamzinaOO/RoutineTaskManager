@@ -17,8 +17,10 @@
     <string name="action_cancel">Отмена</string>
     <string name="action_decrement">Уменьшить</string>
     <string name="action_delete">Удалить</string>
+    <string name="action_disable">Выключить</string>
     <string name="action_do_now">Сделать</string>
     <string name="action_edit">Изменить</string>
+    <string name="action_enable">Включить</string>
     <string name="action_increment">Увеличить</string>
     <string name="action_menu">Меню</string>
     <string name="action_not_now">Не сейчас</string>
@@ -46,6 +48,11 @@
     <string name="home_water_progress">0,2/2 л</string>
     <string name="home_water_unit_ml">мл</string>
     <string name="home_pomodoro_focus">Фокус Помодоро</string>
+    <string name="home_reminder_started">Началось</string>
+    <string name="home_reminder_starts_in">Через %1$s</string>
+    <string name="duration_days_short">%1$d д.</string>
+    <string name="duration_hours_short">%1$d ч.</string>
+    <string name="duration_minutes_short">%1$d мин.</string>
 
     <string name="tab_reminders">Напоминания</string>
     <string name="tab_tasks">Задачи</string>
@@ -70,6 +77,7 @@
     <string name="field_repeat_type">Тип повтора</string>
     <string name="field_repeat_time">Время повтора</string>
     <string name="field_notification_sound">Звук уведомления</string>
+    <string name="field_status">Статус</string>
 
     <string name="repeat_type_on_schedule_period">По расписанию (период)</string>
     <string name="repeat_type_on_schedule_certain">По расписанию (точное время)</string>
@@ -251,6 +259,7 @@
     <string name="error_failed_schedule_reminder_notifications">Не удалось запланировать уведомления напоминаний</string>
     <string name="error_failed_load_reminder">Не удалось загрузить напоминание</string>
     <string name="error_failed_delete_reminder">Не удалось удалить напоминание</string>
+    <string name="error_failed_update_reminder_status">Не удалось обновить статус напоминания</string>
     <string name="error_enter_reminder_name">Введите название напоминания</string>
     <string name="error_repeat_interval_number">Интервал повтора должен быть числом</string>
     <string name="error_repeat_interval_positive">Интервал повтора должен быть больше нуля</string>

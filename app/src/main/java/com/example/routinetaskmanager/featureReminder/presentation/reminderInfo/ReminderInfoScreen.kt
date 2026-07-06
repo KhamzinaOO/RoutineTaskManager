@@ -15,6 +15,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -35,6 +37,7 @@ import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.TitleText
 import com.example.routinetaskmanager.core.presentation.ui.image.FullscreenImagePagerDialog
 import com.example.routinetaskmanager.core.presentation.ui.image.ImagePagerWithThumbnail
+import com.example.routinetaskmanager.core.utills.formatDateTimeToWeekDayAndTime
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.OnSchedulePeriodDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
@@ -91,9 +94,18 @@ fun ReminderInfoScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        uiState.nextReminderDateTime?.let {
+        uiState.reminder?.let { reminder ->
+            ReminderStatusBlock(
+                reminder = reminder,
+                onEnabledChange = { enabled ->
+                    onIntent(ReminderInfoIntent.OnSetEnabled(enabled))
+                }
+            )
+        }
+
+        uiState.nextOccurrence?.let {
             NextReminderBlock(
-                reminderTime = it,
+                reminderTime = it.scheduledAt.formatDateTimeToWeekDayAndTime(),
                 onSkipClick = {onIntent(ReminderInfoIntent.OnSkipButtonClick)},
                 onDoNowClick = {onIntent(ReminderInfoIntent.OnDoButtonClick)},
                 onSkipForTodayClick = {onIntent(ReminderInfoIntent.OnSkipAllForTodayClick)}
@@ -118,6 +130,9 @@ fun ReminderInfoScreen(
             )
         }
 
+        uiState.reminder?.let { reminder ->
+            NotificationBlock(reminder = reminder)
+        }
     }
 
     fullscreenImageIndex?.let { imageIndex ->
@@ -129,6 +144,7 @@ fun ReminderInfoScreen(
             }
         )
     }
+
 }
 
 
@@ -193,14 +209,149 @@ private fun ReminderInfoScreenPreview(){
                 Box(modifier = Modifier.padding(paddingValues)) {
                     ReminderInfoScreen(
                         uiState = ReminderInfoUiState(
-                            reminder = reminder,
-                            nextReminderDateTime = "Today, 18:00"
+                            reminder = reminder
                         ),
                         onIntent = {}
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ReminderStatusBlock(
+    reminder: Reminder,
+    onEnabledChange: (Boolean) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        TitleText(
+            text = stringResource(R.string.field_status)
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            Row(
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (reminder.isEnabled) {
+                            R.drawable.ic_alarm_on
+                        } else {
+                            R.drawable.ic_alarm_disabled
+                        }
+                    ),
+                    contentDescription = null
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = if (reminder.isEnabled) {
+                            stringResource(R.string.status_on)
+                        } else {
+                            stringResource(R.string.status_off)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = if (reminder.isEnabled) {
+                            stringResource(R.string.action_disable)
+                        } else {
+                            stringResource(R.string.action_enable)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Switch(
+                    checked = reminder.isEnabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NotificationBlock(
+    reminder: Reminder
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        TitleText(
+            text = stringResource(R.string.field_notification_sound)
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            Row(
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 12.dp
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (reminder.notificationEnabled) {
+                            R.drawable.ic_alarm_on
+                        } else {
+                            R.drawable.ic_alarm_off
+                        }
+                    ),
+                    contentDescription = null
+                )
+
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = if (reminder.notificationEnabled) {
+                        reminder.notificationMode.toInfoLabel()
+                    } else {
+                        stringResource(R.string.notifications_off)
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotificationMode.toInfoLabel(): String {
+    return when (this) {
+        NotificationMode.SOUND -> stringResource(R.string.notification_mode_sound)
+        NotificationMode.VIBRATION -> stringResource(R.string.notification_mode_vibration)
+        NotificationMode.MUTE -> stringResource(R.string.notification_mode_silent)
     }
 }
 
@@ -253,8 +404,7 @@ fun InstructionsBlock(
 
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             instructions?.let{
                 Text(text = instructions)

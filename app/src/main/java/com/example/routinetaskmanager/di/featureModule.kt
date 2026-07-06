@@ -5,9 +5,11 @@ import com.example.routinetaskmanager.featureHome.HomeViewModel
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.data.repository.ReminderOccurrenceRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.data.session.AndroidWorkSessionRuntimeController
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
+import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveReminderScheduleUseCase
@@ -65,7 +67,8 @@ val featureReminderModule = module {
         ObserveReminderOccurrenceUseCase(
             dispatcherProvider = get(),
             reminderRepository = get(),
-            scheduleCalculator = get()
+            scheduleCalculator = get(),
+            occurrenceRepository = get()
         )
     }
 
@@ -73,7 +76,8 @@ val featureReminderModule = module {
         ObserveReminderScheduleUseCase(
             dispatcherProvider = get(),
             reminderRepository = get(),
-            scheduleCalculator = get()
+            scheduleCalculator = get(),
+            occurrenceRepository = get()
         )
     }
 
@@ -82,7 +86,8 @@ val featureReminderModule = module {
             reminderRepository = get(),
             scheduleCalculator = get(),
             alarmScheduler = get(),
-            scheduledNotificationDao = get()
+            scheduledNotificationDao = get(),
+            reminderOccurrenceRepository = get()
         )
     }
 
@@ -106,7 +111,9 @@ val featureReminderModule = module {
         ReminderCommandUseCase(
             reminderRepository = get(),
             rescheduleRemindersUseCase = get(),
-            dispatcherProvider = get()
+            dispatcherProvider = get(),
+            scheduleCalculator = get(),
+            occurrenceRepository = get(),
         )
     }
 
@@ -121,6 +128,12 @@ val featureReminderModule = module {
             database = get(),
             reminderDao = get(),
             imageStorage = get()
+        )
+    }
+
+    single<ReminderOccurrenceRepository> {
+        ReminderOccurrenceRepositoryImpl(
+            occurrenceDao = get()
         )
     }
 

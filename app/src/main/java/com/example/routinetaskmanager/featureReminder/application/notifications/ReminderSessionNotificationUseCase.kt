@@ -11,6 +11,7 @@ import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDo
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
+import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceKeyFactory
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
@@ -283,7 +284,11 @@ class ReminderSessionNotificationUseCase(
         scheduledAtMillis: Long,
         sequence: Int
     ): String {
-        return "$SESSION_OCCURRENCE_KEY_PREFIX$reminderId-$scheduledAtMillis-$sequence"
+        return ReminderOccurrenceKeyFactory.session(
+            reminderId = reminderId,
+            scheduledAtMillis = scheduledAtMillis,
+            sequence = sequence
+        )
     }
 
     private data class SessionOccurrence(
@@ -293,12 +298,24 @@ class ReminderSessionNotificationUseCase(
     )
 
     private fun SessionOccurrence.toReminderOccurrence(): ReminderOccurrence {
+        val scheduledAtMillis = scheduledAt
+            .atZone(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
         return ReminderOccurrence(
             reminderId = reminder.id,
             reminderName = reminder.name,
             instructionsText = reminder.instructionsText,
             scheduledAt = scheduledAt,
-            repeatType = reminder.repeatRule.toRepeatTypeDomain()
+            repeatType = reminder.repeatRule.toRepeatTypeDomain(),
+            occurrenceKey = buildSessionOccurrenceKey(
+                reminderId = reminder.id,
+                scheduledAtMillis = scheduledAtMillis,
+                sequence = sequence
+            ),
+            scheduledAtMillis = scheduledAtMillis,
+            occurrenceKind = NotificationOccurrenceKind.SESSION
         )
     }
 
@@ -308,7 +325,6 @@ class ReminderSessionNotificationUseCase(
     )
 
     private companion object {
-        const val SESSION_OCCURRENCE_KEY_PREFIX = "REMINDER-SESSION-"
         const val MAX_SESSION_NOTIFICATIONS = 30
         const val MAX_OCCURRENCES_PER_SESSION_REMINDER = 12
         val SESSION_LOOK_AHEAD: Duration = Duration.ofHours(12)

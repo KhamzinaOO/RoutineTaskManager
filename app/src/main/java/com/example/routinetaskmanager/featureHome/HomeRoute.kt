@@ -12,7 +12,9 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeRoute(
     viewModel: HomeViewModel = koinViewModel(),
     showMessage: (String) -> Unit,
-    showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
+    showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit,
+    onAddReminderClick: () -> Unit,
+    onTasksClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -22,6 +24,14 @@ fun HomeRoute(
             when(effect){
                 is HomeEffect.ShowMessage -> {
                     showMessage(effect.message.asString(context))
+                }
+
+                HomeEffect.NavigateCreateReminder -> {
+                    onAddReminderClick()
+                }
+
+                HomeEffect.NavigateTasks -> {
+                    onTasksClick()
                 }
             }
         }

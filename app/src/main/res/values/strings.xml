@@ -17,8 +17,10 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_decrement">Decrement</string>
     <string name="action_delete">Delete</string>
+    <string name="action_disable">Disable</string>
     <string name="action_do_now">Do now</string>
     <string name="action_edit">Edit</string>
+    <string name="action_enable">Enable</string>
     <string name="action_increment">Increment</string>
     <string name="action_menu">Menu</string>
     <string name="action_not_now">Not now</string>
@@ -46,6 +48,11 @@
     <string name="home_water_progress">0.2/2 L</string>
     <string name="home_water_unit_ml">ml</string>
     <string name="home_pomodoro_focus">Pomodoro focus</string>
+    <string name="home_reminder_started">Started</string>
+    <string name="home_reminder_starts_in">Starts in %1$s</string>
+    <string name="duration_days_short">%1$dd</string>
+    <string name="duration_hours_short">%1$dh</string>
+    <string name="duration_minutes_short">%1$dm</string>
 
     <string name="tab_reminders">Reminders</string>
     <string name="tab_tasks">Tasks</string>
@@ -70,6 +77,7 @@
     <string name="field_repeat_type">Repeat type</string>
     <string name="field_repeat_time">Repeat time</string>
     <string name="field_notification_sound">Notification sound</string>
+    <string name="field_status">Status</string>
 
     <string name="repeat_type_on_schedule_period">On schedule (period)</string>
     <string name="repeat_type_on_schedule_certain">On schedule (certain time)</string>
@@ -213,6 +221,7 @@
     <string name="error_failed_schedule_reminder_notifications">Failed to schedule reminder notifications</string>
     <string name="error_failed_load_reminder">Failed to load reminder</string>
     <string name="error_failed_delete_reminder">Failed to delete reminder</string>
+    <string name="error_failed_update_reminder_status">Failed to update reminder status</string>
     <string name="error_enter_reminder_name">Enter reminder name</string>
     <string name="error_repeat_interval_number">Repeat interval must be a number</string>
     <string name="error_repeat_interval_positive">Repeat interval must be greater than zero</string>

@@ -23,7 +23,6 @@ data class ScheduledNotificationEntity(
     val targetId: Long,
     val scheduledAtMillis: Long,
     val occurrenceKey: String,
-//    val channelId: String,
     val occurrenceKind: String = NotificationOccurrenceKind.REGULAR.name,
     val createdAtMillis: Long = System.currentTimeMillis()
 )

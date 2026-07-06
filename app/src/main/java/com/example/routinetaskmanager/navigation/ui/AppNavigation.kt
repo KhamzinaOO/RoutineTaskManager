@@ -173,7 +173,13 @@ fun AppNavigation() {
                                         snackbarHostState.showSnackbar(message)
                                     }
                                 },
-                                showActionMessage = ::showActionSnackbar
+                                showActionMessage = ::showActionSnackbar,
+                                onAddReminderClick = {
+                                    branches.push(CreateReminder)
+                                },
+                                onTasksClick = {
+                                    branches.switchTo(Tasks)
+                                }
                             )
                         }
 
