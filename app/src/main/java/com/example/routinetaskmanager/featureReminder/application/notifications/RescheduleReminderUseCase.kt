@@ -13,6 +13,8 @@ import com.example.routinetaskmanager.featureReminder.domain.model.schedule.Sche
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
@@ -23,8 +25,10 @@ class RescheduleRemindersUseCase(
     private val alarmScheduler: AppAlarmScheduler,
     private val scheduledNotificationDao: ScheduledNotificationDao,
 ) {
-
+    private val mutex: Mutex = Mutex()
     suspend operator fun invoke() {
+        mutex.withLock {
+        }
         withContext(Dispatchers.IO) {
             val oldReminderNotifications = scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
                 targetType = NotificationTargetType.REMINDER.name,
@@ -49,7 +53,10 @@ class RescheduleRemindersUseCase(
 
             val range = ScheduleRange(
                 start = now,
-                endExclusive = now.plusDays(SCHEDULE_LOOK_AHEAD_DAYS)
+                endExclusive = now
+                    .toLocalDate()
+                    .plusDays(SCHEDULE_LOOK_AHEAD_DAYS + 1)
+                    .atStartOfDay()
             )
 
             val statesByKey = reminderOccurrenceRepository.getByRange(
@@ -111,6 +118,7 @@ class RescheduleRemindersUseCase(
 
             scheduledNotificationDao.insertAll(entities)
         }
+
     }
 
     private companion object {
