@@ -44,10 +44,6 @@ data class WeeklyRepeatUi<T>(
     val advancedEntries: List<DayRepeatUi<T>>
 )
 
-data class AfterAnotherRepeatUi(
-    val waitInterval: RepeatIntervalUi = RepeatIntervalUi()
-)
-
 data class DuringSessionPeriodRepeatUi(
     val schedule: WeeklyRepeatUi<IntervalRepeatUi> = defaultWeeklyRepeatUi(
         defaultValue = IntervalRepeatUi()
@@ -86,7 +82,6 @@ fun <T> defaultWeeklyRepeatUi(
 
 data class ReminderRepeatUiStateBundle(
     val repeatType: ReminderRepeatType,
-    val afterAnotherState: AfterAnotherRepeatUi,
     val onSchedulePeriodState: OnSchedulePeriodRepeatUi,
     val onScheduleCertainState: OnScheduleCertainRepeatUi,
     val duringSessionState: DuringSessionPeriodRepeatUi

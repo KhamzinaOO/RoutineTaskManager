@@ -14,10 +14,13 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderOccurre
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderOccurrenceStateEntity
 import com.example.routinetaskmanager.featureReminder.data.mapper.ReminderRepeatRuleJsonMapper
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
+import com.example.routinetaskmanager.featureReminder.domain.model.OnScheduleCertainDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
-import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
-import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
+import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
+import java.time.DayOfWeek
+import java.time.LocalTime
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -161,14 +164,21 @@ class AppDatabaseTest {
     }
 
     private fun reminderEntity(): ReminderEntity {
-        val rule = ReminderRepeatRule.AfterAnother(
-            waitInterval = RepeatInterval(1, RepeatUnit.HOURS)
+        val rule = ReminderRepeatRule.OnScheduleCertain(
+            schedule = WeeklyRepeat(
+                mode = RepeatScheduleMode.DEFAULT,
+                selectedDays = setOf(DayOfWeek.MONDAY),
+                defaultValue = OnScheduleCertainDayRepeat(
+                    pickedTimes = setOf(LocalTime.of(9, 0))
+                ),
+                advancedEntries = emptyList()
+            )
         )
 
         return ReminderEntity(
             name = "Reminder",
             instructionsText = "Instruction",
-            repeatType = "AFTER_ANOTHER",
+            repeatType = "ON_SCHEDULE_CERTAIN",
             repeatRuleJson = ReminderRepeatRuleJsonMapper.toJson(rule),
             notificationMode = NotificationMode.MUTE.name,
             createdAt = 100L,

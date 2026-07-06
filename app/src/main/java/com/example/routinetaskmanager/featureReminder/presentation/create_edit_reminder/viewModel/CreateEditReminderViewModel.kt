@@ -17,7 +17,6 @@ import com.example.routinetaskmanager.featureReminder.application.command.Remind
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.parseHourMinuteOrNull
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toRepeatRule
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiStateBundle
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainDayUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainRepeatUi
@@ -95,15 +94,6 @@ class CreateEditReminderViewModel(
                 _uiState.update {
                     it.copy(
                         repeatType = intent.value,
-                        errorMessage = null
-                    )
-                }
-            }
-
-            is CreateEditReminderIntent.AfterAnotherStateChanged -> {
-                _uiState.update {
-                    it.copy(
-                        afterAnotherState = intent.value,
                         errorMessage = null
                     )
                 }
@@ -315,10 +305,6 @@ class CreateEditReminderViewModel(
             ReminderRepeatType.DURING_SESSION_PERIOD -> {
                 validateDuringSession(state.duringSessionState)
             }
-
-            ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> {
-                validateAfterAnother(state.afterAnotherState)
-            }
         }
     }
 
@@ -337,10 +323,6 @@ class CreateEditReminderViewModel(
             ReminderRepeatType.DURING_SESSION_PERIOD -> {
                 state.duringSessionState.toRepeatRule()
             }
-
-            ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> {
-                state.afterAnotherState.toRepeatRule()
-            }
         }
     }
 
@@ -358,7 +340,6 @@ class CreateEditReminderViewModel(
                             name = reminder.name,
                             instructions = reminder.instructionsText ?: "",
                             repeatType = repeatUiState.repeatType,
-                            afterAnotherState = repeatUiState.afterAnotherState,
                             onSchedulePeriodState = repeatUiState.onSchedulePeriodState,
                             onScheduleCertainState = repeatUiState.onScheduleCertainState,
                             duringSessionState = repeatUiState.duringSessionState,
@@ -387,12 +368,6 @@ class CreateEditReminderViewModel(
         viewModelScope.launch {
             _effect.send(effect)
         }
-    }
-
-    private fun validateAfterAnother(
-        state: AfterAnotherRepeatUi
-    ): UiText? {
-        return validateRepeatInterval(state.waitInterval)
     }
 
     private fun validateDuringSession(

@@ -3,9 +3,7 @@ package com.example.routinetaskmanager.featureReminder.data.mapper
 import com.example.routinetaskmanager.featureReminder.domain.model.OnScheduleCertainDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
-import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
-import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -35,8 +33,15 @@ class ReminderRepeatRuleJsonMapperTest {
 
     @Test
     fun fromJson_ignoresUnknownFields() {
-        val rule = ReminderRepeatRule.AfterAnother(
-            waitInterval = RepeatInterval(2, RepeatUnit.HOURS)
+        val rule = ReminderRepeatRule.OnScheduleCertain(
+            schedule = WeeklyRepeat(
+                mode = RepeatScheduleMode.DEFAULT,
+                selectedDays = setOf(DayOfWeek.FRIDAY),
+                defaultValue = OnScheduleCertainDayRepeat(
+                    pickedTimes = setOf(LocalTime.of(12, 15))
+                ),
+                advancedEntries = emptyList()
+            )
         )
         val json = ReminderRepeatRuleJsonMapper
             .toJson(rule)
@@ -48,12 +53,19 @@ class ReminderRepeatRuleJsonMapperTest {
     }
 
     @Test
-    fun repeatRuleToRepeatType_mapsAfterAnotherType() {
-        val rule = ReminderRepeatRule.AfterAnother(
-            waitInterval = RepeatInterval(1, RepeatUnit.MINUTES)
+    fun repeatRuleToRepeatType_mapsOnScheduleCertainType() {
+        val rule = ReminderRepeatRule.OnScheduleCertain(
+            schedule = WeeklyRepeat(
+                mode = RepeatScheduleMode.DEFAULT,
+                selectedDays = setOf(DayOfWeek.SUNDAY),
+                defaultValue = OnScheduleCertainDayRepeat(
+                    pickedTimes = setOf(LocalTime.of(7, 0))
+                ),
+                advancedEntries = emptyList()
+            )
         )
 
-        assertEquals("AFTER_ANOTHER", rule.toRepeatType())
-        assertEquals(ReminderRepeatType.AFTER_ANOTHER_ACTIVITY, rule.toRepeatTypeDomain())
+        assertEquals("ON_SCHEDULE_CERTAIN", rule.toRepeatType())
+        assertEquals(ReminderRepeatType.ON_SCHEDULE_CERTAIN, rule.toRepeatTypeDomain())
     }
 }

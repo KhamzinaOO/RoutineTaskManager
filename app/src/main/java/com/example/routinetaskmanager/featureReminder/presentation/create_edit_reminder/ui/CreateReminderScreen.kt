@@ -67,8 +67,6 @@ fun CreateReminderScreen(
 
     val repeatType = uiState.repeatType
 
-    val afterAnotherState = uiState.afterAnotherState
-
     val onSchedulePeriodState = uiState.onSchedulePeriodState
 
     val onScheduleCertainState = uiState.onScheduleCertainState
@@ -246,20 +244,6 @@ fun CreateReminderScreen(
                     dropdownValues = repeatUnitDropdownValues()
                 )
             }
-
-            ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> {
-                AfterAnotherRepeatCard(
-                    state = afterAnotherState,
-                    onStateChange = {
-                        onIntent(
-                            CreateEditReminderIntent.AfterAnotherStateChanged(
-                                it
-                            )
-                        )
-                    },
-                    dropdownValues = repeatUnitDropdownValues()
-                )
-            }
         }
 
         TitleText(
@@ -342,8 +326,7 @@ private fun repeatTypeDropdownValues(): List<DropdownMenuItemUi> {
     return listOf(
         DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_PERIOD.ordinal, stringResource(R.string.repeat_type_on_schedule_period)),
         DropdownMenuItemUi(ReminderRepeatType.ON_SCHEDULE_CERTAIN.ordinal, stringResource(R.string.repeat_type_on_schedule_certain)),
-        DropdownMenuItemUi(ReminderRepeatType.DURING_SESSION_PERIOD.ordinal, stringResource(R.string.repeat_type_during_session)),
-        DropdownMenuItemUi(ReminderRepeatType.AFTER_ANOTHER_ACTIVITY.ordinal, stringResource(R.string.repeat_type_after_another))
+        DropdownMenuItemUi(ReminderRepeatType.DURING_SESSION_PERIOD.ordinal, stringResource(R.string.repeat_type_during_session))
     )
 }
 

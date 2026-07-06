@@ -8,7 +8,6 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.TimeWindow
 import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DayRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.IntervalRepeatUi
@@ -81,12 +80,6 @@ fun <DomainValue, UiValue> WeeklyRepeat<DomainValue>.toUi(
     )
 }
 
-fun ReminderRepeatRule.AfterAnother.toUi(): AfterAnotherRepeatUi {
-    return AfterAnotherRepeatUi(
-        waitInterval = waitInterval.toUi()
-    )
-}
-
 fun ReminderRepeatRule.DuringSessionPeriod.toUi(): DuringSessionPeriodRepeatUi {
     return DuringSessionPeriodRepeatUi(
         schedule = schedule.toUi { intervalRepeat ->
@@ -113,20 +106,9 @@ fun ReminderRepeatRule.OnScheduleCertain.toUi(): OnScheduleCertainRepeatUi {
 
 fun ReminderRepeatRule.toUiStateBundle(): ReminderRepeatUiStateBundle {
     return when (this) {
-        is ReminderRepeatRule.AfterAnother -> {
-            ReminderRepeatUiStateBundle(
-                repeatType = ReminderRepeatType.AFTER_ANOTHER_ACTIVITY,
-                afterAnotherState = this.toUi(),
-                onSchedulePeriodState = OnSchedulePeriodRepeatUi(),
-                onScheduleCertainState = OnScheduleCertainRepeatUi(),
-                duringSessionState = DuringSessionPeriodRepeatUi()
-            )
-        }
-
         is ReminderRepeatRule.OnSchedulePeriod -> {
             ReminderRepeatUiStateBundle(
                 repeatType = ReminderRepeatType.ON_SCHEDULE_PERIOD,
-                afterAnotherState = AfterAnotherRepeatUi(),
                 onSchedulePeriodState = this.toUi(),
                 onScheduleCertainState = OnScheduleCertainRepeatUi(),
                 duringSessionState = DuringSessionPeriodRepeatUi()
@@ -136,7 +118,6 @@ fun ReminderRepeatRule.toUiStateBundle(): ReminderRepeatUiStateBundle {
         is ReminderRepeatRule.OnScheduleCertain -> {
             ReminderRepeatUiStateBundle(
                 repeatType = ReminderRepeatType.ON_SCHEDULE_CERTAIN,
-                afterAnotherState = AfterAnotherRepeatUi(),
                 onSchedulePeriodState = OnSchedulePeriodRepeatUi(),
                 onScheduleCertainState = this.toUi(),
                 duringSessionState = DuringSessionPeriodRepeatUi()
@@ -146,7 +127,6 @@ fun ReminderRepeatRule.toUiStateBundle(): ReminderRepeatUiStateBundle {
         is ReminderRepeatRule.DuringSessionPeriod -> {
             ReminderRepeatUiStateBundle(
                 repeatType = ReminderRepeatType.DURING_SESSION_PERIOD,
-                afterAnotherState = AfterAnotherRepeatUi(),
                 onSchedulePeriodState = OnSchedulePeriodRepeatUi(),
                 onScheduleCertainState = OnScheduleCertainRepeatUi(),
                 duringSessionState = this.toUi()

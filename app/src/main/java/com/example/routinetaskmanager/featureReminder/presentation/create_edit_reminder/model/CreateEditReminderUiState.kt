@@ -3,7 +3,6 @@ package com.example.routinetaskmanager.featureReminder.presentation.create_edit_
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnSchedulePeriodRepeatUi
@@ -16,7 +15,6 @@ data class CreateEditReminderUiState(
     val name: String = "",
     val instructions: String = "",
     val repeatType: ReminderRepeatType = ReminderRepeatType.ON_SCHEDULE_PERIOD,
-    val afterAnotherState: AfterAnotherRepeatUi = AfterAnotherRepeatUi(),
     val onSchedulePeriodState: OnSchedulePeriodRepeatUi = OnSchedulePeriodRepeatUi(),
     val onScheduleCertainState: OnScheduleCertainRepeatUi = OnScheduleCertainRepeatUi(),
     val duringSessionState: DuringSessionPeriodRepeatUi = DuringSessionPeriodRepeatUi(),

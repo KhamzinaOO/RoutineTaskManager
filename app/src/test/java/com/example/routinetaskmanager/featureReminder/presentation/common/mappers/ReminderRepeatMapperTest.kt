@@ -1,14 +1,17 @@
 package com.example.routinetaskmanager.featureReminder.presentation.common.mappers
 
+import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatType
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.model.TimeWindow
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
+import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainDayUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.RepeatIntervalUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.TimeWindowUi
+import java.time.DayOfWeek
 import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -66,22 +69,27 @@ class ReminderRepeatMapperTest {
     }
 
     @Test
-    fun toUiStateBundle_setsActiveRepeatTypeAndCopiesAfterAnotherState() {
-        val rule = ReminderRepeatRule.AfterAnother(
-            waitInterval = RepeatInterval(3, RepeatUnit.DAYS)
+    fun toUiStateBundle_setsActiveRepeatTypeAndCopiesDuringSessionState() {
+        val rule = ReminderRepeatRule.DuringSessionPeriod(
+            schedule = WeeklyRepeat(
+                mode = RepeatScheduleMode.DEFAULT,
+                selectedDays = setOf(DayOfWeek.MONDAY),
+                defaultValue = IntervalRepeat(
+                    interval = RepeatInterval(3, RepeatUnit.DAYS)
+                ),
+                advancedEntries = emptyList()
+            )
         )
 
         val bundle = rule.toUiStateBundle()
 
-        assertEquals(ReminderRepeatType.AFTER_ANOTHER_ACTIVITY, bundle.repeatType)
+        assertEquals(ReminderRepeatType.DURING_SESSION_PERIOD, bundle.repeatType)
         assertEquals(
-            AfterAnotherRepeatUi(
-                waitInterval = RepeatIntervalUi(
-                    value = "3",
-                    selectedUnitId = RepeatUnit.DAYS.ordinal
-                )
+            RepeatIntervalUi(
+                value = "3",
+                selectedUnitId = RepeatUnit.DAYS.ordinal
             ),
-            bundle.afterAnotherState
+            bundle.duringSessionState.schedule.defaultValue.interval
         )
     }
 }

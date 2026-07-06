@@ -41,7 +41,6 @@ import com.example.routinetaskmanager.core.presentation.ui.dateTime.SelectedTime
 import com.example.routinetaskmanager.core.presentation.ui.dateTime.TimePicker
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DayRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.IntervalRepeatUi
@@ -100,29 +99,6 @@ fun RepeatTimeCardBase(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun AfterAnotherRepeatCard(
-    modifier: Modifier = Modifier,
-    state: AfterAnotherRepeatUi,
-    onStateChange: (AfterAnotherRepeatUi) -> Unit,
-    dropdownValues: List<DropdownMenuItemUi>
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        IntervalRow(
-            modifier = Modifier.padding(8.dp),
-            label = stringResource(R.string.repeat_wait_time),
-            interval = state.waitInterval,
-            onIntervalChange = { onStateChange(state.copy(waitInterval = it)) },
-            dropdownValues = dropdownValues
-        )
     }
 }
 
@@ -698,20 +674,6 @@ private fun previewDropdownValues(): List<DropdownMenuItemUi> {
         DropdownMenuItemUi(RepeatUnit.HOURS.ordinal, stringResource(R.string.repeat_unit_hours)),
         DropdownMenuItemUi(RepeatUnit.DAYS.ordinal, stringResource(R.string.repeat_unit_days))
     )
-}
-
-@Preview(name = "AfterAnotherRepeatCard")
-@Composable
-private fun AfterAnotherRepeatCardPreview() {
-    var state by remember { mutableStateOf(AfterAnotherRepeatUi()) }
-
-    RoutineTaskManagerTheme {
-        AfterAnotherRepeatCard(
-            state = state,
-            onStateChange = { state = it },
-            dropdownValues = previewDropdownValues()
-        )
-    }
 }
 
 @Preview(name = "DuringSessionPeriodRepeatCard")

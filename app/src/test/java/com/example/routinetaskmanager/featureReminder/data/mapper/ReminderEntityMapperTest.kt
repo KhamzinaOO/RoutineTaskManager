@@ -4,11 +4,15 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderWithImages
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
+import com.example.routinetaskmanager.featureReminder.domain.model.OnScheduleCertainDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderImage
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepeatRule
-import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterval
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
+import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
+import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
+import java.time.DayOfWeek
+import java.time.LocalTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -20,8 +24,15 @@ class ReminderEntityMapperTest {
             id = 7L,
             name = "Drink water",
             instructionsText = "One glass",
-            repeatRule = ReminderRepeatRule.AfterAnother(
-                waitInterval = RepeatInterval(15, RepeatUnit.MINUTES)
+            repeatRule = ReminderRepeatRule.OnScheduleCertain(
+                schedule = WeeklyRepeat(
+                    mode = RepeatScheduleMode.DEFAULT,
+                    selectedDays = setOf(DayOfWeek.MONDAY),
+                    defaultValue = OnScheduleCertainDayRepeat(
+                        pickedTimes = setOf(LocalTime.of(9, 0))
+                    ),
+                    advancedEntries = emptyList()
+                )
             ),
             notificationMode = NotificationMode.VIBRATION,
             images = listOf(
@@ -42,7 +53,7 @@ class ReminderEntityMapperTest {
 
         assertEquals(7L, entity.id)
         assertEquals("Drink water", entity.name)
-        assertEquals("AFTER_ANOTHER", entity.repeatType)
+        assertEquals("ON_SCHEDULE_CERTAIN", entity.repeatType)
         assertEquals("VIBRATION", entity.notificationMode)
         assertEquals(false, entity.isEnabled)
         assertEquals(
@@ -53,8 +64,15 @@ class ReminderEntityMapperTest {
 
     @Test
     fun reminderWithImagesToDomain_restoresReminderAndImages() {
-        val rule = ReminderRepeatRule.AfterAnother(
-            waitInterval = RepeatInterval(1, RepeatUnit.HOURS)
+        val rule = ReminderRepeatRule.OnScheduleCertain(
+            schedule = WeeklyRepeat(
+                mode = RepeatScheduleMode.DEFAULT,
+                selectedDays = setOf(DayOfWeek.TUESDAY),
+                defaultValue = OnScheduleCertainDayRepeat(
+                    pickedTimes = setOf(LocalTime.of(8, 30))
+                ),
+                advancedEntries = emptyList()
+            )
         )
         val entity = ReminderEntity(
             id = 3L,

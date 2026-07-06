@@ -57,10 +57,6 @@ data class WeeklyRepeat<T>(
 @Serializable
 sealed interface ReminderRepeatRule {
     @Serializable
-    data class AfterAnother(
-        val waitInterval: RepeatInterval
-    ) : ReminderRepeatRule
-    @Serializable
     data class DuringSessionPeriod(
         val schedule: WeeklyRepeat<IntervalRepeat>
     ) : ReminderRepeatRule

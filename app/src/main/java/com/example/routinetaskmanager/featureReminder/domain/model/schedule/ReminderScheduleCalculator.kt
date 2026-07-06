@@ -55,10 +55,6 @@ class ReminderScheduleCalculator {
             is ReminderRepeatRule.DuringSessionPeriod -> {
                 emptyList()
             }
-
-            is ReminderRepeatRule.AfterAnother -> {
-                emptyList()
-            }
         }
     }
 

@@ -9,7 +9,6 @@ import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterva
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.model.TimeWindow
 import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
-import com.example.routinetaskmanager.featureReminder.presentation.common.model.AfterAnotherRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.DuringSessionPeriodRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.IntervalRepeatUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.OnScheduleCertainDayUi
@@ -20,12 +19,6 @@ import com.example.routinetaskmanager.featureReminder.presentation.common.model.
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.TimeWindowUi
 import com.example.routinetaskmanager.featureReminder.presentation.common.model.WeeklyRepeatUi
 import java.time.LocalTime
-
-fun AfterAnotherRepeatUi.toDomain(): ReminderRepeatRule.AfterAnother {
-    return ReminderRepeatRule.AfterAnother(
-        waitInterval = waitInterval.toDomain()
-    )
-}
 
 fun DuringSessionPeriodRepeatUi.toDomain(): ReminderRepeatRule.DuringSessionPeriod {
     return ReminderRepeatRule.DuringSessionPeriod(
@@ -141,12 +134,6 @@ internal fun parseHourMinuteOrNull(
     if (minute !in 0..59) return null
 
     return LocalTime.of(hour, minute)
-}
-
-fun AfterAnotherRepeatUi.toRepeatRule(): ReminderRepeatRule {
-    return ReminderRepeatRule.AfterAnother(
-        waitInterval = waitInterval.toDomain()
-    )
 }
 
 fun DuringSessionPeriodRepeatUi.toRepeatRule(): ReminderRepeatRule {

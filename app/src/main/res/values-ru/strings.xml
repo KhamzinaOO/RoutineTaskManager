@@ -82,28 +82,8 @@
     <string name="repeat_type_on_schedule_period">По расписанию (период)</string>
     <string name="repeat_type_on_schedule_certain">По расписанию (точное время)</string>
     <string name="repeat_type_during_session">Во время сессии</string>
-    <string name="repeat_type_after_another">После другой активности</string>
-    <string name="repeat_label_after_another_reminder">После другого напоминания</string>
     <string name="repeat_label_on_schedule_period_compact">По расписанию · Период</string>
     <string name="repeat_label_on_schedule_certain_compact">По расписанию · Точное время</string>
-    <plurals name="repeat_detail_after_minutes">
-        <item quantity="one">Через %d минуту</item>
-        <item quantity="few">Через %d минуты</item>
-        <item quantity="many">Через %d минут</item>
-        <item quantity="other">Через %d минуты</item>
-    </plurals>
-    <plurals name="repeat_detail_after_hours">
-        <item quantity="one">Через %d час</item>
-        <item quantity="few">Через %d часа</item>
-        <item quantity="many">Через %d часов</item>
-        <item quantity="other">Через %d часа</item>
-    </plurals>
-    <plurals name="repeat_detail_after_days">
-        <item quantity="one">Через %d день</item>
-        <item quantity="few">Через %d дня</item>
-        <item quantity="many">Через %d дней</item>
-        <item quantity="other">Через %d дня</item>
-    </plurals>
     <plurals name="repeat_detail_every_minutes">
         <item quantity="one">Каждую %1$d минуту · %2$s</item>
         <item quantity="few">Каждые %1$d минуты · %2$s</item>
@@ -170,7 +150,6 @@
     </plurals>
     <string name="repeat_mode_default">Обычно</string>
     <string name="repeat_mode_advanced">Расширенно</string>
-    <string name="repeat_wait_time">Время ожидания</string>
     <plurals name="repeat_every_minutes">
         <item quantity="one">Каждую</item>
         <item quantity="few">Каждые</item>

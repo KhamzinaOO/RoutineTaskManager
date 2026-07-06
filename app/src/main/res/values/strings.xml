@@ -82,22 +82,8 @@
     <string name="repeat_type_on_schedule_period">On schedule (period)</string>
     <string name="repeat_type_on_schedule_certain">On schedule (certain time)</string>
     <string name="repeat_type_during_session">During session</string>
-    <string name="repeat_type_after_another">After another activity</string>
-    <string name="repeat_label_after_another_reminder">After another reminder</string>
     <string name="repeat_label_on_schedule_period_compact">On schedule · Period</string>
     <string name="repeat_label_on_schedule_certain_compact">On schedule · Certain time</string>
-    <plurals name="repeat_detail_after_minutes">
-        <item quantity="one">After %d minute</item>
-        <item quantity="other">After %d minutes</item>
-    </plurals>
-    <plurals name="repeat_detail_after_hours">
-        <item quantity="one">After %d hour</item>
-        <item quantity="other">After %d hours</item>
-    </plurals>
-    <plurals name="repeat_detail_after_days">
-        <item quantity="one">After %d day</item>
-        <item quantity="other">After %d days</item>
-    </plurals>
     <plurals name="repeat_detail_every_minutes">
         <item quantity="one">Every %1$d minute · %2$s</item>
         <item quantity="other">Every %1$d minutes · %2$s</item>
@@ -144,7 +130,6 @@
     </plurals>
     <string name="repeat_mode_default">Default</string>
     <string name="repeat_mode_advanced">Advanced</string>
-    <string name="repeat_wait_time">Wait time</string>
     <plurals name="repeat_every_minutes">
         <item quantity="one">Every</item>
         <item quantity="other">Every</item>

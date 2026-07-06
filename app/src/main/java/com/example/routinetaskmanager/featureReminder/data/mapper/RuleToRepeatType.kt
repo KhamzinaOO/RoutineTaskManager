@@ -5,7 +5,6 @@ import com.example.routinetaskmanager.featureReminder.domain.model.ReminderRepea
 
 fun ReminderRepeatRule.toRepeatType(): String {
     return when (this) {
-        is ReminderRepeatRule.AfterAnother -> "AFTER_ANOTHER"
         is ReminderRepeatRule.DuringSessionPeriod -> "DURING_SESSION_PERIOD"
         is ReminderRepeatRule.OnSchedulePeriod -> "ON_SCHEDULE_PERIOD"
         is ReminderRepeatRule.OnScheduleCertain -> "ON_SCHEDULE_CERTAIN"
@@ -14,7 +13,6 @@ fun ReminderRepeatRule.toRepeatType(): String {
 
 fun ReminderRepeatRule.toRepeatTypeDomain(): ReminderRepeatType {
     return when (this) {
-        is ReminderRepeatRule.AfterAnother -> ReminderRepeatType.AFTER_ANOTHER_ACTIVITY
         is ReminderRepeatRule.DuringSessionPeriod -> ReminderRepeatType.DURING_SESSION_PERIOD
         is ReminderRepeatRule.OnSchedulePeriod -> ReminderRepeatType.ON_SCHEDULE_PERIOD
         is ReminderRepeatRule.OnScheduleCertain -> ReminderRepeatType.ON_SCHEDULE_CERTAIN

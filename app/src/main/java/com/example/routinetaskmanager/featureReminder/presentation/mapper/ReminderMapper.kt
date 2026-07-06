@@ -36,10 +36,6 @@ fun Reminder.toMiniCardUi(): ReminderMiniCardUi {
 @Composable
 fun ReminderRepeatRule.toRepeatLabel(): String {
     return when (this) {
-        is ReminderRepeatRule.AfterAnother -> {
-            stringResource(R.string.repeat_label_after_another_reminder)
-        }
-
         is ReminderRepeatRule.DuringSessionPeriod -> {
             stringResource(R.string.repeat_type_during_session)
         }
@@ -57,10 +53,6 @@ fun ReminderRepeatRule.toRepeatLabel(): String {
 @Composable
 fun ReminderRepeatRule.toShortDetailsLabel(): String? {
     return when (this) {
-        is ReminderRepeatRule.AfterAnother -> {
-            waitInterval.unit.toAfterDetailLabel(waitInterval.value)
-        }
-
         is ReminderRepeatRule.DuringSessionPeriod -> {
             val days = schedule.selectedDays.toShortDaysLabel()
             val interval = schedule.defaultValue.interval
@@ -130,15 +122,6 @@ fun Set<DayOfWeek>.toShortDaysLabel(): String {
         .joinToString(", ") { day ->
             day.getDisplayName(TextStyle.SHORT_STANDALONE, locale)
         }
-}
-
-@Composable
-fun RepeatUnit.toAfterDetailLabel(value: Int): String {
-    return when (this) {
-        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_detail_after_minutes, value, value)
-        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_detail_after_hours, value, value)
-        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_detail_after_days, value, value)
-    }
 }
 
 @Composable

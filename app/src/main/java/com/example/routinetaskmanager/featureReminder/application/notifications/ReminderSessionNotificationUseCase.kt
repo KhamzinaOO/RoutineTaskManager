@@ -238,10 +238,6 @@ class ReminderSessionNotificationUseCase(
         startedAt: LocalDateTime
     ): Boolean {
         return when (val rule = repeatRule) {
-            is ReminderRepeatRule.AfterAnother -> {
-                rule.waitInterval.toDurationOrNull() != null
-            }
-
             is ReminderRepeatRule.DuringSessionPeriod -> {
                 rule.schedule.valueForDay(startedAt.dayOfWeek)
                     ?.interval

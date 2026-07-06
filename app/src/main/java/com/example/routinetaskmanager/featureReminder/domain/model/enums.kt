@@ -23,6 +23,5 @@ enum class RepeatUnit {
 enum class ReminderRepeatType {
     ON_SCHEDULE_PERIOD,
     ON_SCHEDULE_CERTAIN,
-    DURING_SESSION_PERIOD,
-    AFTER_ANOTHER_ACTIVITY
+    DURING_SESSION_PERIOD
 }

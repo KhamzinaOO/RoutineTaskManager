@@ -32,10 +32,5 @@ fun ReminderRepeatType.toRepeatTypeUi(): ReminderRepeatTypeUi {
             repeatType = this,
             repeatTypeNameRes = R.string.repeat_type_during_session
         )
-        ReminderRepeatType.AFTER_ANOTHER_ACTIVITY -> ReminderRepeatTypeUi(
-            id = 3,
-            repeatType = this,
-            repeatTypeNameRes = R.string.repeat_type_after_another
-        )
     }
 }
