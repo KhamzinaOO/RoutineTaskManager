@@ -17,7 +17,7 @@ import com.example.routinetaskmanager.featureReminder.data.local.ReminderOccurre
         ScheduledNotificationEntity::class,
         ReminderOccurrenceStateEntity::class
     ],
-    version = 0,
+    version = 1,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
