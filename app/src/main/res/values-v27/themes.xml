@@ -3,6 +3,7 @@
 
     <style name="Theme.RoutineTaskManager" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:colorAccent">#212121</item>
         <item name="android:windowNoTitle">true</item>
     </style>
