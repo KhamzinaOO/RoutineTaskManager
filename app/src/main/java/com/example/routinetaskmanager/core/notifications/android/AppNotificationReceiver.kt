@@ -57,6 +57,12 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
         if (!intent.hasExtra(AppNotificationConstants.EXTRA_REQUEST_CODE)) return
         val requestCode = intent.getIntExtra(AppNotificationConstants.EXTRA_REQUEST_CODE, 0)
+        val intentOccurrenceKind = intent.getStringExtra(AppNotificationConstants.EXTRA_OCCURRENCE_KIND)
+            ?.let { value ->
+                runCatching {
+                    NotificationOccurrenceKind.valueOf(value)
+                }.getOrNull()
+            }
 
         goAsync(dispatcherProvider) {
             val scheduledNotification = if (requestCode != Int.MIN_VALUE) {
@@ -72,6 +78,7 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
                         NotificationOccurrenceKind.valueOf(value)
                     }.getOrNull()
                 }
+                ?: intentOccurrenceKind
                 ?: NotificationOccurrenceKind.REGULAR
 
             val payload = notificationTriggerRouter.buildPayloadOrNull(
@@ -83,7 +90,6 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
             if (payload != null) {
                 val wasShown = appNotificationManager.showNotification(payload)
-                //TODO: not the best delete case, need to rethink
 
                 notificationTriggerRouter.onNotificationTriggered(
                     targetType = targetType,

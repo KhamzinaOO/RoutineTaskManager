@@ -5,24 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.error.onErrorMessage
 import com.example.routinetaskmanager.core.error.runAppCatching
+import com.example.routinetaskmanager.core.error.toAppError
+import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
-import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
-import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.example.routinetaskmanager.featureReminder.domain.model.type
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersIntent
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersUiState
 import com.example.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderFilter
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class AllRemindersViewModel(
     private val remindersCommand : ReminderCommandUseCase
@@ -92,6 +91,18 @@ class AllRemindersViewModel(
             }
 
             remindersCommand.observeReminders()
+                .catch { throwable ->
+                    _uiState.update { state ->
+                        state.copy(isLoading = false)
+                    }
+                    sendEffect(
+                        AllRemindersEffect.ShowMessage(
+                            throwable.toAppError().toUiText(
+                                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                            )
+                        )
+                    )
+                }
                 .collect { reminders ->
                     _uiState.update { state ->
                         val newState = state.copy(
@@ -110,9 +121,7 @@ class AllRemindersViewModel(
     private fun deleteReminder(id: Long) {
         viewModelScope.launch {
             runAppCatching {
-                withContext(Dispatchers.IO) {
-                    remindersCommand.deleteReminder(id)
-                }
+                remindersCommand.deleteReminder(id)
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_delete_reminder)
             ) { message ->
@@ -139,7 +148,7 @@ class AllRemindersViewModel(
         reminders.filter { reminder ->
             val typeMatches =
                 reminderFilter.repeatType == null ||
-                        reminder.repeatRule.toRepeatTypeDomain() == reminderFilter.repeatType
+                        reminder.repeatRule.type == reminderFilter.repeatType
 
             val searchMatches =
                 reminderFilter.searchText.isBlank() ||

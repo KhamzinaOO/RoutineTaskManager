@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.featureReminder.domain.repository
 
-import android.net.Uri
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderDraft

@@ -5,10 +5,10 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
-import com.example.routinetaskmanager.core.notifications.android.AppNotificationReceiver
-import com.example.routinetaskmanager.core.notifications.android.AppNotificationRuntimeAccessChecker
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleResult
 import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 
 class AndroidAppAlarmScheduler(
@@ -24,10 +24,11 @@ class AndroidAppAlarmScheduler(
         targetId: Long,
         scheduledAtMillis: Long,
         requestCode: Int,
-        precision: AlarmPrecision
-    ): Boolean {
+        precision: AlarmPrecision,
+        occurrenceKind: NotificationOccurrenceKind
+    ): AppAlarmScheduleResult {
         if (scheduledAtMillis <= System.currentTimeMillis()) {
-            return false
+            return AppAlarmScheduleResult.TimeInPast
         }
 
         val pendingIntent = runCatching {
@@ -35,9 +36,12 @@ class AndroidAppAlarmScheduler(
                 targetType = targetType,
                 targetId = targetId,
                 scheduledAtMillis = scheduledAtMillis,
-                requestCode = requestCode
+                requestCode = requestCode,
+                occurrenceKind = occurrenceKind
             )
-        }.getOrNull() ?: return false
+        }.getOrElse { throwable ->
+            return AppAlarmScheduleResult.Failed(throwable)
+        }
 
         return scheduleSafely(
             triggerAtMillis = scheduledAtMillis,
@@ -66,12 +70,12 @@ class AndroidAppAlarmScheduler(
         }
     }
 
-    //TODO(add occurrence kind)
     private fun createPendingIntent(
         targetType: NotificationTargetType,
         targetId: Long,
         scheduledAtMillis: Long,
-        requestCode: Int
+        requestCode: Int,
+        occurrenceKind: NotificationOccurrenceKind
     ): PendingIntent {
         val intent = Intent(
             context,
@@ -98,6 +102,11 @@ class AndroidAppAlarmScheduler(
                 AppNotificationConstants.EXTRA_REQUEST_CODE,
                 requestCode
             )
+
+            putExtra(
+                AppNotificationConstants.EXTRA_OCCURRENCE_KIND,
+                occurrenceKind.name
+            )
         }
 
         return PendingIntent.getBroadcast(
@@ -112,7 +121,7 @@ class AndroidAppAlarmScheduler(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent,
         precision: AlarmPrecision
-    ): Boolean {
+    ): AppAlarmScheduleResult {
         return when (precision) {
             AlarmPrecision.INEXACT -> scheduleInexact(
                 triggerAtMillis = triggerAtMillis,
@@ -129,7 +138,7 @@ class AndroidAppAlarmScheduler(
     private fun scheduleExact(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
-    ): Boolean {
+    ): AppAlarmScheduleResult {
         if (!permissionChecker.canScheduleExactAlarms()) {
             return scheduleInexact(
                 triggerAtMillis = triggerAtMillis,
@@ -143,7 +152,7 @@ class AndroidAppAlarmScheduler(
                 triggerAtMillis,
                 pendingIntent
             )
-            true
+            AppAlarmScheduleResult.Scheduled
         }.getOrElse {
             scheduleInexact(
                 triggerAtMillis = triggerAtMillis,
@@ -155,7 +164,7 @@ class AndroidAppAlarmScheduler(
     private fun scheduleInexact(
         triggerAtMillis: Long,
         pendingIntent: PendingIntent
-    ): Boolean {
+    ): AppAlarmScheduleResult {
         //think about use smth instead of .setAndAllowWhileIdle for better battery live
         return runCatching {
             alarmManager.setAndAllowWhileIdle(
@@ -163,7 +172,9 @@ class AndroidAppAlarmScheduler(
                 triggerAtMillis,
                 pendingIntent
             )
-            true
-        }.getOrDefault(false)
+            AppAlarmScheduleResult.Scheduled
+        }.getOrElse { throwable ->
+            AppAlarmScheduleResult.Failed(throwable)
+        }
     }
 }

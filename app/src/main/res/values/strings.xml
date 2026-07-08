@@ -104,6 +104,15 @@
         <item quantity="one">%d time · %s</item>
         <item quantity="other">%d times · %s</item>
     </plurals>
+    <string name="repeat_mode_default">Default</string>
+    <string name="repeat_mode_advanced">Advanced</string>
+    <string name="repeat_every">Every</string>
+    <string name="repeat_every_feminine">Every</string>
+    <string name="repeat_every_masculine">Every</string>
+    <string name="repeat_notification_time">Notification time</string>
+    <string name="repeat_unit_minutes">minutes</string>
+    <string name="repeat_unit_hours">hours</string>
+    <string name="repeat_unit_days">days</string>
     <plurals name="repeat_unit_minutes_count">
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
@@ -116,36 +125,6 @@
         <item quantity="one">day</item>
         <item quantity="other">days</item>
     </plurals>
-    <plurals name="repeat_every_unit_minutes_count">
-        <item quantity="one">minute</item>
-        <item quantity="other">minutes</item>
-    </plurals>
-    <plurals name="repeat_every_unit_hours_count">
-        <item quantity="one">hour</item>
-        <item quantity="other">hours</item>
-    </plurals>
-    <plurals name="repeat_every_unit_days_count">
-        <item quantity="one">day</item>
-        <item quantity="other">days</item>
-    </plurals>
-    <string name="repeat_mode_default">Default</string>
-    <string name="repeat_mode_advanced">Advanced</string>
-    <plurals name="repeat_every_minutes">
-        <item quantity="one">Every</item>
-        <item quantity="other">Every</item>
-    </plurals>
-    <plurals name="repeat_every_hours">
-        <item quantity="one">Every</item>
-        <item quantity="other">Every</item>
-    </plurals>
-    <plurals name="repeat_every_days">
-        <item quantity="one">Every</item>
-        <item quantity="other">Every</item>
-    </plurals>
-    <string name="repeat_notification_time">Notification time</string>
-    <string name="repeat_unit_minutes">minutes</string>
-    <string name="repeat_unit_hours">hours</string>
-    <string name="repeat_unit_days">days</string>
     <string name="date_picker_title">Select date</string>
     <string name="time_picker_title">Select time</string>
     <string name="time_all_day">All day</string>
@@ -166,10 +145,6 @@
     <string name="work_session_active_label">work session</string>
     <string name="work_session_stop">Stop work session</string>
     <string name="work_session_started_no_session_reminders">Work session started. No session reminders scheduled</string>
-    <plurals name="work_session_restarted_count">
-        <item quantity="one">Work session reminder restarted: %d</item>
-        <item quantity="other">Work session reminders restarted: %d</item>
-    </plurals>
     <plurals name="work_session_started_scheduled_count">
         <item quantity="one">Work session started. Scheduled reminder: %d</item>
         <item quantity="other">Work session started. Scheduled reminders: %d</item>

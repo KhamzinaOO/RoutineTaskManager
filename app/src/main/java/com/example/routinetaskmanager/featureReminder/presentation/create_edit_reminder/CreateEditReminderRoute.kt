@@ -32,7 +32,7 @@ fun CreateEditReminderRoute(
             viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
         },
         onDenied = {
-            viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
+            viewModel.onIntent(CreateEditReminderIntent.ExactAlarmPermissionDenied)
         }
     )
 

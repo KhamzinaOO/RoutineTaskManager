@@ -2,8 +2,7 @@ package com.example.routinetaskmanager.featureReminder.application.session
 
 sealed interface ToggleWorkSessionResult {
     data class Started(
-        val scheduledNotificationCount: Int,
-        val wasRestart: Boolean
+        val scheduledNotificationCount: Int
     ) : ToggleWorkSessionResult
 
     data object StartedWithoutReminders : ToggleWorkSessionResult
@@ -12,7 +11,11 @@ sealed interface ToggleWorkSessionResult {
 
     data object ForegroundStartBlocked : ToggleWorkSessionResult
 
-    data class Failed(
+    data class StartFailed(
+        val throwable: Throwable
+    ) : ToggleWorkSessionResult
+
+    data class EndFailed(
         val throwable: Throwable
     ) : ToggleWorkSessionResult
 }

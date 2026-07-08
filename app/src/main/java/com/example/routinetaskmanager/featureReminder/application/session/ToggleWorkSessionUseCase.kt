@@ -1,48 +1,46 @@
 package com.example.routinetaskmanager.featureReminder.application.session
 
+import com.example.routinetaskmanager.core.error.runSuspendCatching
+
 class ToggleWorkSessionUseCase(
     private val workSessionManager: WorkSessionManager,
     private val workSessionRuntimeController: WorkSessionRuntimeController
 ) {
 
     suspend operator fun invoke(): ToggleWorkSessionResult {
-        return runCatching {
-            if (workSessionManager.state.value.isActive) {
+        return if (workSessionManager.state.value.isActive) {
+            runSuspendCatching {
                 workSessionManager.endSession()
                 workSessionRuntimeController.stop()
-                return ToggleWorkSessionResult.Ended
+                ToggleWorkSessionResult.Ended
+            }.getOrElse { throwable ->
+                ToggleWorkSessionResult.EndFailed(throwable)
             }
+        } else {
+            runSuspendCatching {
+                val sessionState = workSessionManager.startSession()
 
-            val wasActive = workSessionManager.state.value.isActive
-            val sessionState = workSessionManager.startOrRestartSession()
-            val startedAtMillis = sessionState.startedAtMillis
-
-            if (startedAtMillis != null) {
-                val foregroundStartResult = workSessionRuntimeController.start(startedAtMillis)
-
-                when (foregroundStartResult) {
-                    WorkSessionRuntimeStartResult.Started -> Unit
+                when (workSessionRuntimeController.start(requireNotNull(sessionState.startedAtMillis))) {
+                    WorkSessionRuntimeStartResult.Started -> {
+                        if (sessionState.scheduledNotificationCount == 0) {
+                            ToggleWorkSessionResult.StartedWithoutReminders
+                        } else {
+                            ToggleWorkSessionResult.Started(
+                                scheduledNotificationCount = sessionState.scheduledNotificationCount
+                            )
+                        }
+                    }
 
                     is WorkSessionRuntimeStartResult.Failed -> {
-                        runCatching {
+                        runSuspendCatching {
                             workSessionManager.endSession()
                         }
-
-                        return ToggleWorkSessionResult.ForegroundStartBlocked
+                        ToggleWorkSessionResult.ForegroundStartBlocked
                     }
                 }
+            }.getOrElse { throwable ->
+                ToggleWorkSessionResult.StartFailed(throwable)
             }
-
-            if (sessionState.scheduledNotificationCount == 0) {
-                ToggleWorkSessionResult.StartedWithoutReminders
-            } else {
-                ToggleWorkSessionResult.Started(
-                    scheduledNotificationCount = sessionState.scheduledNotificationCount,
-                    wasRestart = wasActive
-                )
-            }
-        }.getOrElse { throwable ->
-            ToggleWorkSessionResult.Failed(throwable)
         }
     }
 }

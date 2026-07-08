@@ -130,9 +130,9 @@ fun DuringSessionPeriodRepeatCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (schedule.isDefaultMode()) {
-                DuringSessionContent(
-                    value = schedule.defaultValue,
-                    onValueChange = { value ->
+                    DuringSessionContent(
+                        value = schedule.defaultValue,
+                        onValueChange = { value ->
                         onStateChange(
                             state.copy(schedule = schedule.updateDefaultValue(value))
                         )
@@ -197,8 +197,8 @@ fun OnSchedulePeriodRepeatCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (schedule.isDefaultMode()) {
-                OnSchedulePeriodContent(
-                    value = schedule.defaultValue,
+                    OnSchedulePeriodContent(
+                        value = schedule.defaultValue,
                     onValueChange = { value ->
                         onStateChange(
                             state.copy(schedule = schedule.updateDefaultValue(value))
@@ -351,17 +351,14 @@ fun DuringSessionContent(
     onValueChange: (IntervalRepeatUi) -> Unit,
     dropdownValues: List<DropdownMenuItemUi>
 ) {
-    value.interval.value.toIntOrNull()?.let {
-        IntervalRow(
-            label = value.interval.toEveryLabel(it),
-            interval = value.interval,
-            onIntervalChange = { interval ->
-                onValueChange(value.copy(interval = interval))
-            },
-            dropdownValues = dropdownValues,
-            unitLabel = { unit, count -> unit.toEveryUnitLabel(count) }
-        )
-    }
+    IntervalRow(
+        label = value.interval.toEveryLabel(),
+        interval = value.interval,
+        onIntervalChange = { interval ->
+            onValueChange(value.copy(interval = interval))
+        },
+        dropdownValues = dropdownValues
+    )
 }
 
 @Composable
@@ -375,17 +372,14 @@ fun OnSchedulePeriodContent(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        value.interval.value.toIntOrNull()?.let {
-            IntervalRow(
-                label = value.interval.toEveryLabel(it),
-                interval = value.interval,
-                onIntervalChange = { interval ->
-                    onValueChange(value.copy(interval = interval))
-                },
-                dropdownValues = dropdownValues,
-                unitLabel = { unit, count -> unit.toEveryUnitLabel(count) }
-            )
-        }
+        IntervalRow(
+            label = value.interval.toEveryLabel(),
+            interval = value.interval,
+            onIntervalChange = { interval ->
+                onValueChange(value.copy(interval = interval))
+            },
+            dropdownValues = dropdownValues
+        )
 
         TimePicker(
             startTime = value.timeWindow.startTime,
@@ -435,14 +429,9 @@ private fun IntervalRow(
     label: String,
     interval: RepeatIntervalUi,
     onIntervalChange: (RepeatIntervalUi) -> Unit,
-    dropdownValues: List<DropdownMenuItemUi>,
-    unitLabel: @Composable (RepeatUnit, Int) -> String = { unit, count ->
-        unit.toCountLabel(count)
-    }
+    dropdownValues: List<DropdownMenuItemUi>
 ) {
-    val localizedDropdownValues = interval.value.toIntOrNull()
-        ?.let { dropdownValues.withCountLabels(it, unitLabel) }
-        ?: dropdownValues
+    val localizedDropdownValues = dropdownValues.toIntervalUnitLabels(interval.quantityForDisplay())
 
     FlowRow(
         modifier = modifier,
@@ -562,50 +551,50 @@ private fun RepeatIntervalUi.decrement(): RepeatIntervalUi {
 }
 
 @Composable
-private fun RepeatIntervalUi.toEveryLabel(count: Int): String {
-    return when (selectedUnit()) {
-        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_every_minutes, count)
-        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_every_hours, count)
-        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_every_days, count)
+private fun RepeatIntervalUi.toEveryLabel(): String {
+    val unit = RepeatUnit.entries.getOrNull(selectedUnitId)
+
+    return when {
+        unit == RepeatUnit.MINUTES && quantityForDisplay().usesSingularOneForm() -> {
+            stringResource(R.string.repeat_every_feminine)
+        }
+        unit != null && quantityForDisplay().usesSingularOneForm() -> {
+            stringResource(R.string.repeat_every_masculine)
+        }
+        else -> stringResource(R.string.repeat_every)
     }
 }
 
-private fun RepeatIntervalUi.selectedUnit(): RepeatUnit {
-    return RepeatUnit.entries.getOrElse(selectedUnitId) { RepeatUnit.MINUTES }
+private fun RepeatIntervalUi.quantityForDisplay(): Int {
+    return value.toIntOrNull() ?: 0
 }
 
 @Composable
-private fun List<DropdownMenuItemUi>.withCountLabels(
-    count: Int,
-    unitLabel: @Composable (RepeatUnit, Int) -> String
-): List<DropdownMenuItemUi> {
+private fun List<DropdownMenuItemUi>.toIntervalUnitLabels(quantity: Int): List<DropdownMenuItemUi> {
     return map { item ->
         val unit = RepeatUnit.entries.getOrNull(item.id)
 
         if (unit == null) {
             item
         } else {
-            item.copy(name = unit.toCountLabel(count))
+            item.copy(name = unit.toIntervalUnitLabel(quantity))
         }
     }
 }
 
 @Composable
-private fun RepeatUnit.toEveryUnitLabel(count: Int): String {
+private fun RepeatUnit.toIntervalUnitLabel(quantity: Int): String {
     return when (this) {
-        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_every_unit_minutes_count, count)
-        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_every_unit_hours_count, count)
-        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_every_unit_days_count, count)
+        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_unit_minutes_count, quantity)
+        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_unit_hours_count, quantity)
+        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_unit_days_count, quantity)
     }
 }
 
-@Composable
-private fun RepeatUnit.toCountLabel(count: Int): String {
-    return when (this) {
-        RepeatUnit.MINUTES -> pluralStringResource(R.plurals.repeat_unit_minutes_count, count)
-        RepeatUnit.HOURS -> pluralStringResource(R.plurals.repeat_unit_hours_count, count)
-        RepeatUnit.DAYS -> pluralStringResource(R.plurals.repeat_unit_days_count, count)
-    }
+private fun Int.usesSingularOneForm(): Boolean {
+    val positive = kotlin.math.abs(this)
+
+    return positive % 10 == 1 && positive % 100 != 11
 }
 
 private fun OnScheduleCertainDayUi.addInputTime(): OnScheduleCertainDayUi {

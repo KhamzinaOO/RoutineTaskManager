@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -25,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.ui.CommonButton
 import com.example.routinetaskmanager.core.presentation.ui.CommonOutlinedButton
+import com.example.routinetaskmanager.ui.theme.EerieBlack
+import com.example.routinetaskmanager.ui.theme.White
 
 @Composable
 fun NextReminderCard(
@@ -36,6 +40,8 @@ fun NextReminderCard(
     filledButtonText : String,
     onFilledButtonClick : () -> Unit
 ){
+    val contentColor = EerieBlack
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -55,7 +61,7 @@ fun NextReminderCard(
                 Text(
                     text = stringResource(R.string.next_reminder_label),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = contentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -63,7 +69,7 @@ fun NextReminderCard(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = contentColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         softWrap = false
@@ -84,6 +90,7 @@ fun NextReminderCard(
                         style = MaterialTheme.typography.bodyMedium,
                         textDecoration = TextDecoration.Underline,
                         fontWeight = FontWeight.SemiBold,
+                        color = contentColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -91,16 +98,18 @@ fun NextReminderCard(
                         Text(
                             text = reminderTime,
                             style = MaterialTheme.typography.bodySmall,
+                            color = contentColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-            ReminderActionButtons(
-                skipText = outlinedButtonText,
-                onSkipClick = onOutlinedButtonClick,
-                doNowText = filledButtonText,
-                    onDoNowClick = onFilledButtonClick
+                ReminderActionButtons(
+                    skipText = outlinedButtonText,
+                    onSkipClick = onOutlinedButtonClick,
+                    doNowText = filledButtonText,
+                    onDoNowClick = onFilledButtonClick,
+                    contentColor = contentColor
                 )
             }
         }
@@ -113,6 +122,7 @@ fun ReminderActionButtons(
     onSkipClick: () -> Unit,
     doNowText: String,
     onDoNowClick: () -> Unit,
+    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -124,6 +134,11 @@ fun ReminderActionButtons(
             modifier = Modifier.weight(1f),
             onClick = onSkipClick,
             text = skipText,
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = contentColor
+            ),
+            borderColor = contentColor,
             contentPadding = PaddingValues(8.dp)
         )
 
@@ -131,6 +146,10 @@ fun ReminderActionButtons(
             modifier = Modifier.weight(1f),
             onClick = onDoNowClick,
             text = doNowText,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = contentColor,
+                contentColor = White
+            ),
             contentPadding = PaddingValues(8.dp)
         )
     }

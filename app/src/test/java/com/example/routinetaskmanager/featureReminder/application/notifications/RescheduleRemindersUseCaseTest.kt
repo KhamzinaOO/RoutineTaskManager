@@ -1,7 +1,10 @@
 package com.example.routinetaskmanager.featureReminder.application.notifications
 
+import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
 import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleResult
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
+import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
@@ -25,6 +28,8 @@ import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -68,7 +73,8 @@ class RescheduleRemindersUseCaseTest {
             ),
             scheduleCalculator = calculator,
             alarmScheduler = FakeAlarmScheduler(),
-            scheduledNotificationDao = notificationDao
+            scheduledNotificationDao = notificationDao,
+            dispatcherProvider = TestDispatcherProvider
         )
 
         useCase()
@@ -141,15 +147,22 @@ class RescheduleRemindersUseCaseTest {
             targetId: Long,
             scheduledAtMillis: Long,
             requestCode: Int,
-            precision: AlarmPrecision
-        ): Boolean {
+            precision: AlarmPrecision,
+            occurrenceKind: NotificationOccurrenceKind
+        ): AppAlarmScheduleResult {
             scheduled += scheduledAtMillis
-            return true
+            return AppAlarmScheduleResult.Scheduled
         }
 
         override fun cancel(requestCode: Int) {
             cancelled += requestCode
         }
+    }
+
+    private object TestDispatcherProvider : DispatcherProvider {
+        override val main: CoroutineDispatcher = Dispatchers.Unconfined
+        override val io: CoroutineDispatcher = Dispatchers.Unconfined
+        override val default: CoroutineDispatcher = Dispatchers.Unconfined
     }
 
     private class FakeReminderRepository(

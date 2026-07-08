@@ -33,6 +33,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,7 +56,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.TextStyle
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +163,7 @@ fun CommonDateTimePickerDialog(
 ) {
     var step by rememberSaveable { mutableStateOf(DateTimePickerStep.Date) }
     var selectedDateEpochDay by rememberSaveable {
-        mutableStateOf(initialDateTime.toLocalDate().toEpochDay())
+        mutableLongStateOf(initialDateTime.toLocalDate().toEpochDay())
     }
 
     when (step) {
@@ -378,6 +379,8 @@ fun DaysOfWeekPicker(
     selectedDays : Set<DayOfWeek>,
     onDaySelected : (DayOfWeek) -> Unit
 ){
+    val locale = LocalLocale.current.platformLocale
+
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -386,7 +389,7 @@ fun DaysOfWeekPicker(
         items(DayOfWeek.entries){ dayOfWeek ->
             val strDay = dayOfWeek.getDisplayName(
                 TextStyle.NARROW_STANDALONE,
-                Locale.getDefault()
+                locale
             )
             DayOfWeekBox(
                 day = strDay,

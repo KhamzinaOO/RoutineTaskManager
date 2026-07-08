@@ -1,6 +1,7 @@
 package com.example.routinetaskmanager
 
 import android.app.Application
+import com.example.routinetaskmanager.core.error.runSuspendCatching
 import com.example.routinetaskmanager.core.notifications.android.AppNotificationChannels
 import com.example.routinetaskmanager.di.appModules
 import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
@@ -29,7 +30,7 @@ class App : Application() {
 
     private fun rescheduleRegularReminderNotifications() {
         applicationScope.launch {
-            runCatching {
+            runSuspendCatching {
                 getKoin().get<RescheduleRemindersUseCase>()()
             }
         }

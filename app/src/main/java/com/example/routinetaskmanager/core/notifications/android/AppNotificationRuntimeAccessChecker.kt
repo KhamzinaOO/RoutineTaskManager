@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 
-//TODO(Separate classes)
 class AppNotificationRuntimeAccessChecker(
     private val context: Context
 ) {
@@ -25,7 +24,6 @@ class AppNotificationRuntimeAccessChecker(
                 ) == PackageManager.PERMISSION_GRANTED
             }
         }.getOrDefault(false)
-        //TODO(error catching)
     }
 
     fun canScheduleExactAlarms(): Boolean {

@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.featureReminder.data.repository
 
-import android.net.Uri
 import androidx.core.net.toUri
 import androidx.room.withTransaction
 import com.example.routinetaskmanager.data.local.AppDatabase
@@ -63,14 +62,10 @@ class ReminderRepositoryImpl(
     ): Long {
         val now = System.currentTimeMillis()
 
-        val preparedImages = try {
-            prepareNewImages(
-                images = draft.images,
-                fileNamePrefix = "reminder_new_$now"
-            )
-        } catch (throwable: Throwable) {
-            throw throwable
-        }
+        val preparedImages = prepareNewImages(
+            images = draft.images,
+            fileNamePrefix = "reminder_new_$now"
+        )
 
         return try {
             database.withTransaction {
@@ -129,16 +124,12 @@ class ReminderRepositoryImpl(
 
         val currentImages = reminderDao.getImagesByReminderId(reminderId)
 
-        val plan = try {
-            buildImagesUpdatePlan(
-                reminderId = reminderId,
-                currentImages = currentImages,
-                inputImages = draft.images,
-                now = now
-            )
-        } catch (throwable: Throwable) {
-            throw throwable
-        }
+        val plan = buildImagesUpdatePlan(
+            reminderId = reminderId,
+            currentImages = currentImages,
+            inputImages = draft.images,
+            now = now
+        )
 
         try {
             database.withTransaction {

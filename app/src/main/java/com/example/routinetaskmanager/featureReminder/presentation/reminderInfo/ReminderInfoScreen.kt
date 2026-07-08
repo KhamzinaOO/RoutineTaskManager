@@ -60,6 +60,7 @@ import com.example.routinetaskmanager.navigation.ui.CommonTopAppBarWithActionBut
 import com.example.routinetaskmanager.navigation.ui.LocalAppScaffoldState
 import com.example.routinetaskmanager.navigation.ui.LocalCurrentRoute
 import com.example.routinetaskmanager.navigation.ui.ReminderInfo
+import com.example.routinetaskmanager.ui.theme.EerieBlack
 import com.example.routinetaskmanager.ui.theme.RoutineTaskManagerTheme
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -457,6 +458,8 @@ fun NextReminderInfoCard(
     onOutlinedButtonClick : () -> Unit,
     onFilledButtonClick : () -> Unit
 ){
+    val contentColor = EerieBlack
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -477,7 +480,7 @@ fun NextReminderInfoCard(
                     text = reminderTime,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = contentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -490,7 +493,8 @@ fun NextReminderInfoCard(
                     skipText = stringResource(R.string.skip),
                     onSkipClick = onOutlinedButtonClick,
                     doNowText = stringResource(R.string.do_now),
-                    onDoNowClick = onFilledButtonClick
+                    onDoNowClick = onFilledButtonClick,
+                    contentColor = contentColor
                 )
             }
         }

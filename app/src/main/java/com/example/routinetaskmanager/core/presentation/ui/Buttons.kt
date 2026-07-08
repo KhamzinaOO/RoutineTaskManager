@@ -113,6 +113,7 @@ fun CommonOutlinedButton(
     ),
     shape : Shape = CircleShape,
     text : String,
+    borderColor: Color = MaterialTheme.colorScheme.onTertiary,
     contentPadding : PaddingValues = PaddingValues(horizontal = 12.dp)
 ){
     OutlinedButton(
@@ -122,7 +123,7 @@ fun CommonOutlinedButton(
         enabled = enabled,
         colors = colors,
         contentPadding = contentPadding,
-        border = BorderStroke(width = 1.dp, MaterialTheme.colorScheme.onTertiary)
+        border = BorderStroke(width = 1.dp, borderColor)
     ) {
         Text(
             text = text,

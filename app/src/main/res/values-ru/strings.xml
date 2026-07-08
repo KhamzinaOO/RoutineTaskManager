@@ -112,6 +112,15 @@
         <item quantity="many">%d раз · %s</item>
         <item quantity="other">%d раза · %s</item>
     </plurals>
+    <string name="repeat_mode_default">Обычно</string>
+    <string name="repeat_mode_advanced">Расширенно</string>
+    <string name="repeat_every">Каждые</string>
+    <string name="repeat_every_feminine">Каждую</string>
+    <string name="repeat_every_masculine">Каждый</string>
+    <string name="repeat_notification_time">Время уведомления</string>
+    <string name="repeat_unit_minutes">минут</string>
+    <string name="repeat_unit_hours">часов</string>
+    <string name="repeat_unit_days">дней</string>
     <plurals name="repeat_unit_minutes_count">
         <item quantity="one">минуту</item>
         <item quantity="few">минуты</item>
@@ -130,48 +139,6 @@
         <item quantity="many">дней</item>
         <item quantity="other">дня</item>
     </plurals>
-    <plurals name="repeat_every_unit_minutes_count">
-        <item quantity="one">минуту</item>
-        <item quantity="few">минуты</item>
-        <item quantity="many">минут</item>
-        <item quantity="other">минуты</item>
-    </plurals>
-    <plurals name="repeat_every_unit_hours_count">
-        <item quantity="one">час</item>
-        <item quantity="few">часа</item>
-        <item quantity="many">часов</item>
-        <item quantity="other">часа</item>
-    </plurals>
-    <plurals name="repeat_every_unit_days_count">
-        <item quantity="one">день</item>
-        <item quantity="few">дня</item>
-        <item quantity="many">дней</item>
-        <item quantity="other">дня</item>
-    </plurals>
-    <string name="repeat_mode_default">Обычно</string>
-    <string name="repeat_mode_advanced">Расширенно</string>
-    <plurals name="repeat_every_minutes">
-        <item quantity="one">Каждую</item>
-        <item quantity="few">Каждые</item>
-        <item quantity="many">Каждые</item>
-        <item quantity="other">Каждые</item>
-    </plurals>
-    <plurals name="repeat_every_hours">
-        <item quantity="one">Каждый</item>
-        <item quantity="few">Каждые</item>
-        <item quantity="many">Каждые</item>
-        <item quantity="other">Каждые</item>
-    </plurals>
-    <plurals name="repeat_every_days">
-        <item quantity="one">Каждый</item>
-        <item quantity="few">Каждые</item>
-        <item quantity="many">Каждые</item>
-        <item quantity="other">Каждые</item>
-    </plurals>
-    <string name="repeat_notification_time">Время уведомления</string>
-    <string name="repeat_unit_minutes">минут</string>
-    <string name="repeat_unit_hours">часов</string>
-    <string name="repeat_unit_days">дней</string>
     <string name="date_picker_title">Выберите дату</string>
     <string name="time_picker_title">Выберите время</string>
     <string name="time_all_day">Весь день</string>
@@ -192,12 +159,6 @@
     <string name="work_session_active_label">рабочая сессия</string>
     <string name="work_session_stop">Остановить рабочую сессию</string>
     <string name="work_session_started_no_session_reminders">Рабочая сессия началась. Сессионные напоминания не запланированы</string>
-    <plurals name="work_session_restarted_count">
-        <item quantity="one">Сессионное напоминание перезапущено: %d</item>
-        <item quantity="few">Сессионные напоминания перезапущены: %d</item>
-        <item quantity="many">Сессионные напоминания перезапущены: %d</item>
-        <item quantity="other">Сессионные напоминания перезапущены: %d</item>
-    </plurals>
     <plurals name="work_session_started_scheduled_count">
         <item quantity="one">Рабочая сессия началась. Запланировано напоминание: %d</item>
         <item quantity="few">Рабочая сессия началась. Запланировано напоминания: %d</item>

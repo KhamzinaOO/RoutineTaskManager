@@ -1,10 +1,13 @@
 package com.example.routinetaskmanager.navigation.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -124,11 +127,14 @@ fun AppNavigation() {
     ) {
         Scaffold(
             modifier = Modifier
+                .fillMaxSize()
                 .clickable(
                     onClick = { focusManager.clearFocus() },
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ),
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
@@ -150,6 +156,8 @@ fun AppNavigation() {
         ) { paddingValues ->
             Box(
                 Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .clickable(
                         onClick = { focusManager.clearFocus() },

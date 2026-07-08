@@ -1,6 +1,9 @@
 package com.example.routinetaskmanager.featureReminder.application.notifications
 
+import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
+import com.example.routinetaskmanager.core.notifications.NotificationRequestCodeGenerator
 import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleResult
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
@@ -12,7 +15,6 @@ import com.example.routinetaskmanager.featureReminder.domain.model.schedule.Remi
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -24,11 +26,12 @@ class RescheduleRemindersUseCase(
     private val scheduleCalculator: ReminderScheduleCalculator,
     private val alarmScheduler: AppAlarmScheduler,
     private val scheduledNotificationDao: ScheduledNotificationDao,
+    private val dispatcherProvider: DispatcherProvider
 ) {
     private val mutex: Mutex = Mutex()
     suspend operator fun invoke() {
         mutex.withLock {
-            withContext(Dispatchers.IO) {
+            withContext(dispatcherProvider.io) {
                 val oldReminderNotifications = scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
                     targetType = NotificationTargetType.REMINDER.name,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR.name
@@ -42,6 +45,11 @@ class RescheduleRemindersUseCase(
                     targetType = NotificationTargetType.REMINDER.name,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR.name
                 )
+
+                val usedRequestCodes = scheduledNotificationDao
+                    .getAll()
+                    .map { notification -> notification.requestCode }
+                    .toMutableSet()
 
                 val reminders = reminderRepository.getAllRemindersSnapshot()
                     .filter { reminder ->
@@ -90,18 +98,21 @@ class RescheduleRemindersUseCase(
                     val scheduledAtMillis = occurrence.scheduledAtMillis
                     val occurrenceKey = occurrence.occurrenceKey
 
-                    //IS NOT UNIQUE!!!
-                    val requestCode = occurrenceKey.hashCode()
+                    val requestCode = NotificationRequestCodeGenerator.next(
+                        key = occurrenceKey,
+                        usedCodes = usedRequestCodes
+                    )
 
-                    val wasScheduled = alarmScheduler.schedule(
+                    val scheduleResult = alarmScheduler.schedule(
                         targetType = NotificationTargetType.REMINDER,
                         targetId = occurrence.reminderId,
                         scheduledAtMillis = scheduledAtMillis,
                         requestCode = requestCode,
-                        precision = AlarmPrecision.EXACT
+                        precision = AlarmPrecision.EXACT,
+                        occurrenceKind = NotificationOccurrenceKind.REGULAR
                     )
 
-                    if (!wasScheduled) {
+                    if (scheduleResult != AppAlarmScheduleResult.Scheduled) {
                         return@mapNotNull null
                     }
 

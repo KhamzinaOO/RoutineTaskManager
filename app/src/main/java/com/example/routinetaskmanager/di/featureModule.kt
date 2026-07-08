@@ -5,9 +5,11 @@ import com.example.routinetaskmanager.featureHome.HomeViewModel
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionStateStore
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderOccurrenceRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.data.repository.ReminderRepositoryImpl
 import com.example.routinetaskmanager.featureReminder.data.session.AndroidWorkSessionRuntimeController
+import com.example.routinetaskmanager.featureReminder.data.session.SharedPrefsWorkSessionStateStore
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
@@ -17,6 +19,7 @@ import com.example.routinetaskmanager.featureReminder.application.session.Observ
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.ReminderSessionNotificationUseCase
 import com.example.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceByIdUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveReminderOccurrenceUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
@@ -56,6 +59,14 @@ val featureReminderModule = module {
     }
 
     factory {
+        ObserveNextReminderOccurrenceUseCase(
+            dispatcherProvider = get(),
+            workSessionManager = get(),
+            observeReminderScheduleUseCase = get()
+        )
+    }
+
+    factory {
         ObserveNextReminderOccurrenceByIdUseCase(
             dispatcherProvider = get(),
             workSessionManager = get(),
@@ -87,7 +98,8 @@ val featureReminderModule = module {
             scheduleCalculator = get(),
             alarmScheduler = get(),
             scheduledNotificationDao = get(),
-            reminderOccurrenceRepository = get()
+            reminderOccurrenceRepository = get(),
+            dispatcherProvider = get()
         )
     }
 
@@ -101,8 +113,18 @@ val featureReminderModule = module {
     }
 
     single {
+        SharedPrefsWorkSessionStateStore(
+            context = androidContext()
+        )
+    }
+
+    single<WorkSessionStateStore> {
+        get<SharedPrefsWorkSessionStateStore>()
+    }
+
+    single {
         WorkSessionManager(
-            context = androidContext(),
+            stateStore = get(),
             reminderSessionNotificationUseCase = get()
         )
     }

@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.routinetaskmanager.MainActivity
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.runSuspendCatching
 import com.example.routinetaskmanager.core.notifications.AppNotificationConstants
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 import kotlinx.coroutines.CoroutineScope
@@ -69,7 +70,7 @@ class WorkSessionForegroundService : Service(), KoinComponent {
 
     private fun stopSession() {
         serviceScope.launch {
-            runCatching {
+            runSuspendCatching {
                 workSessionManager.endSession()
             }.onFailure { Log.e(ContentValues.TAG, "Failed to end session", it) }
             stopForeground(STOP_FOREGROUND_REMOVE)

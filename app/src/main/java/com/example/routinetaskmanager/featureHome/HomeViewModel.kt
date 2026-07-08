@@ -3,27 +3,36 @@ package com.example.routinetaskmanager.featureHome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.routinetaskmanager.R
+import com.example.routinetaskmanager.core.error.onErrorMessage
+import com.example.routinetaskmanager.core.error.onSuccess
+import com.example.routinetaskmanager.core.error.runAppCatching
+import com.example.routinetaskmanager.core.error.runSuspendCatching
 import com.example.routinetaskmanager.core.error.toAppError
 import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
+import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ObserveWorkSessionStateUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionResult
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
+import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessage
+import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessageOrNull
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -31,6 +40,7 @@ import java.util.Locale
 
 class HomeViewModel(
     private val observeDayReminderOccurrencesUseCase: ObserveDayReminderOccurrencesUseCase,
+    private val observeNextReminderOccurrenceUseCase: ObserveNextReminderOccurrenceUseCase,
     private val reminderCommandUseCase: ReminderCommandUseCase,
     private val observeWorkSessionStateUseCase: ObserveWorkSessionStateUseCase,
     private val restoreActiveWorkSessionRuntimeUseCase: RestoreActiveWorkSessionRuntimeUseCase,
@@ -50,7 +60,9 @@ class HomeViewModel(
 
     init {
         observeTodayReminders()
+        observeNextReminder()
         observeWorkSession()
+        restoreActiveWorkSessionRuntime()
     }
 
     fun onIntent(intent : HomeUiIntent){
@@ -108,6 +120,39 @@ class HomeViewModel(
             .launchIn(viewModelScope)
     }
 
+    private fun observeNextReminder() {
+        viewModelScope.launch {
+            runAppCatching {
+                observeNextReminderOccurrenceUseCase(
+                    date = LocalDateTime.now()
+                ).distinctUntilChanged()
+            }.onSuccess { occurrenceFlow ->
+                occurrenceFlow
+                    .onEach { occurrence ->
+                        _uiState.update { state ->
+                            state.copy(
+                                nextOccurrence = occurrence
+                            )
+                        }
+                    }
+                    .catch { throwable ->
+                        sendEffect(
+                            HomeEffect.ShowMessage(
+                                throwable.toAppError().toUiText(
+                                    defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                                )
+                            )
+                        )
+                    }
+                    .launchIn(viewModelScope)
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+            ) { message ->
+                sendEffect(HomeEffect.ShowMessage(message))
+            }
+        }
+    }
+
     private fun observeWorkSession(){
         observeWorkSessionStateUseCase().onEach { state ->
             _uiState.update {
@@ -120,16 +165,24 @@ class HomeViewModel(
         }.launchIn(viewModelScope)
     }
 
+    private fun restoreActiveWorkSessionRuntime() {
+        viewModelScope.launch {
+            restoreActiveWorkSessionRuntimeUseCase().toUiMessageOrNull()?.let { message ->
+                sendEffect(HomeEffect.ShowMessage(message))
+            }
+        }
+    }
+
     private fun toggleWorkSession(){
         viewModelScope.launch {
             if (_uiState.value.isSessionActionInProgress) return@launch
 
             _uiState.update { it.copy(isSessionActionInProgress = true) }
 
-            val result = runCatching {
+            val result = runSuspendCatching {
                 toggleWorkSessionUseCase()
             }.getOrElse { throwable ->
-                ToggleWorkSessionResult.Failed(throwable)
+                ToggleWorkSessionResult.StartFailed(throwable)
             }
 
             handleToggleWorkSessionResult(result)
@@ -142,15 +195,13 @@ class HomeViewModel(
         occurrence: ReminderOccurrence
     ) {
         viewModelScope.launch {
-            runCatching {
+            runAppCatching {
                 reminderCommandUseCase.completeOccurrence(occurrence)
-            }.onFailure { throwable ->
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
+            ) { message ->
                 sendEffect(
-                    HomeEffect.ShowMessage(
-                        throwable.toAppError().toUiText(
-                            defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
-                        )
-                    )
+                    HomeEffect.ShowMessage(message)
                 )
             }
         }
@@ -160,15 +211,13 @@ class HomeViewModel(
         occurrence: ReminderOccurrence
     ) {
         viewModelScope.launch {
-            runCatching {
+            runAppCatching {
                 reminderCommandUseCase.skipOccurrence(occurrence)
-            }.onFailure { throwable ->
+            }.onErrorMessage(
+                defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
+            ) { message ->
                 sendEffect(
-                    HomeEffect.ShowMessage(
-                        throwable.toAppError().toUiText(
-                            defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
-                        )
-                    )
+                    HomeEffect.ShowMessage(message)
                 )
             }
         }
@@ -204,56 +253,6 @@ class HomeViewModel(
     private fun handleToggleWorkSessionResult(
         result: ToggleWorkSessionResult
     ) {
-        when (result) {
-            is ToggleWorkSessionResult.Started -> {
-                val message = if (result.wasRestart) {
-                    UiText.PluralResource(
-                        R.plurals.work_session_restarted_count,
-                        result.scheduledNotificationCount
-                    )
-                } else {
-                    UiText.PluralResource(
-                        R.plurals.work_session_started_scheduled_count,
-                        result.scheduledNotificationCount
-                    )
-                }
-
-                sendEffect(HomeEffect.ShowMessage(message))
-            }
-
-            ToggleWorkSessionResult.StartedWithoutReminders -> {
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        UiText.StringResource(R.string.work_session_started_no_session_reminders)
-                    )
-                )
-            }
-
-            ToggleWorkSessionResult.Ended -> {
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        UiText.StringResource(R.string.work_session_ended)
-                    )
-                )
-            }
-
-            ToggleWorkSessionResult.ForegroundStartBlocked -> {
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        UiText.StringResource(R.string.error_failed_start_work_session_service)
-                    )
-                )
-            }
-
-            is ToggleWorkSessionResult.Failed -> {
-                sendEffect(
-                    HomeEffect.ShowMessage(
-                        result.throwable.toAppError().toUiText(
-                            defaultMessage = UiText.StringResource(R.string.error_failed_start_work_session)
-                        )
-                    )
-                )
-            }
-        }
+        sendEffect(HomeEffect.ShowMessage(result.toUiMessage()))
     }
 }

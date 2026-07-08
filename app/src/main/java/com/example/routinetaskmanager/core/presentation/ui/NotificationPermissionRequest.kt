@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.routinetaskmanager.R
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -36,7 +36,7 @@ enum class PermissionDeniedAction {
     RetryRequest,
     OpenSettings
 }
-//TODO(add "NotificationManagerCompat.from(context).areNotificationsEnabled()")
+
 @Composable
 fun rememberNotificationPermissionRequest(
     onGranted: () -> Unit,
@@ -50,7 +50,7 @@ fun rememberNotificationPermissionRequest(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
+        if (isGranted && areNotificationsEnabled(context)) {
             onGranted()
         } else {
             notifyNotificationPermissionDenied(
@@ -64,7 +64,11 @@ fun rememberNotificationPermissionRequest(
 
     fun requestPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            onGranted()
+            if (areNotificationsEnabled(context)) {
+                onGranted()
+            } else {
+                onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
+            }
             return
         }
 
@@ -75,7 +79,11 @@ fun rememberNotificationPermissionRequest(
         ) == PackageManager.PERMISSION_GRANTED
 
         if (isGranted) {
-            onGranted()
+            if (areNotificationsEnabled(context)) {
+                onGranted()
+            } else {
+                onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
+            }
             return
         }
 
@@ -307,10 +315,8 @@ private fun canRequestNotificationPermissionAgain(
     } ?: false
 }
 
-private fun appDetailsSettingsIntent(context: Context): Intent {
-    return Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = "package:${context.packageName}".toUri()
-    }
+private fun areNotificationsEnabled(context: Context): Boolean {
+    return NotificationManagerCompat.from(context).areNotificationsEnabled()
 }
 
 private tailrec fun Context.findActivity(): Activity? {

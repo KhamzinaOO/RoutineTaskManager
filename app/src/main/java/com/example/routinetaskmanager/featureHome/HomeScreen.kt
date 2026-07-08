@@ -1,6 +1,5 @@
 package com.example.routinetaskmanager.featureHome
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,25 +21,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.routinetaskmanager.R
 import com.example.routinetaskmanager.core.presentation.model.asString
-import com.example.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
-import com.example.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
-import com.example.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
-import com.example.routinetaskmanager.core.utills.formatTime
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.NextReminderCard
-import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionButton
+import com.example.routinetaskmanager.featureReminder.presentation.common.ui.components.WorkSessionControl
 import com.example.routinetaskmanager.featureWidgets.AmountTracker
 import com.example.routinetaskmanager.featureWidgets.TimerTracker
 import com.example.routinetaskmanager.navigation.ui.AppChrome
 import com.example.routinetaskmanager.navigation.ui.AppChromeEffect
 import com.example.routinetaskmanager.navigation.ui.Home
 import com.example.routinetaskmanager.navigation.ui.HomeTopBar
-import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@SuppressLint("LocalContextGetResourceValueCall")
 @Composable
 fun HomeScreen(
     uiState : HomeUiState,
@@ -50,33 +41,6 @@ fun HomeScreen(
     showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val context = LocalContext.current
-    val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
-
-    val requestNotificationPermission = rememberNotificationPermissionRequest(
-        onGranted = {
-            onIntent(HomeUiIntent.OnSessionButtonClick)
-        },
-        onDenied = {
-            onIntent(HomeUiIntent.NotificationPermissionDenied)
-        },
-        onDeniedWithAction = { action ->
-            val actionLabel = when (action) {
-                PermissionDeniedAction.RetryRequest -> context.getString(R.string.action_retry)
-                PermissionDeniedAction.OpenSettings -> context.getString(R.string.action_settings)
-            }
-
-            showActionMessage(
-                context.getString(R.string.notifications_required_for_session),
-                actionLabel
-            ) {
-                when (action) {
-                    PermissionDeniedAction.RetryRequest -> notificationPermissionRequestRef[0]?.invoke()
-                    PermissionDeniedAction.OpenSettings -> openAppNotificationSettings(context)
-                }
-            }
-        }
-    )
-    notificationPermissionRequestRef[0] = requestNotificationPermission
 
     AppChromeEffect(
         owner = Home,
@@ -97,36 +61,21 @@ fun HomeScreen(
         modifier = Modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        var elapsedTimeMillis by remember { mutableLongStateOf(0L) }
-
-        LaunchedEffect(uiState.isSessionActive, uiState.sessionStartedAtMillis) {
-            val startedAtMillis = uiState.sessionStartedAtMillis
-
-            if (!uiState.isSessionActive || startedAtMillis == null) {
-                elapsedTimeMillis = 0L
-                return@LaunchedEffect
-            }
-
-            while (true) {
-                elapsedTimeMillis = System.currentTimeMillis() - startedAtMillis
-                delay(1000L)
-            }
-        }
-
-        val timerText = formatTime(elapsedTimeMillis)
-
-
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.CenterEnd
         ){
-            WorkSessionButton(
+            WorkSessionControl(
                 remindersCount = uiState.sessionReminderCount,
-                timer = timerText,
                 isActive = uiState.isSessionActive,
+                startedAtMillis = uiState.sessionStartedAtMillis,
                 isLoading = uiState.isSessionActionInProgress,
-                onEndClick = { onIntent(HomeUiIntent.OnSessionButtonClick) },
-                onStartClick = { requestNotificationPermission() }
+                showActionMessage = showActionMessage,
+                onStartSession = { onIntent(HomeUiIntent.OnSessionButtonClick) },
+                onEndSession = { onIntent(HomeUiIntent.OnSessionButtonClick) },
+                onNotificationPermissionDenied = {
+                    onIntent(HomeUiIntent.NotificationPermissionDenied)
+                }
             )
         }
 
@@ -134,11 +83,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            val nextReminder = uiState.reminders.firstOrNull { reminder ->
-                reminder.status == ReminderOccurrenceStatus.PLANNED
-            }
-
-            nextReminder?.let { reminder ->
+            uiState.nextOccurrence?.let { reminder ->
                 NextReminderCard(
                     time = reminder.scheduledAt.format(DateTimeFormatter.ofPattern("EEEE HH:mm")),
                     label = reminder.reminderName,
@@ -176,34 +121,34 @@ fun HomeScreen(
                 }
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AmountTracker(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .height(170.dp),
-                    title = stringResource(R.string.home_drink_water),
-                    progressText = stringResource(R.string.home_water_progress),
-                    progress = 0.1f,
-                    textFieldHint = stringResource(R.string.home_water_unit_ml),
-                    onAddButtonClicked = {}
-                )
-                TimerTracker(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .height(170.dp),
-                    title = stringResource(R.string.home_pomodoro_focus),
-                    progressText = "00:00",
-                    progress = 0f,
-                    onStartClick = {},
-                    onEndClick = {},
-                    onRepeatClick = {}
-                )
-            }
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                AmountTracker(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .fillMaxWidth()
+//                        .height(170.dp),
+//                    title = stringResource(R.string.home_drink_water),
+//                    progressText = stringResource(R.string.home_water_progress),
+//                    progress = 0.1f,
+//                    textFieldHint = stringResource(R.string.home_water_unit_ml),
+//                    onAddButtonClicked = {}
+//                )
+//                TimerTracker(
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .fillMaxWidth()
+//                        .height(170.dp),
+//                    title = stringResource(R.string.home_pomodoro_focus),
+//                    progressText = "00:00",
+//                    progress = 0f,
+//                    onStartClick = {},
+//                    onEndClick = {},
+//                    onRepeatClick = {}
+//                )
+//            }
         }
     }
 }

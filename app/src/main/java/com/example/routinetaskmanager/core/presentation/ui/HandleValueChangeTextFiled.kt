@@ -21,7 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,7 +50,7 @@ fun HandleValueChangeTextFiled(
             color = Color.Transparent,
             icon = painterResource(R.drawable.ic_remove),
             contentDescription = stringResource(R.string.action_decrement),
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.primary,
             onClick = onDecrement
         )
 
@@ -63,7 +65,7 @@ fun HandleValueChangeTextFiled(
             color = Color.Transparent,
             icon = Icons.Default.Add,
             contentDescription = stringResource(R.string.action_increment),
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.primary,
             onClick = onIncrement
         )
     }
@@ -91,7 +93,7 @@ fun HandleValueChangeTimeTextFiled(
             color = Color.Transparent,
             icon = painterResource(R.drawable.ic_remove),
             contentDescription = stringResource(R.string.action_decrement),
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.primary,
             onClick = onDecrement
         )
 
@@ -111,7 +113,7 @@ fun HandleValueChangeTimeTextFiled(
             color = Color.Transparent,
             icon = Icons.Default.Add,
             contentDescription = stringResource(R.string.action_increment),
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.primary,
             onClick = onIncrement
         )
     }
@@ -312,6 +314,7 @@ fun OvalNumberField(
         },
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge.copy(
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         ),
         keyboardOptions = KeyboardOptions(
@@ -319,6 +322,7 @@ fun OvalNumberField(
             imeAction = imeAction
         ),
         keyboardActions = keyboardActions,
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         modifier = modifier
             .width(70.dp)
             .height(34.dp)

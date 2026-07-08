@@ -1,7 +1,9 @@
 package com.example.routinetaskmanager.featureReminder.application.notifications
 
 import com.example.routinetaskmanager.core.coroutines.DispatcherProvider
+import com.example.routinetaskmanager.core.notifications.NotificationRequestCodeGenerator
 import com.example.routinetaskmanager.core.notifications.api.AlarmPrecision
+import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleResult
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
@@ -18,7 +20,6 @@ import com.example.routinetaskmanager.featureReminder.domain.model.RepeatSchedul
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -75,12 +76,17 @@ class ReminderSessionNotificationUseCase(
     }
 
 
-    suspend fun startSession(
+    suspend fun rescheduleSessionNotifications(
         startedAt: LocalDateTime = LocalDateTime.now(),
         from: LocalDateTime = LocalDateTime.now()
     ): SessionScheduleResult {
         return withContext(dispatcherProvider.io) {
             cancelSessionNotifications()
+
+            val usedRequestCodes = scheduledNotificationDao
+                .getAll()
+                .map { notification -> notification.requestCode }
+                .toMutableSet()
 
             val reminders = reminderRepository.getAllRemindersSnapshot()
                 .filter { reminder ->
@@ -111,17 +117,21 @@ class ReminderSessionNotificationUseCase(
                     sequence = occurrence.sequence
                 )
 
-                val requestCode = occurrenceKey.hashCode()
+                val requestCode = NotificationRequestCodeGenerator.next(
+                    key = occurrenceKey,
+                    usedCodes = usedRequestCodes
+                )
 
-                val wasScheduled = alarmScheduler.schedule(
+                val scheduleResult = alarmScheduler.schedule(
                     targetType = NotificationTargetType.REMINDER,
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
                     requestCode = requestCode,
-                    precision = AlarmPrecision.INEXACT
+                    precision = AlarmPrecision.INEXACT,
+                    occurrenceKind = NotificationOccurrenceKind.SESSION
                 )
 
-                if (!wasScheduled) {
+                if (scheduleResult != AppAlarmScheduleResult.Scheduled) {
                     return@mapNotNull null
                 }
 
@@ -131,7 +141,6 @@ class ReminderSessionNotificationUseCase(
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    //channelId = occurrence.reminder.notificationMode.toReminderChannelId(),
                     occurrenceKind = NotificationOccurrenceKind.SESSION.name
                 )
             }
