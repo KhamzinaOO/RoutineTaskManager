@@ -28,97 +28,96 @@ class RescheduleRemindersUseCase(
     private val mutex: Mutex = Mutex()
     suspend operator fun invoke() {
         mutex.withLock {
-        }
-        withContext(Dispatchers.IO) {
-            val oldReminderNotifications = scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
-                targetType = NotificationTargetType.REMINDER.name,
-                occurrenceKind = NotificationOccurrenceKind.REGULAR.name
-            )
-
-            oldReminderNotifications.forEach { entity ->
-                alarmScheduler.cancel(entity.requestCode)
-            }
-
-            scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKind(
-                targetType = NotificationTargetType.REMINDER.name,
-                occurrenceKind = NotificationOccurrenceKind.REGULAR.name
-            )
-
-            val reminders = reminderRepository.getAllRemindersSnapshot()
-                .filter { reminder ->
-                    reminder.isEnabled && reminder.notificationEnabled
-                }
-
-            val now = LocalDateTime.now()
-
-            val range = ScheduleRange(
-                start = now,
-                endExclusive = now
-                    .toLocalDate()
-                    .plusDays(SCHEDULE_LOOK_AHEAD_DAYS + 1)
-                    .atStartOfDay()
-            )
-
-            val statesByKey = reminderOccurrenceRepository.getByRange(
-                startMillis = range.start.toEpochMillis(),
-                endMillis = range.endExclusive.toEpochMillis()
-            ).associateBy { it.occurrenceKey }
-
-            val nextOccurrences = scheduleCalculator
-                .buildOccurrences(
-                    reminders = reminders,
-                    range = range
-                ).map { occurrence ->
-                    val state = statesByKey[occurrence.occurrenceKey]
-
-                    if(state == null){
-                        occurrence
-                    }else{
-                        occurrence.copy(
-                            status = state.status
-                        )
-                    }
-                }
-                .filter { occurrence ->
-                    occurrence.scheduledAt.isAfter(now) && occurrence.status == ReminderOccurrenceStatus.PLANNED
-                }
-                .sortedBy { occurrence ->
-                    occurrence.scheduledAt
-                }
-                .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
-
-            val entities = nextOccurrences.mapNotNull { occurrence ->
-                val scheduledAtMillis = occurrence.scheduledAtMillis
-                val occurrenceKey = occurrence.occurrenceKey
-
-                //IS NOT UNIQUE!!!
-                val requestCode = occurrenceKey.hashCode()
-
-                val wasScheduled = alarmScheduler.schedule(
-                    targetType = NotificationTargetType.REMINDER,
-                    targetId = occurrence.reminderId,
-                    scheduledAtMillis = scheduledAtMillis,
-                    requestCode = requestCode,
-                    precision = AlarmPrecision.EXACT
-                )
-
-                if (!wasScheduled) {
-                    return@mapNotNull null
-                }
-
-                ScheduledNotificationEntity(
-                    requestCode = requestCode,
+            withContext(Dispatchers.IO) {
+                val oldReminderNotifications = scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
                     targetType = NotificationTargetType.REMINDER.name,
-                    targetId = occurrence.reminderId,
-                    scheduledAtMillis = scheduledAtMillis,
-                    occurrenceKey = occurrenceKey,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR.name
                 )
+
+                oldReminderNotifications.forEach { entity ->
+                    alarmScheduler.cancel(entity.requestCode)
+                }
+
+                scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKind(
+                    targetType = NotificationTargetType.REMINDER.name,
+                    occurrenceKind = NotificationOccurrenceKind.REGULAR.name
+                )
+
+                val reminders = reminderRepository.getAllRemindersSnapshot()
+                    .filter { reminder ->
+                        reminder.isEnabled && reminder.notificationEnabled
+                    }
+
+                val now = LocalDateTime.now()
+
+                val range = ScheduleRange(
+                    start = now,
+                    endExclusive = now
+                        .toLocalDate()
+                        .plusDays(SCHEDULE_LOOK_AHEAD_DAYS + 1)
+                        .atStartOfDay()
+                )
+
+                val statesByKey = reminderOccurrenceRepository.getByRange(
+                    startMillis = range.start.toEpochMillis(),
+                    endMillis = range.endExclusive.toEpochMillis()
+                ).associateBy { it.occurrenceKey }
+
+                val nextOccurrences = scheduleCalculator
+                    .buildOccurrences(
+                        reminders = reminders,
+                        range = range
+                    ).map { occurrence ->
+                        val state = statesByKey[occurrence.occurrenceKey]
+
+                        if(state == null){
+                            occurrence
+                        }else{
+                            occurrence.copy(
+                                status = state.status
+                            )
+                        }
+                    }
+                    .filter { occurrence ->
+                        occurrence.scheduledAt.isAfter(now) && occurrence.status == ReminderOccurrenceStatus.PLANNED
+                    }
+                    .sortedBy { occurrence ->
+                        occurrence.scheduledAt
+                    }
+                    .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
+
+                val entities = nextOccurrences.mapNotNull { occurrence ->
+                    val scheduledAtMillis = occurrence.scheduledAtMillis
+                    val occurrenceKey = occurrence.occurrenceKey
+
+                    //IS NOT UNIQUE!!!
+                    val requestCode = occurrenceKey.hashCode()
+
+                    val wasScheduled = alarmScheduler.schedule(
+                        targetType = NotificationTargetType.REMINDER,
+                        targetId = occurrence.reminderId,
+                        scheduledAtMillis = scheduledAtMillis,
+                        requestCode = requestCode,
+                        precision = AlarmPrecision.EXACT
+                    )
+
+                    if (!wasScheduled) {
+                        return@mapNotNull null
+                    }
+
+                    ScheduledNotificationEntity(
+                        requestCode = requestCode,
+                        targetType = NotificationTargetType.REMINDER.name,
+                        targetId = occurrence.reminderId,
+                        scheduledAtMillis = scheduledAtMillis,
+                        occurrenceKey = occurrenceKey,
+                        occurrenceKind = NotificationOccurrenceKind.REGULAR.name
+                    )
+                }
+
+                scheduledNotificationDao.insertAll(entities)
             }
-
-            scheduledNotificationDao.insertAll(entities)
         }
-
     }
 
     private companion object {
