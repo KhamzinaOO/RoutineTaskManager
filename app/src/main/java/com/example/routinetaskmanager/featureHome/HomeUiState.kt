@@ -8,6 +8,7 @@ data class HomeUiState (
     val greetingText : UiText = UiText.StringResource(R.string.greeting_morning),
     val dateText : String = "",
     val reminders: List<ReminderOccurrence> = emptyList(),
+    val nextOccurrence: ReminderOccurrence? = null,
     val isSessionActive: Boolean = false,
     val sessionStartedAtMillis: Long? = null,
     val sessionReminderCount: Int = 0,
