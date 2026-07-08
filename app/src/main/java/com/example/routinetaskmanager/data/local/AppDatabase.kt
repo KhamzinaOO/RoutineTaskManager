@@ -2,8 +2,8 @@ package com.example.routinetaskmanager.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationDao
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEntity

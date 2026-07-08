@@ -10,7 +10,7 @@ import com.example.routinetaskmanager.core.notifications.AppNotificationConstant
 import com.example.routinetaskmanager.core.notifications.NotificationTriggerRouter
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -18,7 +18,7 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
     private val appNotificationManager: AppNotificationManager by inject()
     private val notificationTriggerRouter: NotificationTriggerRouter by inject()
-    private val scheduledNotificationDao: ScheduledNotificationDao by inject()
+    private val scheduledNotificationRepository: ScheduledNotificationRepository by inject()
     private val dispatcherProvider: DispatcherProvider by inject()
 
     override fun onReceive(
@@ -66,18 +66,13 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
 
         goAsync(dispatcherProvider) {
             val scheduledNotification = if (requestCode != Int.MIN_VALUE) {
-                scheduledNotificationDao.getByRequestCode(requestCode)
+                scheduledNotificationRepository.getByRequestCode(requestCode)
             } else {
                 null
             }
 
             val occurrenceKind = scheduledNotification
                 ?.occurrenceKind
-                ?.let { value ->
-                    runCatching {
-                        NotificationOccurrenceKind.valueOf(value)
-                    }.getOrNull()
-                }
                 ?: intentOccurrenceKind
                 ?: NotificationOccurrenceKind.REGULAR
 
@@ -97,7 +92,7 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKind = occurrenceKind
                 )
-                scheduledNotificationDao.deleteByRequestCode(requestCode)
+                scheduledNotificationRepository.deleteByRequestCode(requestCode)
 
                 if (!wasShown) {
                     Log.w(ContentValues.TAG, "Notification was not shown: targetType=$targetType targetId=$targetId requestCode=$requestCode")

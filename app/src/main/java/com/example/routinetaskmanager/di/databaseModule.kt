@@ -1,7 +1,9 @@
 package com.example.routinetaskmanager.di
 
 import androidx.room.Room
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationRepositoryImpl
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationDao
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.example.routinetaskmanager.data.local.AppDatabase
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderOccurrenceDAO
@@ -26,6 +28,12 @@ val databaseModule = module {
 
     single<ScheduledNotificationDao> {
         get<AppDatabase>().scheduleDao()
+    }
+
+    single<ScheduledNotificationRepository> {
+        ScheduledNotificationRepositoryImpl(
+            scheduledNotificationDao = get()
+        )
     }
 
     single<ReminderOccurrenceDAO> {

@@ -4,14 +4,14 @@ import com.example.routinetaskmanager.core.notifications.api.NotificationPayload
 import com.example.routinetaskmanager.core.notifications.api.NotificationTriggerHandler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.example.routinetaskmanager.core.notifications.toReminderChannelId
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import com.example.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 
 class ReminderNotificationTriggerHandler(
     private val reminderRepository: ReminderRepository,
-    private val scheduledNotificationDao: ScheduledNotificationDao,
+    private val scheduledNotificationRepository: ScheduledNotificationRepository,
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
     private val workSessionManager: WorkSessionManager
 ) : NotificationTriggerHandler {
@@ -25,8 +25,8 @@ class ReminderNotificationTriggerHandler(
             ?: return null
 
         if (!reminder.isEnabled || !reminder.notificationEnabled) {
-            scheduledNotificationDao.deleteByTarget(
-                targetType = NotificationTargetType.REMINDER.name,
+            scheduledNotificationRepository.deleteByTarget(
+                targetType = NotificationTargetType.REMINDER,
                 targetId = targetId
             )
             return null

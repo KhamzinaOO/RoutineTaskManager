@@ -5,8 +5,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationDao
+import com.example.routinetaskmanager.core.notifications.data.local.ScheduledNotificationEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderDao
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderEntity
 import com.example.routinetaskmanager.featureReminder.data.local.ReminderImageEntity

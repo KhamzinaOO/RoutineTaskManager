@@ -1,4 +1,4 @@
-package com.example.routinetaskmanager.data.local.notifications
+package com.example.routinetaskmanager.core.notifications.data.local
 
 import androidx.room.Entity
 import androidx.room.Index

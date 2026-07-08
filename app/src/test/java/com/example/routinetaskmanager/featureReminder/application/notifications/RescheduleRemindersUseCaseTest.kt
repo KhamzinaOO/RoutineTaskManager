@@ -6,8 +6,8 @@ import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleRes
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotification
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.example.routinetaskmanager.featureReminder.domain.model.NotificationMode
 import com.example.routinetaskmanager.featureReminder.domain.model.OnScheduleCertainDayRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
@@ -61,7 +61,7 @@ class RescheduleRemindersUseCaseTest {
             )
             .single()
 
-        val notificationDao = FakeScheduledNotificationDao()
+        val notificationRepository = FakeScheduledNotificationRepository()
         val useCase = RescheduleRemindersUseCase(
             reminderOccurrenceRepository = FakeOccurrenceRepository(
                 initialStates = listOf(
@@ -73,27 +73,27 @@ class RescheduleRemindersUseCaseTest {
             ),
             scheduleCalculator = calculator,
             alarmScheduler = FakeAlarmScheduler(),
-            scheduledNotificationDao = notificationDao,
+            scheduledNotificationRepository = notificationRepository,
             dispatcherProvider = TestDispatcherProvider
         )
 
         useCase()
 
-        val scheduledNotifications = notificationDao.getAll()
+        val scheduledNotifications = notificationRepository.getAll()
         assertTrue(
-            scheduledNotifications.any { entity ->
-                entity.occurrenceKey == tomorrowOccurrence.occurrenceKey
+            scheduledNotifications.any { notification ->
+                notification.occurrenceKey == tomorrowOccurrence.occurrenceKey
             }
         )
         assertFalse(
-            scheduledNotifications.any { entity ->
-                entity.occurrenceKey == todayOccurrence.occurrenceKey
+            scheduledNotifications.any { notification ->
+                notification.occurrenceKey == todayOccurrence.occurrenceKey
             }
         )
         assertEquals(
             tomorrowOccurrence.scheduledAtMillis,
             scheduledNotifications
-                .minBy { entity -> entity.scheduledAtMillis }
+                .minBy { notification -> notification.scheduledAtMillis }
                 .scheduledAtMillis
         )
     }
@@ -285,101 +285,101 @@ class RescheduleRemindersUseCaseTest {
         }
     }
 
-    private class FakeScheduledNotificationDao : ScheduledNotificationDao {
-        private val notifications = mutableListOf<ScheduledNotificationEntity>()
+    private class FakeScheduledNotificationRepository : ScheduledNotificationRepository {
+        private val notifications = mutableListOf<ScheduledNotification>()
 
-        override suspend fun insert(entity: ScheduledNotificationEntity) {
+        override suspend fun insert(notification: ScheduledNotification) {
             notifications.removeAll { existing ->
-                existing.occurrenceKey == entity.occurrenceKey
+                existing.occurrenceKey == notification.occurrenceKey
             }
-            notifications += entity
+            notifications += notification
         }
 
-        override suspend fun insertAll(entities: List<ScheduledNotificationEntity>) {
-            entities.forEach { entity ->
-                insert(entity)
+        override suspend fun insertAll(notifications: List<ScheduledNotification>) {
+            notifications.forEach { notification ->
+                insert(notification)
             }
         }
 
-        override suspend fun getAll(): List<ScheduledNotificationEntity> {
+        override suspend fun getAll(): List<ScheduledNotification> {
             return notifications.toList()
         }
 
         override suspend fun getByTargetType(
-            targetType: String
-        ): List<ScheduledNotificationEntity> {
-            return notifications.filter { entity ->
-                entity.targetType == targetType
+            targetType: NotificationTargetType
+        ): List<ScheduledNotification> {
+            return notifications.filter { notification ->
+                notification.targetType == targetType
             }
         }
 
         override suspend fun getByTargetTypeAndOccurrenceKind(
-            targetType: String,
-            occurrenceKind: String
-        ): List<ScheduledNotificationEntity> {
-            return notifications.filter { entity ->
-                entity.targetType == targetType &&
-                        entity.occurrenceKind == occurrenceKind
+            targetType: NotificationTargetType,
+            occurrenceKind: NotificationOccurrenceKind
+        ): List<ScheduledNotification> {
+            return notifications.filter { notification ->
+                notification.targetType == targetType &&
+                        notification.occurrenceKind == occurrenceKind
             }
         }
 
         override suspend fun getByTargetTypeAndOccurrenceKeyPrefix(
-            targetType: String,
+            targetType: NotificationTargetType,
             occurrenceKeyPrefix: String
-        ): List<ScheduledNotificationEntity> {
-            return notifications.filter { entity ->
-                entity.targetType == targetType &&
-                        entity.occurrenceKey.startsWith(occurrenceKeyPrefix)
+        ): List<ScheduledNotification> {
+            return notifications.filter { notification ->
+                notification.targetType == targetType &&
+                        notification.occurrenceKey.startsWith(occurrenceKeyPrefix)
             }
         }
 
         override suspend fun getByTarget(
-            targetType: String,
+            targetType: NotificationTargetType,
             targetId: Long
-        ): List<ScheduledNotificationEntity> {
-            return notifications.filter { entity ->
-                entity.targetType == targetType &&
-                        entity.targetId == targetId
+        ): List<ScheduledNotification> {
+            return notifications.filter { notification ->
+                notification.targetType == targetType &&
+                        notification.targetId == targetId
             }
         }
 
         override suspend fun getByRequestCode(
             requestCode: Int
-        ): ScheduledNotificationEntity? {
-            return notifications.firstOrNull { entity ->
-                entity.requestCode == requestCode
+        ): ScheduledNotification? {
+            return notifications.firstOrNull { notification ->
+                notification.requestCode == requestCode
             }
         }
 
         override suspend fun deleteByRequestCode(requestCode: Int) {
-            notifications.removeAll { entity ->
-                entity.requestCode == requestCode
+            notifications.removeAll { notification ->
+                notification.requestCode == requestCode
             }
         }
 
-        override suspend fun deleteByTargetType(targetType: String) {
-            notifications.removeAll { entity ->
-                entity.targetType == targetType
+        override suspend fun deleteByTargetType(targetType: NotificationTargetType) {
+            notifications.removeAll { notification ->
+                notification.targetType == targetType
             }
         }
 
         override suspend fun deleteByTargetTypeAndOccurrenceKind(
-            targetType: String,
-            occurrenceKind: String
+            targetType: NotificationTargetType,
+            occurrenceKind: NotificationOccurrenceKind
         ) {
-            notifications.removeAll { entity ->
-                entity.targetType == targetType &&
-                        entity.occurrenceKind == occurrenceKind
+            notifications.removeAll { notification ->
+                notification.targetType == targetType &&
+                        notification.occurrenceKind == occurrenceKind
             }
         }
 
         override suspend fun deleteByTarget(
-            targetType: String,
+            targetType: NotificationTargetType,
             targetId: Long
         ) {
-            notifications.removeAll { entity ->
-                entity.targetType == targetType &&
-                        entity.targetId == targetId
+            notifications.removeAll { notification ->
+                notification.targetType == targetType &&
+                        notification.targetId == targetId
             }
         }
 

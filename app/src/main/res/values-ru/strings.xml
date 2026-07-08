@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">RoutineTaskManager</string>
 
     <string name="nav_home">Главная</string>
@@ -122,19 +122,19 @@
     <string name="repeat_unit_hours">часов</string>
     <string name="repeat_unit_days">дней</string>
     <plurals name="repeat_unit_minutes_count">
-        <item quantity="one">минуту</item>
+        <item quantity="one" tools:ignore="ImpliedQuantity">минуту</item>
         <item quantity="few">минуты</item>
         <item quantity="many">минут</item>
         <item quantity="other">минуты</item>
     </plurals>
     <plurals name="repeat_unit_hours_count">
-        <item quantity="one">час</item>
+        <item quantity="one" tools:ignore="ImpliedQuantity">час</item>
         <item quantity="few">часа</item>
         <item quantity="many">часов</item>
         <item quantity="other">часа</item>
     </plurals>
     <plurals name="repeat_unit_days_count">
-        <item quantity="one">день</item>
+        <item quantity="one" tools:ignore="ImpliedQuantity">день</item>
         <item quantity="few">дня</item>
         <item quantity="many">дней</item>
         <item quantity="other">дня</item>

@@ -7,9 +7,8 @@ import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduleRes
 import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
-import com.example.routinetaskmanager.featureReminder.data.mapper.toRepeatTypeDomain
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotification
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.example.routinetaskmanager.featureReminder.domain.model.IntervalRepeat
 import com.example.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
@@ -19,6 +18,7 @@ import com.example.routinetaskmanager.featureReminder.domain.model.RepeatInterva
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatScheduleMode
 import com.example.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.example.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
+import com.example.routinetaskmanager.featureReminder.domain.model.type
 import com.example.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -32,7 +32,7 @@ class ReminderSessionNotificationUseCase(
     private val dispatcherProvider: DispatcherProvider,
     private val reminderRepository: ReminderRepository,
     private val alarmScheduler: AppAlarmScheduler,
-    private val scheduledNotificationDao: ScheduledNotificationDao
+    private val scheduledNotificationRepository: ScheduledNotificationRepository
 ) {
 
     fun observeSessionOccurrences(
@@ -83,7 +83,7 @@ class ReminderSessionNotificationUseCase(
         return withContext(dispatcherProvider.io) {
             cancelSessionNotifications()
 
-            val usedRequestCodes = scheduledNotificationDao
+            val usedRequestCodes = scheduledNotificationRepository
                 .getAll()
                 .map { notification -> notification.requestCode }
                 .toMutableSet()
@@ -105,7 +105,7 @@ class ReminderSessionNotificationUseCase(
                 reminder.hasSessionReminderFor(startedAt)
             }
 
-            val entities = occurrences.mapNotNull { occurrence ->
+            val notifications = occurrences.mapNotNull { occurrence ->
                 val scheduledAtMillis = occurrence.scheduledAt
                     .atZone(ZoneId.systemDefault())
                     .toInstant()
@@ -135,20 +135,20 @@ class ReminderSessionNotificationUseCase(
                     return@mapNotNull null
                 }
 
-                ScheduledNotificationEntity(
+                ScheduledNotification(
                     requestCode = requestCode,
-                    targetType = NotificationTargetType.REMINDER.name,
+                    targetType = NotificationTargetType.REMINDER,
                     targetId = occurrence.reminder.id,
                     scheduledAtMillis = scheduledAtMillis,
                     occurrenceKey = occurrenceKey,
-                    occurrenceKind = NotificationOccurrenceKind.SESSION.name
+                    occurrenceKind = NotificationOccurrenceKind.SESSION
                 )
             }
 
-            scheduledNotificationDao.insertAll(entities)
+            scheduledNotificationRepository.insertAll(notifications)
             SessionScheduleResult(
                 sessionReminderCount = sessionReminderCount,
-                scheduledNotificationCount = entities.size
+                scheduledNotificationCount = notifications.size
             )
         }
     }
@@ -174,18 +174,18 @@ class ReminderSessionNotificationUseCase(
 
     private suspend fun cancelSessionNotifications() {
         val sessionNotifications =
-            scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
-                targetType = NotificationTargetType.REMINDER.name,
-                occurrenceKind = NotificationOccurrenceKind.SESSION.name
+            scheduledNotificationRepository.getByTargetTypeAndOccurrenceKind(
+                targetType = NotificationTargetType.REMINDER,
+                occurrenceKind = NotificationOccurrenceKind.SESSION
             )
 
         sessionNotifications.forEach { notification ->
             alarmScheduler.cancel(notification.requestCode)
         }
 
-        scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKind(
-            targetType = NotificationTargetType.REMINDER.name,
-            occurrenceKind = NotificationOccurrenceKind.SESSION.name
+        scheduledNotificationRepository.deleteByTargetTypeAndOccurrenceKind(
+            targetType = NotificationTargetType.REMINDER,
+            occurrenceKind = NotificationOccurrenceKind.SESSION
         )
     }
 
@@ -313,7 +313,7 @@ class ReminderSessionNotificationUseCase(
             reminderName = reminder.name,
             instructionsText = reminder.instructionsText,
             scheduledAt = scheduledAt,
-            repeatType = reminder.repeatRule.toRepeatTypeDomain(),
+            repeatType = reminder.repeatRule.type,
             occurrenceKey = buildSessionOccurrenceKey(
                 reminderId = reminder.id,
                 scheduledAtMillis = scheduledAtMillis,

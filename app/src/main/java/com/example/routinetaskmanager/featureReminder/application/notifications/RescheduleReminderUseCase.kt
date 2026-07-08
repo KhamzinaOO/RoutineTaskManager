@@ -8,8 +8,8 @@ import com.example.routinetaskmanager.core.notifications.api.AppAlarmScheduler
 import com.example.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.example.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.example.routinetaskmanager.core.utills.toEpochMillis
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationDao
-import com.example.routinetaskmanager.data.local.notifications.ScheduledNotificationEntity
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotification
+import com.example.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.example.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
@@ -25,28 +25,28 @@ class RescheduleRemindersUseCase(
     private val reminderRepository: ReminderRepository,
     private val scheduleCalculator: ReminderScheduleCalculator,
     private val alarmScheduler: AppAlarmScheduler,
-    private val scheduledNotificationDao: ScheduledNotificationDao,
+    private val scheduledNotificationRepository: ScheduledNotificationRepository,
     private val dispatcherProvider: DispatcherProvider
 ) {
     private val mutex: Mutex = Mutex()
     suspend operator fun invoke() {
         mutex.withLock {
             withContext(dispatcherProvider.io) {
-                val oldReminderNotifications = scheduledNotificationDao.getByTargetTypeAndOccurrenceKind(
-                    targetType = NotificationTargetType.REMINDER.name,
-                    occurrenceKind = NotificationOccurrenceKind.REGULAR.name
+                val oldReminderNotifications = scheduledNotificationRepository.getByTargetTypeAndOccurrenceKind(
+                    targetType = NotificationTargetType.REMINDER,
+                    occurrenceKind = NotificationOccurrenceKind.REGULAR
                 )
 
                 oldReminderNotifications.forEach { entity ->
                     alarmScheduler.cancel(entity.requestCode)
                 }
 
-                scheduledNotificationDao.deleteByTargetTypeAndOccurrenceKind(
-                    targetType = NotificationTargetType.REMINDER.name,
-                    occurrenceKind = NotificationOccurrenceKind.REGULAR.name
+                scheduledNotificationRepository.deleteByTargetTypeAndOccurrenceKind(
+                    targetType = NotificationTargetType.REMINDER,
+                    occurrenceKind = NotificationOccurrenceKind.REGULAR
                 )
 
-                val usedRequestCodes = scheduledNotificationDao
+                val usedRequestCodes = scheduledNotificationRepository
                     .getAll()
                     .map { notification -> notification.requestCode }
                     .toMutableSet()
@@ -94,7 +94,7 @@ class RescheduleRemindersUseCase(
                     }
                     .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
 
-                val entities = nextOccurrences.mapNotNull { occurrence ->
+                val notifications = nextOccurrences.mapNotNull { occurrence ->
                     val scheduledAtMillis = occurrence.scheduledAtMillis
                     val occurrenceKey = occurrence.occurrenceKey
 
@@ -116,17 +116,17 @@ class RescheduleRemindersUseCase(
                         return@mapNotNull null
                     }
 
-                    ScheduledNotificationEntity(
+                    ScheduledNotification(
                         requestCode = requestCode,
-                        targetType = NotificationTargetType.REMINDER.name,
+                        targetType = NotificationTargetType.REMINDER,
                         targetId = occurrence.reminderId,
                         scheduledAtMillis = scheduledAtMillis,
                         occurrenceKey = occurrenceKey,
-                        occurrenceKind = NotificationOccurrenceKind.REGULAR.name
+                        occurrenceKind = NotificationOccurrenceKind.REGULAR
                     )
                 }
 
-                scheduledNotificationDao.insertAll(entities)
+                scheduledNotificationRepository.insertAll(notifications)
             }
         }
     }
