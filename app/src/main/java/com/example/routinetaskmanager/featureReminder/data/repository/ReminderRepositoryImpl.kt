@@ -120,7 +120,7 @@ class ReminderRepositoryImpl(
         val now = System.currentTimeMillis()
 
         val currentReminder = reminderDao.getReminderById(reminderId)
-            ?: throw IllegalArgumentException("Reminder not found")
+            ?: throw NoSuchElementException()
 
         val currentImages = reminderDao.getImagesByReminderId(reminderId)
 

@@ -10,6 +10,7 @@ import com.example.routinetaskmanager.core.error.runSuspendCatching
 import com.example.routinetaskmanager.core.error.toAppError
 import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
+import com.example.routinetaskmanager.core.time.DateTimeTicker
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceUseCase
@@ -20,12 +21,14 @@ import com.example.routinetaskmanager.featureReminder.application.session.Toggle
 import com.example.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessage
 import com.example.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessageOrNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -44,15 +47,11 @@ class HomeViewModel(
     private val reminderCommandUseCase: ReminderCommandUseCase,
     private val observeWorkSessionStateUseCase: ObserveWorkSessionStateUseCase,
     private val restoreActiveWorkSessionRuntimeUseCase: RestoreActiveWorkSessionRuntimeUseCase,
-    private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase
+    private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase,
+    private val dateTimeTicker: DateTimeTicker
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        HomeUiState(
-            greetingText = buildGreeting(),
-            dateText = buildDateText()
-        )
-    )
+    private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<HomeEffect>(Channel.BUFFERED)
@@ -99,13 +98,23 @@ class HomeViewModel(
         }
     }
 
-    private fun observeTodayReminders(){
-        observeDayReminderOccurrencesUseCase(date = LocalDate.now())
-            .onEach { reminders ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeTodayReminders() {
+        dateTimeTicker.todayFlow()
+            .onEach { today ->
                 _uiState.update {
                     it.copy(
-                        reminders = reminders
+                        greetingText = buildGreeting(),
+                        dateText = buildDateText(today)
                     )
+                }
+            }
+            .flatMapLatest { today ->
+                observeDayReminderOccurrencesUseCase(date = today)
+            }
+            .onEach { reminders ->
+                _uiState.update {
+                    it.copy(reminders = reminders)
                 }
             }
             .catch { throwable ->
@@ -120,36 +129,31 @@ class HomeViewModel(
             .launchIn(viewModelScope)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeNextReminder() {
         viewModelScope.launch {
-            runAppCatching {
+            dateTimeTicker.nowMinuteFlow().flatMapLatest { now ->
                 observeNextReminderOccurrenceUseCase(
-                    date = LocalDateTime.now()
-                ).distinctUntilChanged()
-            }.onSuccess { occurrenceFlow ->
-                occurrenceFlow
-                    .onEach { occurrence ->
-                        _uiState.update { state ->
-                            state.copy(
-                                nextOccurrence = occurrence
-                            )
-                        }
-                    }
-                    .catch { throwable ->
-                        sendEffect(
-                            HomeEffect.ShowMessage(
-                                throwable.toAppError().toUiText(
-                                    defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
-                                )
-                            )
+                    date = now
+                )
+            }.distinctUntilChanged()
+                .onEach { occurrence ->
+                    _uiState.update { state ->
+                        state.copy(
+                            nextOccurrence = occurrence
                         )
                     }
-                    .launchIn(viewModelScope)
-            }.onErrorMessage(
-                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
-            ) { message ->
-                sendEffect(HomeEffect.ShowMessage(message))
-            }
+                }
+                .catch { throwable ->
+                    sendEffect(
+                        HomeEffect.ShowMessage(
+                            throwable.toAppError().toUiText(
+                                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                            )
+                        )
+                    )
+                }
+                .launchIn(viewModelScope)
         }
     }
 
@@ -241,12 +245,10 @@ class HomeViewModel(
         }
     }
 
-    private fun buildDateText(): String {
-        val date = LocalDate.now()
+    private fun buildDateText(date: LocalDate): String {
         val locale = Locale.getDefault()
         val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.FULL, locale)
         val dateText = date.format(DateTimeFormatter.ofPattern("dd MMMM y", locale))
-
         return "$dayOfWeek, $dateText"
     }
 

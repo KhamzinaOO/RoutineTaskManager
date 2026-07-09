@@ -50,7 +50,8 @@ val featureReminderModule = module {
         ReminderInfoViewModel(
             reminderId = id,
             commandUseCase = get(),
-            observeNextReminderOccurrenceById = get()
+            observeNextReminderOccurrenceById = get(),
+            dateTimeTicker = get(),
         )
     }
 

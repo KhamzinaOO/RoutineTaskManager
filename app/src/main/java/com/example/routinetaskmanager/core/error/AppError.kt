@@ -1,7 +1,5 @@
 package com.example.routinetaskmanager.core.error
 
-import com.example.routinetaskmanager.core.presentation.model.UiText
-
 sealed interface AppError {
     data object Cancellation : AppError
     data object NotFound : AppError
@@ -12,6 +10,13 @@ sealed interface AppError {
     data object ExactAlarmPermissionDenied : AppError
     data object AlarmSchedulingFailed : AppError
     data object ForegroundServiceBlocked : AppError
-    data class Validation(val message: UiText) : AppError
+
+    data class Validation(
+        val reason: ValidationReason = ValidationReason.InvalidInput
+    ) : AppError
     data class Unknown(val throwable: Throwable? = null) : AppError
+}
+
+sealed interface ValidationReason {
+    data object InvalidInput : ValidationReason
 }

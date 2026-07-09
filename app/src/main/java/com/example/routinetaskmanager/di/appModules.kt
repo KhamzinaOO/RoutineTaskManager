@@ -5,5 +5,6 @@ val appModules = listOf(
     featureReminderModule,
     databaseModule,
     notificationModule,
-    coroutineModule
+    coroutineModule,
+    dateTimeModule
 )

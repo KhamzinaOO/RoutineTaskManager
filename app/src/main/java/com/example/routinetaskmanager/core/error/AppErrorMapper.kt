@@ -11,10 +11,7 @@ fun Throwable.toAppError(): AppError {
         is CancellationException -> AppError.Cancellation
         is NoSuchElementException -> AppError.NotFound
         is IllegalArgumentException -> AppError.Validation(
-            message = message
-                ?.takeIf { it.isNotBlank() }
-                ?.let(UiText::DynamicString)
-                ?: UiText.StringResource(R.string.error_invalid_input)
+            reason = ValidationReason.InvalidInput
         )
         is SecurityException -> AppError.PermissionDenied
         is SQLiteException -> AppError.Database
@@ -36,10 +33,17 @@ fun AppError.toUiText(
         AppError.ExactAlarmPermissionDenied -> UiText.StringResource(R.string.error_exact_alarm_permission_denied)
         AppError.AlarmSchedulingFailed -> UiText.StringResource(R.string.error_alarm_scheduling_failed)
         AppError.ForegroundServiceBlocked -> UiText.StringResource(R.string.error_failed_start_work_session_service)
-        is AppError.Validation -> message
+        is AppError.Validation -> reason.toUiText()
         is AppError.Unknown -> defaultMessage
     }
 }
 
+
 val AppError.shouldShowMessage: Boolean
     get() = this != AppError.Cancellation
+
+private fun ValidationReason.toUiText(): UiText {
+    return when (this) {
+        ValidationReason.InvalidInput -> UiText.StringResource(R.string.error_invalid_input)
+    }
+}

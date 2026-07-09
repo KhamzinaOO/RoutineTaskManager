@@ -10,6 +10,7 @@ import com.example.routinetaskmanager.core.error.runSuspendCatching
 import com.example.routinetaskmanager.core.error.toAppError
 import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
+import com.example.routinetaskmanager.core.time.DateTimeTicker
 import com.example.routinetaskmanager.featureReminder.application.session.RestoreActiveWorkSessionRuntimeUseCase
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionResult
 import com.example.routinetaskmanager.featureReminder.application.session.ToggleWorkSessionUseCase
@@ -37,7 +38,8 @@ class ReminderMainViewModel(
     private val observeDayReminderOccurrencesUseCase: ObserveDayReminderOccurrencesUseCase,
     private val observeWorkSessionStateUseCase: ObserveWorkSessionStateUseCase,
     private val restoreActiveWorkSessionRuntimeUseCase: RestoreActiveWorkSessionRuntimeUseCase,
-    private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase
+    private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase,
+    private val dateTimeTicker: DateTimeTicker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReminderMainUiState())

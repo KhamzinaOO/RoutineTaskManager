@@ -9,11 +9,13 @@ import com.example.routinetaskmanager.core.error.runAppCatching
 import com.example.routinetaskmanager.core.error.toAppError
 import com.example.routinetaskmanager.core.error.toUiText
 import com.example.routinetaskmanager.core.presentation.model.UiText
+import com.example.routinetaskmanager.core.time.DateTimeTicker
 import com.example.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.example.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceByIdUseCase
 import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoEffect
 import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoIntent
 import com.example.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoUiState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -31,7 +34,8 @@ import java.time.LocalDateTime
 class ReminderInfoViewModel(
     private val reminderId : Long,
     private val commandUseCase : ReminderCommandUseCase,
-    private val observeNextReminderOccurrenceById: ObserveNextReminderOccurrenceByIdUseCase
+    private val observeNextReminderOccurrenceById: ObserveNextReminderOccurrenceByIdUseCase,
+    private val dateTimeTicker: DateTimeTicker
 ) : ViewModel(){
     private val _uiState = MutableStateFlow<ReminderInfoUiState>(ReminderInfoUiState())
     val uiState : StateFlow<ReminderInfoUiState> = _uiState.asStateFlow()
@@ -179,21 +183,22 @@ class ReminderInfoViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getNextReminder(){
         viewModelScope.launch {
-            runAppCatching {
+            dateTimeTicker.nowMinuteFlow().flatMapLatest{ now ->
                 observeNextReminderOccurrenceById(
-                    date = LocalDateTime.now(),
+                    date = now,
                     reminderId = reminderId
-                ).distinctUntilChanged()
-            }.onSuccess { occurrenceFlow ->
-                occurrenceFlow.onEach { occurrence ->
+                )
+            }.distinctUntilChanged()
+                .onEach {  occurrence ->
                     _uiState.update {
                         it.copy(
                             nextOccurrence = occurrence
                         )
                     }
-                }.catch { throwable ->
+            }.catch { throwable ->
                     _effect.send(
                         ReminderInfoEffect.ShowMessage(
                             throwable.toAppError().toUiText(
@@ -204,7 +209,6 @@ class ReminderInfoViewModel(
                 }.collect {}
 
             }
-        }
     }
 
     private fun sendEffect(
