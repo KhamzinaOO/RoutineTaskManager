@@ -3,10 +3,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
-    namespace = "com.example.routinetaskmanager"
+    namespace = "com.okhamzina.routinetaskmanager"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -14,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.routinetaskmanager"
+        applicationId = "com.okhamzina.routinetaskmanager"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -78,4 +80,8 @@ dependencies {
     testImplementation(libs.androidx.room.testing)
 
     implementation(libs.coil.compose)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 }

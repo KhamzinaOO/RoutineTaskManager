@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "526860518494",
+    "project_id": "routinetaskmanager",
+    "storage_bucket": "routinetaskmanager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:526860518494:android:801414cf61a2a59dc9a0cf",
+        "android_client_info": {
+          "package_name": "com.okhamzina.routinetaskmanager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuZFnyegr1CP2irTDp7JpiPyodI9sMOB0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
