@@ -43,7 +43,7 @@ fun AllRemindersScreen(
     uiState : AllRemindersUiState,
     onIntent : (AllRemindersIntent) -> Unit
 ){
-    val reminders = uiState.remindersToShow
+    val reminders = uiState.visibleReminders
 
     var openedReminderId by remember { mutableStateOf<Long?>(null) }
 
@@ -53,16 +53,16 @@ fun AllRemindersScreen(
             topBar = {
                 CommonAppBarWithMenuButtonAndDropdown(
                     title = stringResource(R.string.all_reminders_title),
-                    onMenuButtonClick = { onIntent(AllRemindersIntent.OnMenuButtonClick)},
+                    onMenuButtonClick = { onIntent(AllRemindersIntent.MenuButtonClicked)},
                     onSearchButtonClick = {
-
+                        onIntent(AllRemindersIntent.SearchButtonClicked)
                     }
                 )
             },
             fab = {
                 CommonFloatingButton(
                     onClick = {
-                        onIntent(AllRemindersIntent.OnAddFABClick)
+                        onIntent(AllRemindersIntent.AddReminderClicked)
                     }
                 )
             }
@@ -77,8 +77,8 @@ fun AllRemindersScreen(
 
         RemindersTopFiltersBar(
             onItemClick = {
-                onIntent(AllRemindersIntent.OnTypeSelected(
-                    typeIndex = it.id
+                onIntent(AllRemindersIntent.TypeFilterSelected(
+                    typeId = it.id
                 ))
             },
             selectedId = uiState.reminderFilter.repeatType?.ordinal ?: -1,
@@ -107,7 +107,7 @@ fun AllRemindersScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(24.dp))
                             .combinedClickable(
-                                onClick = {onIntent(AllRemindersIntent.OnItemClick(reminder.id))},
+                                onClick = {onIntent(AllRemindersIntent.ReminderClicked(reminder.id))},
                                 onLongClick = {
                                     openedReminderId = reminder.id
                                 }
@@ -129,15 +129,15 @@ fun AllRemindersScreen(
 
                             when (item.id) {
                                 0 -> {
-                                    onIntent(AllRemindersIntent.OnOpenClick(reminder.id))
+                                    onIntent(AllRemindersIntent.ReminderClicked(reminder.id))
                                 }
 
                                 1 -> {
-                                    onIntent(AllRemindersIntent.OnEditClick(reminder.id))
+                                    onIntent(AllRemindersIntent.EditReminderClicked(reminder.id))
                                 }
 
                                 2 -> {
-                                    onIntent(AllRemindersIntent.OnDeleteClick(reminder.id))
+                                    onIntent(AllRemindersIntent.DeleteReminderClicked(reminder.id))
                                 }
                             }
                         }

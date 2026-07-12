@@ -81,9 +81,9 @@ fun ReminderInfoScreen(
             topBar = {
                 CommonTopAppBarWithActionButtons(
                     title = uiState.reminder?.name ?: "Error",
-                    onBackClick = { onIntent(ReminderInfoIntent.OnBackClick) },
-                    onEditClick = { onIntent(ReminderInfoIntent.OnReminderEdit) },
-                    onDeleteClick = { onIntent(ReminderInfoIntent.OnReminderDelete) }
+                    onBackClick = { onIntent(ReminderInfoIntent.BackClicked) },
+                    onEditClick = { onIntent(ReminderInfoIntent.EditClicked) },
+                    onDeleteClick = { onIntent(ReminderInfoIntent.DeleteClicked) }
                 )
             }
         )
@@ -99,7 +99,7 @@ fun ReminderInfoScreen(
             ReminderStatusBlock(
                 reminder = reminder,
                 onEnabledChange = { enabled ->
-                    onIntent(ReminderInfoIntent.OnSetEnabled(enabled))
+                    onIntent(ReminderInfoIntent.EnabledChanged(enabled))
                 }
             )
         }
@@ -107,9 +107,9 @@ fun ReminderInfoScreen(
         uiState.nextOccurrence?.let {
             NextReminderBlock(
                 reminderTime = it.scheduledAt.formatDateTimeToWeekDayAndTime(),
-                onSkipClick = {onIntent(ReminderInfoIntent.OnSkipButtonClick)},
-                onDoNowClick = {onIntent(ReminderInfoIntent.OnDoButtonClick)},
-                onSkipForTodayClick = {onIntent(ReminderInfoIntent.OnSkipAllForTodayClick)}
+                onSkipClick = {onIntent(ReminderInfoIntent.SkipNextClicked)},
+                onDoNowClick = {onIntent(ReminderInfoIntent.CompleteNextClicked)},
+                onSkipForTodayClick = {onIntent(ReminderInfoIntent.SkipRemainingTodayClicked)}
             )
         } ?: Text(
             text = stringResource(R.string.no_reminders_found_for_this_week)

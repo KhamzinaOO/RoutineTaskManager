@@ -2,6 +2,7 @@ package com.okhamzina.routinetaskmanager.core.notifications.domain
 
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationTargetType
+import kotlinx.coroutines.flow.Flow
 
 interface ScheduledNotificationRepository {
 
@@ -10,6 +11,8 @@ interface ScheduledNotificationRepository {
     suspend fun insertAll(notifications: List<ScheduledNotification>)
 
     suspend fun getAll(): List<ScheduledNotification>
+
+    fun observeHasScheduledNotifications(): Flow<Boolean>
 
     suspend fun getByTargetType(
         targetType: NotificationTargetType

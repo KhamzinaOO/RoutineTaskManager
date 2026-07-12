@@ -17,11 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,11 +33,6 @@ import java.util.Locale
 
 private const val WEEK_CAROUSEL_START_PAGE = 1000
 private const val WEEK_CAROUSEL_PAGE_COUNT = 2000
-
-val LocalDateSaver = Saver<LocalDate, Long>(
-    save = { it.toEpochDay() },
-    restore = { LocalDate.ofEpochDay(it) }
-)
 
 fun LocalDate.startOfWeek(): LocalDate =
     with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -68,35 +58,31 @@ fun pageToWeekDate(
 @Composable
 fun WeekCarousel(
     modifier: Modifier = Modifier,
+    selectedDate: LocalDate,
+    today: LocalDate,
     onDaySelected: (LocalDate) -> Unit
 ) {
     val locale = LocalLocale.current.platformLocale
-    val today = remember { LocalDate.now() }
 
     val pagerState = rememberPagerState(
         initialPage = WEEK_CAROUSEL_START_PAGE
     ) { WEEK_CAROUSEL_PAGE_COUNT }
 
-    var selectedDate by rememberSaveable(stateSaver = LocalDateSaver) {
-        mutableStateOf(today)
-    }
-
-    LaunchedEffect(pagerState.currentPage) {
+    LaunchedEffect(pagerState.currentPage, today) {
         val weekBaseDate = pageToWeekDate(
             page = pagerState.currentPage,
             startPage = WEEK_CAROUSEL_START_PAGE,
             today = today
         )
 
-        selectedDate = if (pagerState.currentPage == WEEK_CAROUSEL_START_PAGE) {
+        val dateToSelect = if (pagerState.currentPage == WEEK_CAROUSEL_START_PAGE) {
             today
         } else {
             weekBaseDate
         }
-    }
-
-    LaunchedEffect(selectedDate) {
-        onDaySelected(selectedDate)
+        if (dateToSelect != selectedDate) {
+            onDaySelected(dateToSelect)
+        }
     }
 
     Box(
@@ -122,7 +108,7 @@ fun WeekCarousel(
                 isSelected = { it == selectedDate },
                 locale = locale,
                 onClick = { clickedDate ->
-                    selectedDate = clickedDate
+                    onDaySelected(clickedDate)
                 }
             )
         }

@@ -2,9 +2,10 @@ package com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderIn
 
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
+import java.time.LocalDate
 
 data class ReminderInfoUiState(
     val reminder : Reminder? = null,
     val nextOccurrence: ReminderOccurrence? = null,
-    val linkedReminder : Reminder? = null
+    val today: LocalDate = LocalDate.now()
 )

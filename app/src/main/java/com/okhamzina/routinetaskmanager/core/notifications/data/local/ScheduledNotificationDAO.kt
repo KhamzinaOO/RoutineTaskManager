@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -21,6 +22,9 @@ interface ScheduledNotificationDao {
 
     @Query("SELECT * FROM scheduled_notifications")
     suspend fun getAll(): List<ScheduledNotificationEntity>
+
+    @Query("SELECT COUNT(*) FROM scheduled_notifications")
+    fun observeCount(): Flow<Int>
 
     @Query(
         """

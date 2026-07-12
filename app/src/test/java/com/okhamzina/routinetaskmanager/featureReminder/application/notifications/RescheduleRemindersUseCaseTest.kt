@@ -30,6 +30,7 @@ import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -393,6 +394,10 @@ class RescheduleRemindersUseCaseTest {
 
         override suspend fun getAll(): List<ScheduledNotification> {
             return notifications.toList()
+        }
+
+        override fun observeHasScheduledNotifications(): Flow<Boolean> {
+            return flowOf(notifications.isNotEmpty())
         }
 
         override suspend fun getByTargetType(

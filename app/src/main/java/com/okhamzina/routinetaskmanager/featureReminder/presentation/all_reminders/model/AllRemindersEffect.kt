@@ -3,13 +3,10 @@ package com.okhamzina.routinetaskmanager.featureReminder.presentation.all_remind
 import com.okhamzina.routinetaskmanager.core.presentation.model.UiText
 
 sealed interface AllRemindersEffect {
-    data object FABClicked : AllRemindersEffect
-    data object MenuButtonClicked : AllRemindersEffect
-    data class ItemClicked (val id : Long) : AllRemindersEffect
-
-    data class EditClicked (val id : Long) : AllRemindersEffect
-
-    data class OpenClicked (val id : Long) : AllRemindersEffect
-
-    data class ShowMessage (val message : UiText) : AllRemindersEffect
+    data object NavigateToCreateReminder : AllRemindersEffect
+    data object OpenDrawer : AllRemindersEffect
+    data object OpenSearch : AllRemindersEffect
+    data class NavigateToReminder(val id: Long) : AllRemindersEffect
+    data class NavigateToEditReminder(val id: Long) : AllRemindersEffect
+    data class ShowMessage(val message: UiText) : AllRemindersEffect
 }

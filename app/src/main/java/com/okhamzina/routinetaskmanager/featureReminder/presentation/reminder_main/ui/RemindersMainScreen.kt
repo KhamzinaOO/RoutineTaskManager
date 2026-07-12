@@ -55,19 +55,19 @@ fun RemindersMainScreen(
                         LocalLocale.current.platformLocale
                     ),
                     onMenuButtonClick = {
-                        onIntent(ReminderMainIntent.MenuButtonClick)
+                        onIntent(ReminderMainIntent.MenuButtonClicked)
                     },
                     onSearchButtonClick = {
-                        onIntent(ReminderMainIntent.SearchButtonClick)
+                        onIntent(ReminderMainIntent.SearchButtonClicked)
                     },
                     onCalendarButtonClick = {
-                        onIntent(ReminderMainIntent.CalendarButtonClick)
+                        onIntent(ReminderMainIntent.CalendarButtonClicked)
                     }
                 )
             },
             fab = {
                 CommonFloatingButton {
-                    onIntent(ReminderMainIntent.AddFABClick)
+                    onIntent(ReminderMainIntent.AddReminderClicked)
                 }
             }
         )
@@ -81,8 +81,10 @@ fun RemindersMainScreen(
                 .padding(horizontal = 16.dp)
         ) {
             WeekCarousel(
+                selectedDate = uiState.selectedDate,
+                today = uiState.today,
                 onDaySelected = { date ->
-                    onIntent(ReminderMainIntent.DateClick(date))
+                    onIntent(ReminderMainIntent.DateSelected(date))
                 }
             )
         }
@@ -98,8 +100,8 @@ fun RemindersMainScreen(
                 startedAtMillis = uiState.sessionStartedAtMillis,
                 isLoading = uiState.isSessionActionInProgress,
                 showActionMessage = showActionMessage,
-                onStartSession = { onIntent(ReminderMainIntent.SessionButtonClick) },
-                onEndSession = { onIntent(ReminderMainIntent.SessionButtonClick) },
+                onStartSession = { onIntent(ReminderMainIntent.SessionButtonClicked) },
+                onEndSession = { onIntent(ReminderMainIntent.SessionButtonClicked) },
                 onNotificationPermissionDenied = {
                     onIntent(ReminderMainIntent.NotificationPermissionDenied)
                 }

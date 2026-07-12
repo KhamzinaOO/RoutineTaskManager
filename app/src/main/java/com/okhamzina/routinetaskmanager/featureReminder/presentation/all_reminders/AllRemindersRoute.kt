@@ -14,7 +14,8 @@ import org.koin.androidx.compose.koinViewModel
 fun AllRemindersRoute(
     viewModel: AllRemindersViewModel = koinViewModel(),
     onMenuClick : () -> Unit,
-    onFABClicked : () -> Unit,
+    onAddReminderClick : () -> Unit,
+    onSearchClick: () -> Unit = {},
     onReminderClick : (Long) -> Unit,
     onEditClick : (Long) -> Unit,
     showSnackBar : (String) -> Unit
@@ -22,24 +23,23 @@ fun AllRemindersRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
             when(effect){
-                AllRemindersEffect.FABClicked -> {
-                    onFABClicked()
+                AllRemindersEffect.NavigateToCreateReminder -> {
+                    onAddReminderClick()
                 }
-                is AllRemindersEffect.ItemClicked -> {
+                is AllRemindersEffect.NavigateToReminder -> {
                     onReminderClick(effect.id)
                 }
-                AllRemindersEffect.MenuButtonClicked -> {
+                AllRemindersEffect.OpenDrawer -> {
                     onMenuClick()
                 }
 
-                is AllRemindersEffect.EditClicked -> {
+                AllRemindersEffect.OpenSearch -> onSearchClick()
+
+                is AllRemindersEffect.NavigateToEditReminder -> {
                     onEditClick(effect.id)
-                }
-                is AllRemindersEffect.OpenClicked -> {
-                    onReminderClick(effect.id)
                 }
                 is AllRemindersEffect.ShowMessage -> {
                     showSnackBar(effect.message.asString(context))

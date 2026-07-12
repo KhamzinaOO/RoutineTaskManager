@@ -14,13 +14,14 @@ fun HomeRoute(
     showMessage: (String) -> Unit,
     showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit,
     onAddReminderClick: () -> Unit,
-    onTasksClick: () -> Unit
+    onTasksClick: () -> Unit,
+    onSettingsClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
             when(effect){
                 is HomeEffect.ShowMessage -> {
                     showMessage(effect.message.asString(context))
@@ -33,6 +34,8 @@ fun HomeRoute(
                 HomeEffect.NavigateTasks -> {
                     onTasksClick()
                 }
+
+                HomeEffect.NavigateToSettings -> onSettingsClick()
             }
         }
     }

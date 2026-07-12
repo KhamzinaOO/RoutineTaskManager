@@ -15,23 +15,29 @@ import org.koin.androidx.compose.koinViewModel
 fun ReminderMainRoute(
     viewModel: ReminderMainViewModel = koinViewModel(),
     onTopBarIconClick : () -> Unit,
-    onFABClicked : () -> Unit,
+    onAddReminderClick : () -> Unit,
+    onSearchClick: () -> Unit = {},
+    onCalendarClick: () -> Unit = {},
     showMessage: (String) -> Unit,
     showActionMessage: (message: String, actionLabel: String, onAction: () -> Unit) -> Unit
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit){
-        viewModel.effect.collect { effect ->
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
             when(effect){
                 is ReminderMainEffect.OpenDrawer -> {
                     onTopBarIconClick()
                 }
 
-                is ReminderMainEffect.FABClicked -> {
-                    onFABClicked()
+                ReminderMainEffect.NavigateToCreateReminder -> {
+                    onAddReminderClick()
                 }
+
+                ReminderMainEffect.OpenSearch -> onSearchClick()
+
+                ReminderMainEffect.OpenCalendar -> onCalendarClick()
 
                 is ReminderMainEffect.ShowMessage -> {
                     showMessage(effect.message.asString(context))

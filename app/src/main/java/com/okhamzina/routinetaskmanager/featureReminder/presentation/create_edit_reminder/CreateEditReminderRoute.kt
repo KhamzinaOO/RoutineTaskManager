@@ -31,7 +31,7 @@ fun CreateEditReminderRoute(
     val exactAlarmPromptConfig = LocalExactAlarmPromptConfig.current
     val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = {
-            viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
+            viewModel.onIntent(CreateEditReminderIntent.ExactAlarmPermissionGranted)
         },
         onDenied = {
             viewModel.onIntent(CreateEditReminderIntent.ExactAlarmPermissionDenied)
@@ -59,8 +59,8 @@ fun CreateEditReminderRoute(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
             when (effect) {
                 CreateEditReminderEffect.NavigateBack -> {
                     onBackClick()

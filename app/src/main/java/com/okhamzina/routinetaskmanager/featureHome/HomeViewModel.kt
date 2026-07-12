@@ -1,6 +1,5 @@
 package com.okhamzina.routinetaskmanager.featureHome
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.okhamzina.routinetaskmanager.R
 import com.okhamzina.routinetaskmanager.core.error.ErrorReporter
@@ -10,6 +9,7 @@ import com.okhamzina.routinetaskmanager.core.error.runSuspendCatching
 import com.okhamzina.routinetaskmanager.core.error.toAppError
 import com.okhamzina.routinetaskmanager.core.error.toUiText
 import com.okhamzina.routinetaskmanager.core.presentation.model.UiText
+import com.okhamzina.routinetaskmanager.core.presentation.model.MviViewModel
 import com.okhamzina.routinetaskmanager.core.time.DateTimeTicker
 import com.okhamzina.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.okhamzina.routinetaskmanager.featureReminder.application.schedule.ObserveDayReminderOccurrencesUseCase
@@ -22,17 +22,12 @@ import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOcc
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessage
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.common.mappers.toUiMessageOrNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -50,13 +45,7 @@ class HomeViewModel(
     private val toggleWorkSessionUseCase: ToggleWorkSessionUseCase,
     private val dateTimeTicker: DateTimeTicker,
     private val errorReporter: ErrorReporter
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
-    private val _effect = Channel<HomeEffect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
+) : MviViewModel<HomeUiState, HomeIntent, HomeEffect>(HomeUiState()) {
 
     init {
         observeTodayReminders()
@@ -65,19 +54,24 @@ class HomeViewModel(
         restoreActiveWorkSessionRuntime()
     }
 
-    fun onIntent(intent : HomeUiIntent){
+    override fun onIntent(intent: HomeIntent) {
         when (intent) {
-            is HomeUiIntent.AddReminderClick -> {
-                sendEffect(HomeEffect.NavigateCreateReminder)
+            HomeIntent.AddScheduleItemClicked -> {
+                sendEffect(
+                    when (currentState.selectedScheduleSection) {
+                        HomeScheduleSection.REMINDERS -> HomeEffect.NavigateCreateReminder
+                        HomeScheduleSection.TASKS -> HomeEffect.NavigateTasks
+                    }
+                )
             }
 
-            is HomeUiIntent.AddTaskClick -> {
-                sendEffect(HomeEffect.NavigateTasks)
+            is HomeIntent.ScheduleSectionSelected -> {
+                updateState { state ->
+                    state.copy(selectedScheduleSection = intent.section)
+                }
             }
 
-            is HomeUiIntent.DateClick -> Unit
-
-            is HomeUiIntent.NotificationPermissionDenied -> {
+            HomeIntent.NotificationPermissionDenied -> {
                 sendEffect(
                     HomeEffect.ShowMessage(
                         UiText.StringResource(R.string.error_notification_permission_denied)
@@ -85,15 +79,19 @@ class HomeViewModel(
                 )
             }
 
-            is HomeUiIntent.OnNextReminderDoneClick -> {
+            HomeIntent.SettingsClicked -> {
+                sendEffect(HomeEffect.NavigateToSettings)
+            }
+
+            is HomeIntent.NextReminderDoneClicked -> {
                 completeOccurrence(intent.occurrence)
             }
 
-            is HomeUiIntent.OnNextReminderSkipClick -> {
+            is HomeIntent.NextReminderSkipClicked -> {
                 skipOccurrence(intent.occurrence)
             }
 
-            is HomeUiIntent.OnSessionButtonClick -> {
+            HomeIntent.SessionButtonClicked -> {
                 toggleWorkSession()
             }
         }
@@ -101,24 +99,28 @@ class HomeViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeTodayReminders() {
-        dateTimeTicker.todayFlow()
-            .onEach { today ->
-                _uiState.update {
+        dateTimeTicker.nowMinuteFlow()
+            .onEach { now ->
+                updateState {
                     it.copy(
-                        greetingText = buildGreeting(),
-                        dateText = buildDateText(today)
+                        currentDateTime = now,
+                        greetingText = buildGreeting(now.toLocalTime()),
+                        dateText = buildDateText(now.toLocalDate())
                     )
                 }
             }
+            .map { now -> now.toLocalDate() }
+            .distinctUntilChanged()
             .flatMapLatest { today ->
                 observeDayReminderOccurrencesUseCase(date = today)
             }
             .onEach { reminders ->
-                _uiState.update {
+                updateState {
                     it.copy(reminders = reminders)
                 }
             }
             .catch { throwable ->
+                errorReporter.record(throwable)
                 sendEffect(
                     HomeEffect.ShowMessage(
                         throwable.toAppError().toUiText(
@@ -132,20 +134,20 @@ class HomeViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeNextReminder() {
-        viewModelScope.launch {
-            dateTimeTicker.nowMinuteFlow().flatMapLatest { now ->
+        dateTimeTicker.nowMinuteFlow().flatMapLatest { now ->
                 observeNextReminderOccurrenceUseCase(
                     date = now
                 )
             }.distinctUntilChanged()
                 .onEach { occurrence ->
-                    _uiState.update { state ->
+                    updateState { state ->
                         state.copy(
                             nextOccurrence = occurrence
                         )
                     }
                 }
                 .catch { throwable ->
+                    errorReporter.record(throwable)
                     sendEffect(
                         HomeEffect.ShowMessage(
                             throwable.toAppError().toUiText(
@@ -155,18 +157,26 @@ class HomeViewModel(
                     )
                 }
                 .launchIn(viewModelScope)
-        }
     }
 
     private fun observeWorkSession(){
         observeWorkSessionStateUseCase().onEach { state ->
-            _uiState.update {
+            updateState {
                 it.copy(
                     isSessionActive = state.isActive,
                     sessionStartedAtMillis = state.startedAtMillis,
                     sessionReminderCount = state.sessionReminderCount
                 )
             }
+        }.catch { throwable ->
+            errorReporter.record(throwable)
+            sendEffect(
+                HomeEffect.ShowMessage(
+                    throwable.toAppError().toUiText(
+                        defaultMessage = UiText.StringResource(R.string.error_failed_load_reminders)
+                    )
+                )
+            )
         }.launchIn(viewModelScope)
     }
 
@@ -180,19 +190,21 @@ class HomeViewModel(
 
     private fun toggleWorkSession(){
         viewModelScope.launch {
-            if (_uiState.value.isSessionActionInProgress) return@launch
+            if (currentState.isSessionActionInProgress) return@launch
 
-            _uiState.update { it.copy(isSessionActionInProgress = true) }
+            updateState { it.copy(isSessionActionInProgress = true) }
 
-            val result = runSuspendCatching(errorReporter) {
-                toggleWorkSessionUseCase()
-            }.getOrElse { throwable ->
-                ToggleWorkSessionResult.StartFailed(throwable.toAppError())
+            try {
+                val result = runSuspendCatching(errorReporter) {
+                    toggleWorkSessionUseCase()
+                }.getOrElse { throwable ->
+                    ToggleWorkSessionResult.StartFailed(throwable.toAppError())
+                }
+
+                handleToggleWorkSessionResult(result)
+            } finally {
+                updateState { it.copy(isSessionActionInProgress = false) }
             }
-
-            handleToggleWorkSessionResult(result)
-
-            _uiState.update { it.copy(isSessionActionInProgress = false) }
         }
     }
 
@@ -228,15 +240,8 @@ class HomeViewModel(
         }
     }
 
-
-    private fun sendEffect(effect: HomeEffect) {
-        viewModelScope.launch {
-            _effect.send(effect)
-        }
-    }
-
-    private fun buildGreeting(): UiText {
-        val hour = LocalTime.now().hour
+    private fun buildGreeting(time: LocalTime): UiText {
+        val hour = time.hour
 
         return when (hour) {
             in 5..11 -> UiText.StringResource(R.string.greeting_morning)

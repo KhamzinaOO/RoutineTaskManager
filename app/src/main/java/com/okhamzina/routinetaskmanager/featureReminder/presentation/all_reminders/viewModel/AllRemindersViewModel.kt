@@ -1,6 +1,5 @@
 package com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.viewModel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.okhamzina.routinetaskmanager.R
 import com.okhamzina.routinetaskmanager.core.error.ErrorReporter
@@ -10,75 +9,61 @@ import com.okhamzina.routinetaskmanager.core.error.toAppError
 import com.okhamzina.routinetaskmanager.core.error.toUiText
 import com.okhamzina.routinetaskmanager.core.presentation.model.UiText
 import com.okhamzina.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
-import com.okhamzina.routinetaskmanager.featureReminder.domain.model.type
+import com.okhamzina.routinetaskmanager.core.presentation.model.MviViewModel
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersEffect
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersIntent
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.model.AllRemindersUiState
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.model.ReminderFilter
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AllRemindersViewModel(
     private val remindersCommand : ReminderCommandUseCase,
     private val errorReporter: ErrorReporter
-) : ViewModel() {
-
-    private val _effect = Channel<AllRemindersEffect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
-
-    private val _uiState = MutableStateFlow(AllRemindersUiState())
-    val uiState: StateFlow<AllRemindersUiState> = _uiState.asStateFlow()
+) : MviViewModel<AllRemindersUiState, AllRemindersIntent, AllRemindersEffect>(
+    AllRemindersUiState()
+) {
 
     init {
         observeReminders()
     }
 
-    fun onIntent(intent: AllRemindersIntent) {
+    override fun onIntent(intent: AllRemindersIntent) {
         when (intent) {
-            AllRemindersIntent.OnAddFABClick -> {
-                sendEffect(AllRemindersEffect.FABClicked)
+            AllRemindersIntent.AddReminderClicked -> {
+                sendEffect(AllRemindersEffect.NavigateToCreateReminder)
             }
 
-            is AllRemindersIntent.OnItemClick -> {
-                sendEffect(AllRemindersEffect.ItemClicked(intent.id))
+            is AllRemindersIntent.ReminderClicked -> {
+                sendEffect(AllRemindersEffect.NavigateToReminder(intent.id))
             }
 
-            AllRemindersIntent.OnMenuButtonClick -> {
-                sendEffect(AllRemindersEffect.MenuButtonClicked)
+            AllRemindersIntent.MenuButtonClicked -> {
+                sendEffect(AllRemindersEffect.OpenDrawer)
             }
 
-            is AllRemindersIntent.OnOpenClick -> {
-                sendEffect(AllRemindersEffect.OpenClicked(intent.id))
+            AllRemindersIntent.SearchButtonClicked -> {
+                sendEffect(AllRemindersEffect.OpenSearch)
             }
 
-            is AllRemindersIntent.OnEditClick -> {
-                sendEffect(AllRemindersEffect.EditClicked(intent.id))
+            is AllRemindersIntent.EditReminderClicked -> {
+                sendEffect(AllRemindersEffect.NavigateToEditReminder(intent.id))
             }
 
-            is AllRemindersIntent.OnDeleteClick -> {
+            is AllRemindersIntent.DeleteReminderClicked -> {
                 deleteReminder(intent.id)
             }
 
-            is AllRemindersIntent.ShowMessage -> {
-                sendEffect(AllRemindersEffect.ShowMessage(UiText.DynamicString(intent.message)))
-            }
-
-            is AllRemindersIntent.FilterReminder -> {
+            is AllRemindersIntent.FilterChanged -> {
                 updateFilter(intent.filter)
             }
 
-            is AllRemindersIntent.OnTypeSelected -> {
-                val selectedType = _uiState.value.repeatTypeFilterList
-                    .find { it.id == intent.typeIndex }
+            is AllRemindersIntent.TypeFilterSelected -> {
+                val selectedType = currentState.repeatTypeFilterList
+                    .find { it.id == intent.typeId }
 
                 updateFilter(
-                    _uiState.value.reminderFilter.copy(
+                    currentState.reminderFilter.copy(
                         repeatType = selectedType?.repeatType
                     )
                 )
@@ -88,13 +73,13 @@ class AllRemindersViewModel(
 
     private fun observeReminders() {
         viewModelScope.launch {
-            _uiState.update {
+            updateState {
                 it.copy(isLoading = true)
             }
 
             remindersCommand.observeReminders()
                 .catch { throwable ->
-                    _uiState.update { state ->
+                    updateState { state ->
                         state.copy(isLoading = false)
                     }
                     sendEffect(
@@ -106,14 +91,10 @@ class AllRemindersViewModel(
                     )
                 }
                 .collect { reminders ->
-                    _uiState.update { state ->
-                        val newState = state.copy(
+                    updateState { state ->
+                        state.copy(
                             reminders = reminders,
                             isLoading = false
-                        )
-
-                        newState.copy(
-                            remindersToShow = newState.filteredReminders()
                         )
                     }
                 }
@@ -135,33 +116,8 @@ class AllRemindersViewModel(
     }
 
     private fun updateFilter(filter: ReminderFilter) {
-        _uiState.update { state ->
-            val newState = state.copy(
-                reminderFilter = filter
-            )
-
-            newState.copy(
-                remindersToShow = newState.filteredReminders()
-            )
-        }
-    }
-
-    private fun AllRemindersUiState.filteredReminders() =
-        reminders.filter { reminder ->
-            val typeMatches =
-                reminderFilter.repeatType == null ||
-                        reminder.repeatRule.type == reminderFilter.repeatType
-
-            val searchMatches =
-                reminderFilter.searchText.isBlank() ||
-                        reminder.name.contains(reminderFilter.searchText, ignoreCase = true)
-
-            typeMatches && searchMatches
-        }
-
-    private fun sendEffect(effect: AllRemindersEffect) {
-        viewModelScope.launch {
-            _effect.send(effect)
+        updateState { state ->
+            state.copy(reminderFilter = filter)
         }
     }
 }

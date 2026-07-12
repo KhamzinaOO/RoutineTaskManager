@@ -49,7 +49,7 @@ sealed interface CreateEditReminderIntent {
 
     data object SaveClicked : CreateEditReminderIntent
 
-    data object NotificationPermissionGranted : CreateEditReminderIntent
+    data object ExactAlarmPermissionGranted : CreateEditReminderIntent
 
     data object ExactAlarmPermissionDenied : CreateEditReminderIntent
 

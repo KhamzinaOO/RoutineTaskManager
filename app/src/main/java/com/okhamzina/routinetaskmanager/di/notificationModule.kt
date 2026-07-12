@@ -9,7 +9,7 @@ import com.okhamzina.routinetaskmanager.core.notifications.android.AppNotificati
 import com.okhamzina.routinetaskmanager.core.notifications.NotificationTriggerRouter
 import com.okhamzina.routinetaskmanager.featureReminder.application.notifications.ReminderNotificationTriggerHandler
 import com.okhamzina.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
-import com.okhamzina.routinetaskmanager.core.notifications.ExactAlarmAccessViewModel
+import com.okhamzina.routinetaskmanager.core.notifications.NotificationAccessViewModel
 import com.okhamzina.routinetaskmanager.core.notifications.data.SharedPrefsExactAlarmAccessRepository
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ExactAlarmAccessRepository
 import com.okhamzina.routinetaskmanager.featureTask.TaskNotificationTriggerHandler
@@ -95,5 +95,5 @@ val notificationModule = module {
         )
     }
 
-    viewModelOf(::ExactAlarmAccessViewModel)
+    viewModelOf(::NotificationAccessViewModel)
 }

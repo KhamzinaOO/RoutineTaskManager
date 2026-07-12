@@ -3,15 +3,13 @@ package com.okhamzina.routinetaskmanager.featureReminder.presentation.reminder_m
 import java.time.LocalDate
 
 sealed interface ReminderMainIntent {
-    data object MenuButtonClick : ReminderMainIntent
-    data object SearchButtonClick : ReminderMainIntent
-    data object CalendarButtonClick : ReminderMainIntent
-    data object CalendarSwipe : ReminderMainIntent
+    data object MenuButtonClicked : ReminderMainIntent
+    data object SearchButtonClicked : ReminderMainIntent
+    data object CalendarButtonClicked : ReminderMainIntent
     data object NotificationPermissionDenied : ReminderMainIntent
-    data class DateClick(
+    data class DateSelected(
         val date : LocalDate
     ) : ReminderMainIntent
-    data object SessionButtonClick : ReminderMainIntent
-    data object AddFABClick : ReminderMainIntent
-
+    data object SessionButtonClicked : ReminderMainIntent
+    data object AddReminderClicked : ReminderMainIntent
 }

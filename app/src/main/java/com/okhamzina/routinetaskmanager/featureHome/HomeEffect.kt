@@ -6,4 +6,5 @@ sealed interface HomeEffect{
     data class ShowMessage(val message: UiText) : HomeEffect
     data object NavigateCreateReminder : HomeEffect
     data object NavigateTasks : HomeEffect
+    data object NavigateToSettings : HomeEffect
 }

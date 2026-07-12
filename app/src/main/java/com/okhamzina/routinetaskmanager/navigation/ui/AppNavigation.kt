@@ -30,6 +30,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -39,11 +40,16 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.okhamzina.routinetaskmanager.featureHome.HomeRoute
-import com.okhamzina.routinetaskmanager.core.notifications.ExactAlarmAccessViewModel
+import com.okhamzina.routinetaskmanager.core.notifications.NotificationAccessIntent
+import com.okhamzina.routinetaskmanager.core.notifications.NotificationAccessViewModel
 import com.okhamzina.routinetaskmanager.core.presentation.ui.ExactAlarmPromptConfig
 import com.okhamzina.routinetaskmanager.core.presentation.ui.ExactAlarmWarningBanner
 import com.okhamzina.routinetaskmanager.core.presentation.ui.LocalExactAlarmPromptConfig
+import com.okhamzina.routinetaskmanager.core.presentation.ui.NotificationAccessWarningBanner
+import com.okhamzina.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
+import com.okhamzina.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
 import com.okhamzina.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
+import com.okhamzina.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.create_edit_reminder.CreateEditReminderRoute
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo.ReminderInfoRoute
@@ -99,15 +105,26 @@ fun AppChromeEffect(
 
 @Composable
 fun AppNavigation() {
-    val exactAlarmAccessViewModel: ExactAlarmAccessViewModel = koinViewModel()
-    val exactAlarmAccessState by exactAlarmAccessViewModel.uiState.collectAsStateWithLifecycle()
+    val notificationAccessViewModel: NotificationAccessViewModel = koinViewModel()
+    val notificationAccessState by notificationAccessViewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = {
+            notificationAccessViewModel.onIntent(NotificationAccessIntent.AppResumed)
+        },
+        onDenied = {},
+        onDeniedWithAction = { action ->
+            if (action == PermissionDeniedAction.OpenSettings) {
+                openAppNotificationSettings(context)
+            }
+        }
+    )
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                exactAlarmAccessViewModel.onAppResumed()
+                notificationAccessViewModel.onIntent(NotificationAccessIntent.AppResumed)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -153,8 +170,12 @@ fun AppNavigation() {
         LocalAppScaffoldState provides appScaffoldState,
         LocalCurrentRoute provides currentRoute,
         LocalExactAlarmPromptConfig provides ExactAlarmPromptConfig(
-            skipExplanation = exactAlarmAccessState.isWarningDismissedForever,
-            onDoNotShowAgain = exactAlarmAccessViewModel::dismissWarningForever
+            skipExplanation = notificationAccessState.isExactWarningDismissedForever,
+            onDoNotShowAgain = {
+                notificationAccessViewModel.onIntent(
+                    NotificationAccessIntent.DismissExactWarningForever
+                )
+            }
         )
     ) {
         Scaffold(
@@ -197,10 +218,27 @@ fun AppNavigation() {
                         indication = null
                     )
             ) {
-                if (exactAlarmAccessState.shouldShowWarning) {
+                if (notificationAccessState.shouldShowNotificationWarning) {
+                    NotificationAccessWarningBanner(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        onEnable = requestNotificationPermission,
+                        onDismissForever = {
+                            notificationAccessViewModel.onIntent(
+                                NotificationAccessIntent.DismissNotificationWarningForever
+                            )
+                        }
+                    )
+                }
+
+                if (notificationAccessState.shouldShowExactAlarmWarning) {
                     ExactAlarmWarningBanner(
+                        modifier = Modifier.padding(vertical = 8.dp),
                         onOpenSettings = { openExactAlarmSettings(context) },
-                        onDismissForever = exactAlarmAccessViewModel::dismissWarningForever
+                        onDismissForever = {
+                            notificationAccessViewModel.onIntent(
+                                NotificationAccessIntent.DismissExactWarningForever
+                            )
+                        }
                     )
                 }
 
@@ -270,7 +308,7 @@ fun AppNavigation() {
                                             }
                                         }
                                     },
-                                    onFABClicked = {branches.push(CreateReminder)},
+                                    onAddReminderClick = {branches.push(CreateReminder)},
                                     showMessage = { message ->
                                         scope.launch {
                                             snackbarHostState.showSnackbar(message)
@@ -309,7 +347,7 @@ fun AppNavigation() {
                                             }
                                         }
                                     },
-                                    onFABClicked = {
+                                    onAddReminderClick = {
                                         branches.push(CreateReminder)
                                     },
                                     onEditClick = {

@@ -1,16 +1,15 @@
 package com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.okhamzina.routinetaskmanager.R
 import com.okhamzina.routinetaskmanager.core.error.ErrorReporter
 import com.okhamzina.routinetaskmanager.core.error.onErrorMessage
 import com.okhamzina.routinetaskmanager.core.error.onSuccess
-import com.okhamzina.routinetaskmanager.core.error.runAppCatching
 import com.okhamzina.routinetaskmanager.core.error.runAppResultCatching
 import com.okhamzina.routinetaskmanager.core.error.toAppError
 import com.okhamzina.routinetaskmanager.core.error.toUiText
 import com.okhamzina.routinetaskmanager.core.presentation.model.UiText
+import com.okhamzina.routinetaskmanager.core.presentation.model.MviViewModel
 import com.okhamzina.routinetaskmanager.core.time.DateTimeTicker
 import com.okhamzina.routinetaskmanager.featureReminder.application.command.ReminderCommandUseCase
 import com.okhamzina.routinetaskmanager.featureReminder.application.schedule.ObserveNextReminderOccurrenceByIdUseCase
@@ -18,20 +17,12 @@ import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInf
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoIntent
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo.model.ReminderInfoUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 class ReminderInfoViewModel(
     private val reminderId : Long,
@@ -39,37 +30,31 @@ class ReminderInfoViewModel(
     private val observeNextReminderOccurrenceById: ObserveNextReminderOccurrenceByIdUseCase,
     private val dateTimeTicker: DateTimeTicker,
     private val errorReporter: ErrorReporter
-) : ViewModel(){
-    private val _uiState = MutableStateFlow<ReminderInfoUiState>(ReminderInfoUiState())
-    val uiState : StateFlow<ReminderInfoUiState> = _uiState.asStateFlow()
-
-    private val _effect = Channel<ReminderInfoEffect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
-
-    fun onIntent(intent: ReminderInfoIntent){
+) : MviViewModel<ReminderInfoUiState, ReminderInfoIntent, ReminderInfoEffect>(ReminderInfoUiState()) {
+    override fun onIntent(intent: ReminderInfoIntent) {
         when(intent){
-            is ReminderInfoIntent.OnReminderDelete -> {
+            ReminderInfoIntent.DeleteClicked -> {
                 deleteReminder()
             }
-            is ReminderInfoIntent.OnReminderEdit -> {
-               sendEffect(ReminderInfoEffect.EditReminder(reminderId))
+            ReminderInfoIntent.EditClicked -> {
+               sendEffect(ReminderInfoEffect.NavigateToEditReminder(reminderId))
             }
 
-            is ReminderInfoIntent.OnDoButtonClick -> {
+            ReminderInfoIntent.CompleteNextClicked -> {
                 completeNextOccurrence()
             }
 
-            is ReminderInfoIntent.OnSkipButtonClick -> {
+            ReminderInfoIntent.SkipNextClicked -> {
                 skipNextOccurrence()
             }
 
-            is ReminderInfoIntent.OnSkipAllForTodayClick -> {
+            ReminderInfoIntent.SkipRemainingTodayClicked -> {
                 skipRemainingForToday()
             }
-            is ReminderInfoIntent.OnSetEnabled -> {
+            is ReminderInfoIntent.EnabledChanged -> {
                 setReminderEnabled(intent.enabled)
             }
-            is ReminderInfoIntent.OnBackClick ->{
+            ReminderInfoIntent.BackClicked ->{
                 sendEffect(ReminderInfoEffect.NavigateBack)
             }
         }
@@ -81,7 +66,7 @@ class ReminderInfoViewModel(
     }
 
     private fun completeNextOccurrence() {
-        val occurrence = uiState.value.nextOccurrence ?: return
+        val occurrence = currentState.nextOccurrence ?: return
 
         viewModelScope.launch {
             runAppResultCatching(errorReporter) {
@@ -91,15 +76,13 @@ class ReminderInfoViewModel(
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
             ) { message ->
-                _effect.send(
-                    ReminderInfoEffect.ShowMessage(message)
-                )
+                sendEffect(ReminderInfoEffect.ShowMessage(message))
             }
         }
     }
 
     private fun skipNextOccurrence() {
-        val occurrence = uiState.value.nextOccurrence ?: return
+        val occurrence = currentState.nextOccurrence ?: return
 
         viewModelScope.launch {
             runAppResultCatching(errorReporter) {
@@ -109,9 +92,7 @@ class ReminderInfoViewModel(
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
             ) { message ->
-                _effect.send(
-                    ReminderInfoEffect.ShowMessage(message)
-                )
+                sendEffect(ReminderInfoEffect.ShowMessage(message))
             }
         }
     }
@@ -121,36 +102,32 @@ class ReminderInfoViewModel(
             runAppResultCatching(errorReporter) {
                 commandUseCase.skipRemainingForToday(
                     reminderId = reminderId,
-                    date = LocalDate.now()
+                    date = currentState.today
                 )
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
             ) { message ->
-                _effect.send(
-                    ReminderInfoEffect.ShowMessage(message)
-                )
+                sendEffect(ReminderInfoEffect.ShowMessage(message))
             }
         }
     }
 
     private fun loadReminder(){
-        viewModelScope.launch {
-            runAppCatching(errorReporter) {
-               commandUseCase.observeReminderById(reminderId).collectLatest { result ->
-                   _uiState.update {
-                       it.copy(
-                           reminder = result
-                       )
-                   }
-               }
-            }.onErrorMessage(
-                defaultMessage = UiText.StringResource(R.string.error_failed_load_reminder)
-            ) { message ->
-                _effect.send(ReminderInfoEffect.ShowMessage(
-                    message
-                ))
+        commandUseCase.observeReminderById(reminderId)
+            .onEach { reminder ->
+                updateState { state -> state.copy(reminder = reminder) }
             }
-        }
+            .catch { throwable ->
+                errorReporter.record(throwable)
+                sendEffect(
+                    ReminderInfoEffect.ShowMessage(
+                        throwable.toAppError().toUiText(
+                            defaultMessage = UiText.StringResource(R.string.error_failed_load_reminder)
+                        )
+                    )
+                )
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun deleteReminder(){
@@ -158,13 +135,11 @@ class ReminderInfoViewModel(
             runAppResultCatching(errorReporter) {
                 commandUseCase.deleteReminder(reminderId)
             }.onSuccess {
-                _effect.send(ReminderInfoEffect.NavigateBack)
+                sendEffect(ReminderInfoEffect.NavigateBack)
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_delete_reminder)
             ) { message ->
-                _effect.send(ReminderInfoEffect.ShowMessage(
-                    message
-                ))
+                sendEffect(ReminderInfoEffect.ShowMessage(message))
             }
         }
     }
@@ -179,9 +154,7 @@ class ReminderInfoViewModel(
             }.onErrorMessage(
                 defaultMessage = UiText.StringResource(R.string.error_failed_update_reminder_status)
             ) { message ->
-                _effect.send(
-                    ReminderInfoEffect.ShowMessage(message)
-                )
+                sendEffect(ReminderInfoEffect.ShowMessage(message))
             }
         }
     }
@@ -190,33 +163,29 @@ class ReminderInfoViewModel(
     private fun getNextReminder(){
         viewModelScope.launch {
             dateTimeTicker.nowMinuteFlow().flatMapLatest{ now ->
+                updateState { state -> state.copy(today = now.toLocalDate()) }
                 observeNextReminderOccurrenceById(
                     date = now,
                     reminderId = reminderId
                 )
             }.distinctUntilChanged()
                 .onEach {  occurrence ->
-                    _uiState.update {
+                    updateState {
                         it.copy(
                             nextOccurrence = occurrence
                         )
                     }
             }.catch { throwable ->
-                    _effect.send(
+                    errorReporter.record(throwable)
+                    sendEffect(
                         ReminderInfoEffect.ShowMessage(
                             throwable.toAppError().toUiText(
                                 defaultMessage = UiText.StringResource(R.string.error_failed_load_reminder)
                             )
                         )
                     )
-                }.collect {}
-
-            }
+                }.launchIn(this)
+        }
     }
 
-    private fun sendEffect(
-        effect: ReminderInfoEffect
-    ) {
-        _effect.trySend(effect)
-    }
 }

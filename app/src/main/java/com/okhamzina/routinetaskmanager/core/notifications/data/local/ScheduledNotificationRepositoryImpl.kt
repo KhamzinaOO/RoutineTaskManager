@@ -4,6 +4,8 @@ import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationOccur
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationTargetType
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotification
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class ScheduledNotificationRepositoryImpl(
     private val scheduledNotificationDao: ScheduledNotificationDao
@@ -24,6 +26,11 @@ class ScheduledNotificationRepositoryImpl(
     override suspend fun getAll(): List<ScheduledNotification> {
         return scheduledNotificationDao.getAll()
             .map { entity -> entity.toDomain() }
+    }
+
+    override fun observeHasScheduledNotifications(): Flow<Boolean> {
+        return scheduledNotificationDao.observeCount()
+            .map { count -> count > 0 }
     }
 
     override suspend fun getByTargetType(

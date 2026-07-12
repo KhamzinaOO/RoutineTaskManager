@@ -1,16 +1,13 @@
 package com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo.model
 
 sealed interface ReminderInfoIntent {
-    data object OnReminderDelete  : ReminderInfoIntent
-    data object OnReminderEdit : ReminderInfoIntent
-
-    data object OnSkipButtonClick : ReminderInfoIntent
-    data object OnDoButtonClick : ReminderInfoIntent
-    data object OnSkipAllForTodayClick : ReminderInfoIntent
-
-    data class OnSetEnabled(
+    data object DeleteClicked : ReminderInfoIntent
+    data object EditClicked : ReminderInfoIntent
+    data object SkipNextClicked : ReminderInfoIntent
+    data object CompleteNextClicked : ReminderInfoIntent
+    data object SkipRemainingTodayClicked : ReminderInfoIntent
+    data class EnabledChanged(
         val enabled: Boolean
     ) : ReminderInfoIntent
-
-    data object OnBackClick: ReminderInfoIntent
+    data object BackClicked : ReminderInfoIntent
 }

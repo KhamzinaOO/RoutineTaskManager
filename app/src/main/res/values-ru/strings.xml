@@ -182,6 +182,7 @@
     <string name="exact_alarm_inexact_mode_warning">Точные напоминания не включены. Напоминания продолжат работать, но Android может показать их позже выбранного времени.</string>
     <string name="notifications_required_for_session">Для запуска рабочей сессии нужны уведомления</string>
     <string name="notifications_disabled_enable_settings">Уведомления выключены. Включите их в настройках, чтобы получать напоминания</string>
+    <string name="notifications_are_disabled">Уведомления отключены</string>
     <string name="notifications_disabled_saved_without_alerts">Уведомления выключены. Напоминание сохранено без запланированных уведомлений</string>
 
     <string name="notification_channel_sound_name">уведомления</string>
@@ -226,4 +227,6 @@
     <string name="do_now">Сделать</string>
     <string name="skip_for_today">Пропустить на сегодня</string>
     <string name="no_reminders_found_for_this_week">Не найдены напоминания на этой неделе</string>
+    <string name="exact_reminders_are_disabled">Точные уведомления отключены!</string>
+    <string name="enable">Включить</string>
 </resources>

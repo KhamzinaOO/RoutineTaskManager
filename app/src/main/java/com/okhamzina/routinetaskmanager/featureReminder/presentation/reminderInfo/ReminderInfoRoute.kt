@@ -21,10 +21,10 @@ fun ReminderInfoRoute(
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
             when(effect){
-                is ReminderInfoEffect.EditReminder -> onEditClick(effect.id)
+                is ReminderInfoEffect.NavigateToEditReminder -> onEditClick(effect.id)
                 ReminderInfoEffect.NavigateBack -> onBackClick()
                 is ReminderInfoEffect.ShowMessage -> {
                     showMessage(effect.message.asString(context))

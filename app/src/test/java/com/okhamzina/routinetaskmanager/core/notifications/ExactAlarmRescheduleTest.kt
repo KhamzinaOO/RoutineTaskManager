@@ -249,6 +249,9 @@ class ExactAlarmRescheduleTest {
         }
 
         override suspend fun getAll(): List<ScheduledNotification> = notifications.toList()
+        override fun observeHasScheduledNotifications(): Flow<Boolean> =
+            flowOf(notifications.isNotEmpty())
+
         override suspend fun getByTargetType(targetType: NotificationTargetType) =
             notifications.filter { it.targetType == targetType }
 

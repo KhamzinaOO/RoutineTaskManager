@@ -164,6 +164,7 @@
     <string name="exact_alarm_inexact_mode_warning">Exact reminders are not enabled. Reminders will still work, but Android may deliver them later than the selected time.</string>
     <string name="notifications_required_for_session">Notifications are required to start a work session</string>
     <string name="notifications_disabled_enable_settings">Notifications are disabled. Enable them in settings to receive reminders</string>
+    <string name="notifications_are_disabled">Notifications are turned off</string>
     <string name="notifications_disabled_saved_without_alerts">Notifications are disabled. Reminder was saved without scheduled alerts</string>
 
     <string name="notification_channel_sound_name">notifications</string>
@@ -208,4 +209,6 @@
     <string name="do_now">Do now</string>
     <string name="skip_for_today">Skip for today</string>
     <string name="no_reminders_found_for_this_week">No reminders found for this week</string>
+    <string name="exact_reminders_are_disabled">Exact reminders are disabled!</string>
+    <string name="enable">Enable</string>
 </resources>
