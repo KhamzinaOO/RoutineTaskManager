@@ -315,6 +315,11 @@ class RescheduleRemindersUseCaseTest {
                 .filterNot { existing -> existing.occurrenceKey == state.occurrenceKey } + newState
         }
 
+        override suspend fun upsertState(state: ReminderOccurrenceState) {
+            states.value = states.value
+                .filterNot { existing -> existing.occurrenceKey == state.occurrenceKey } + state
+        }
+
         override suspend fun getStateByKey(key: String): ReminderOccurrenceState? {
             return states.value.firstOrNull { state -> state.occurrenceKey == key }
         }

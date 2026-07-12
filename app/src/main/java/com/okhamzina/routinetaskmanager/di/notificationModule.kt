@@ -9,10 +9,14 @@ import com.okhamzina.routinetaskmanager.core.notifications.android.AppNotificati
 import com.okhamzina.routinetaskmanager.core.notifications.NotificationTriggerRouter
 import com.okhamzina.routinetaskmanager.featureReminder.application.notifications.ReminderNotificationTriggerHandler
 import com.okhamzina.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
+import com.okhamzina.routinetaskmanager.core.notifications.ExactAlarmAccessViewModel
+import com.okhamzina.routinetaskmanager.core.notifications.data.SharedPrefsExactAlarmAccessRepository
+import com.okhamzina.routinetaskmanager.core.notifications.domain.ExactAlarmAccessRepository
 import com.okhamzina.routinetaskmanager.featureTask.TaskNotificationTriggerHandler
 import com.okhamzina.routinetaskmanager.featureReminder.data.session.WorkSessionForegroundController
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
+import org.koin.core.module.dsl.viewModelOf
 
 val notificationModule = module {
 
@@ -31,6 +35,13 @@ val notificationModule = module {
     single {
         AppNotificationRuntimeAccessChecker(
             context = androidContext()
+        )
+    }
+
+    single<ExactAlarmAccessRepository> {
+        SharedPrefsExactAlarmAccessRepository(
+            context = androidContext(),
+            accessChecker = get()
         )
     }
 
@@ -58,6 +69,7 @@ val notificationModule = module {
     single {
         ReminderNotificationTriggerHandler(
             reminderRepository = get(),
+            reminderOccurrenceRepository = get(),
             scheduledNotificationRepository = get(),
             rescheduleRemindersUseCase = get(),
             workSessionManager = get(),
@@ -82,4 +94,6 @@ val notificationModule = module {
             workSessionManager = get()
         )
     }
+
+    viewModelOf(::ExactAlarmAccessViewModel)
 }

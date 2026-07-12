@@ -11,6 +11,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.okhamzina.routinetaskmanager.core.presentation.model.asString
 import com.okhamzina.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
 import com.okhamzina.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
+import com.okhamzina.routinetaskmanager.core.presentation.ui.LocalExactAlarmPromptConfig
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderEffect
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.create_edit_reminder.model.CreateEditReminderIntent
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.create_edit_reminder.ui.CreateReminderScreen
@@ -27,13 +28,16 @@ fun CreateEditReminderRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val exactAlarmPromptConfig = LocalExactAlarmPromptConfig.current
     val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = {
             viewModel.onIntent(CreateEditReminderIntent.NotificationPermissionGranted)
         },
         onDenied = {
             viewModel.onIntent(CreateEditReminderIntent.ExactAlarmPermissionDenied)
-        }
+        },
+        skipExplanation = exactAlarmPromptConfig.skipExplanation,
+        onDoNotShowAgain = exactAlarmPromptConfig.onDoNotShowAgain
     )
 
     val requestNotificationPermission = rememberNotificationPermissionRequest(

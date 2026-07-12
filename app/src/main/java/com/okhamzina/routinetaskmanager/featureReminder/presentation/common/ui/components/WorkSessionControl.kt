@@ -13,6 +13,8 @@ import com.okhamzina.routinetaskmanager.R
 import com.okhamzina.routinetaskmanager.core.presentation.ui.PermissionDeniedAction
 import com.okhamzina.routinetaskmanager.core.presentation.ui.openAppNotificationSettings
 import com.okhamzina.routinetaskmanager.core.presentation.ui.rememberNotificationPermissionRequest
+import com.okhamzina.routinetaskmanager.core.presentation.ui.rememberExactAlarmAccessRequest
+import com.okhamzina.routinetaskmanager.core.presentation.ui.LocalExactAlarmPromptConfig
 import com.okhamzina.routinetaskmanager.core.utills.formatTime
 import kotlinx.coroutines.delay
 
@@ -29,13 +31,21 @@ fun WorkSessionControl(
     onNotificationPermissionDenied: () -> Unit
 ) {
     val context = LocalContext.current
+    val exactAlarmPromptConfig = LocalExactAlarmPromptConfig.current
     val retryActionLabel = stringResource(R.string.action_retry)
     val settingsActionLabel = stringResource(R.string.action_settings)
     val notificationsRequiredMessage = stringResource(R.string.notifications_required_for_session)
     val notificationPermissionRequestRef = remember { arrayOf<(() -> Unit)?>(null) }
 
-    val requestNotificationPermission = rememberNotificationPermissionRequest(
+    val requestExactAlarmAccess = rememberExactAlarmAccessRequest(
         onGranted = onStartSession,
+        onDenied = onStartSession,
+        skipExplanation = exactAlarmPromptConfig.skipExplanation,
+        onDoNotShowAgain = exactAlarmPromptConfig.onDoNotShowAgain
+    )
+
+    val requestNotificationPermission = rememberNotificationPermissionRequest(
+        onGranted = requestExactAlarmAccess,
         onDenied = onNotificationPermissionDenied,
         onDeniedWithAction = { action ->
             val actionLabel = when (action) {

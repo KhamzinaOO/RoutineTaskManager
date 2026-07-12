@@ -23,8 +23,13 @@ import com.okhamzina.routinetaskmanager.featureReminder.domain.model.RepeatUnit
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.type
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
+import com.okhamzina.routinetaskmanager.core.utills.toEpochMillis
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.Duration
@@ -34,16 +39,21 @@ import java.time.ZoneId
 class ReminderSessionNotificationUseCase(
     private val dispatcherProvider: DispatcherProvider,
     private val reminderRepository: ReminderRepository,
+    private val reminderOccurrenceRepository: ReminderOccurrenceRepository,
     private val alarmScheduler: AppAlarmScheduler,
     private val scheduledNotificationRepository: ScheduledNotificationRepository
 ) {
 
+    private val rescheduleMutex = Mutex()
+
     fun observeSessionOccurrences(
         startedAt: LocalDateTime
     ): Flow<List<ReminderOccurrence>> {
-        return reminderRepository.observeReminders()
-            .map { reminders ->
-                val now = LocalDateTime.now()
+        return combine(
+            reminderRepository.observeReminders(),
+            observeSessionOccurrenceStates(startedAt)
+        ) { reminders, states ->
+                val statesByKey = states.associateBy { state -> state.occurrenceKey }
                 val enabledReminders = reminders.filter { reminder ->
                     reminder.isEnabled && reminder.notificationEnabled
                 }
@@ -51,10 +61,17 @@ class ReminderSessionNotificationUseCase(
                 buildSessionOccurrences(
                     reminders = enabledReminders,
                     startedAt = startedAt,
-                    from = now
+                    from = startedAt
                 )
                     .take(MAX_SESSION_NOTIFICATIONS)
-                    .map { it.toReminderOccurrence() }
+                    .map { occurrence ->
+                        occurrence.toReminderOccurrence().let { domainOccurrence ->
+                            domainOccurrence.copy(
+                                status = statesByKey[domainOccurrence.occurrenceKey]?.status
+                                    ?: ReminderOccurrenceStatus.PLANNED
+                            )
+                        }
+                    }
             }
     }
 
@@ -62,18 +79,27 @@ class ReminderSessionNotificationUseCase(
         reminderId: Long,
         startedAt: LocalDateTime
     ): Flow<List<ReminderOccurrence>?> {
-        return reminderRepository.observeReminderById(reminderId)
-            .map { reminder ->
+        return combine(
+            reminderRepository.observeReminderById(reminderId),
+            observeSessionOccurrenceStates(startedAt)
+        ) { reminder, states ->
+                val statesByKey = states.associateBy { state -> state.occurrenceKey }
                 reminder?.takeIf { it.isEnabled }
                     ?.let {
-                        val now = LocalDateTime.now()
                         buildSessionOccurrences(
                             reminders = listOf(reminder),
                             startedAt = startedAt,
-                            from = now
+                            from = startedAt
                         )
                             .take(MAX_SESSION_NOTIFICATIONS)
-                            .map { it.toReminderOccurrence() }
+                            .map { occurrence ->
+                                occurrence.toReminderOccurrence().let { domainOccurrence ->
+                                    domainOccurrence.copy(
+                                        status = statesByKey[domainOccurrence.occurrenceKey]?.status
+                                            ?: ReminderOccurrenceStatus.PLANNED
+                                    )
+                                }
+                            }
                     }
             }
     }
@@ -83,8 +109,9 @@ class ReminderSessionNotificationUseCase(
         startedAt: LocalDateTime = LocalDateTime.now(),
         from: LocalDateTime = LocalDateTime.now()
     ): AppResult<SessionScheduleResult, AppError> {
-        return withContext(dispatcherProvider.io) {
-            cancelSessionNotifications()
+        return rescheduleMutex.withLock {
+            withContext(dispatcherProvider.io) {
+                cancelSessionNotifications()
 
             val usedRequestCodes = scheduledNotificationRepository
                 .getAll()
@@ -101,7 +128,24 @@ class ReminderSessionNotificationUseCase(
                 startedAt = startedAt,
                 from = from
             )
-                .filter { it.scheduledAt.isAfter(from) }
+                .map { occurrence -> occurrence.toReminderOccurrence() }
+                .let { builtOccurrences ->
+                    val statesByKey = reminderOccurrenceRepository.getByRange(
+                        startMillis = startedAt.toEpochMillis(),
+                        endMillis = startedAt.plus(SESSION_LOOK_AHEAD).toEpochMillis()
+                    ).associateBy { state -> state.occurrenceKey }
+
+                    builtOccurrences.map { occurrence ->
+                        occurrence.copy(
+                            status = statesByKey[occurrence.occurrenceKey]?.status
+                                ?: ReminderOccurrenceStatus.PLANNED
+                        )
+                    }
+                }
+                .filter { occurrence ->
+                    occurrence.scheduledAt.isAfter(from) &&
+                            occurrence.status == ReminderOccurrenceStatus.PLANNED
+                }
                 .take(MAX_SESSION_NOTIFICATIONS)
 
             val sessionReminderCount = reminders.count { reminder ->
@@ -111,16 +155,8 @@ class ReminderSessionNotificationUseCase(
             val notifications = mutableListOf<ScheduledNotification>()
 
             for (occurrence in occurrences) {
-                val scheduledAtMillis = occurrence.scheduledAt
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli()
-
-                val occurrenceKey = buildSessionOccurrenceKey(
-                    reminderId = occurrence.reminder.id,
-                    scheduledAtMillis = scheduledAtMillis,
-                    sequence = occurrence.sequence
-                )
+                val scheduledAtMillis = occurrence.scheduledAtMillis
+                val occurrenceKey = occurrence.occurrenceKey
 
                 val requestCode = NotificationRequestCodeGenerator.next(
                     key = occurrenceKey,
@@ -129,10 +165,10 @@ class ReminderSessionNotificationUseCase(
 
                 val scheduleResult = alarmScheduler.schedule(
                     targetType = NotificationTargetType.REMINDER,
-                    targetId = occurrence.reminder.id,
+                    targetId = occurrence.reminderId,
                     scheduledAtMillis = scheduledAtMillis,
                     requestCode = requestCode,
-                    precision = AlarmPrecision.INEXACT,
+                    precision = AlarmPrecision.EXACT,
                     occurrenceKind = NotificationOccurrenceKind.SESSION
                 )
 
@@ -141,7 +177,7 @@ class ReminderSessionNotificationUseCase(
                         notifications += ScheduledNotification(
                             requestCode = requestCode,
                             targetType = NotificationTargetType.REMINDER,
-                            targetId = occurrence.reminder.id,
+                            targetId = occurrence.reminderId,
                             scheduledAtMillis = scheduledAtMillis,
                             occurrenceKey = occurrenceKey,
                             occurrenceKind = NotificationOccurrenceKind.SESSION
@@ -162,13 +198,14 @@ class ReminderSessionNotificationUseCase(
                 }
             }
 
-            scheduledNotificationRepository.insertAll(notifications)
-            AppResult.Success(
-                SessionScheduleResult(
-                    sessionReminderCount = sessionReminderCount,
-                    scheduledNotificationCount = notifications.size
+                scheduledNotificationRepository.insertAll(notifications)
+                AppResult.Success(
+                    SessionScheduleResult(
+                        sessionReminderCount = sessionReminderCount,
+                        scheduledNotificationCount = notifications.size
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -186,8 +223,10 @@ class ReminderSessionNotificationUseCase(
     }
 
     suspend fun endSession() {
-        withContext(dispatcherProvider.io) {
-            cancelSessionNotifications()
+        rescheduleMutex.withLock {
+            withContext(dispatcherProvider.io) {
+                cancelSessionNotifications()
+            }
         }
     }
 
@@ -207,6 +246,43 @@ class ReminderSessionNotificationUseCase(
             occurrenceKind = NotificationOccurrenceKind.SESSION
         )
     }
+
+    suspend fun getElapsedSessionOccurrences(
+        startedAt: LocalDateTime,
+        endedAt: LocalDateTime
+    ): List<ReminderOccurrence> {
+        return withContext(dispatcherProvider.io) {
+            val reminders = reminderRepository.getAllRemindersSnapshot()
+                .filter { reminder ->
+                    reminder.isEnabled && reminder.notificationEnabled
+                }
+
+            val statesByKey = reminderOccurrenceRepository.getByRange(
+                startMillis = startedAt.toEpochMillis(),
+                endMillis = endedAt.plus(SESSION_LOOK_AHEAD).toEpochMillis() + 1L
+            ).associateBy { state -> state.occurrenceKey }
+
+            buildSessionOccurrences(
+                reminders = reminders,
+                startedAt = startedAt,
+                from = startedAt
+            )
+                .map { occurrence -> occurrence.toReminderOccurrence() }
+                .map { occurrence ->
+                    occurrence.copy(
+                        status = statesByKey[occurrence.occurrenceKey]?.status
+                            ?: ReminderOccurrenceStatus.PLANNED
+                    )
+                }
+                .filter { occurrence -> !occurrence.scheduledAt.isAfter(endedAt) || occurrence.status == ReminderOccurrenceStatus.COMPLETED}
+        }
+    }
+
+    private fun observeSessionOccurrenceStates(startedAt: LocalDateTime) =
+        reminderOccurrenceRepository.observeByRange(
+            startMillis = startedAt.toEpochMillis(),
+            endMillis = startedAt.plus(SESSION_LOOK_AHEAD).toEpochMillis()
+        )
 
     private fun buildSessionOccurrences(
         reminders: List<Reminder>,

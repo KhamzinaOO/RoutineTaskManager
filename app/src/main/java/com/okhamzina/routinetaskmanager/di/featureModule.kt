@@ -109,6 +109,7 @@ val featureReminderModule = module {
     factory {
         ReminderSessionNotificationUseCase(
             reminderRepository = get(),
+            reminderOccurrenceRepository = get(),
             alarmScheduler = get(),
             scheduledNotificationRepository = get(),
             dispatcherProvider = get()
@@ -136,6 +137,7 @@ val featureReminderModule = module {
         ReminderCommandUseCase(
             reminderRepository = get(),
             rescheduleRemindersUseCase = get(),
+            workSessionManager = get(),
             dispatcherProvider = get(),
             scheduleCalculator = get(),
             occurrenceRepository = get(),

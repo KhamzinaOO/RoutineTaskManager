@@ -12,17 +12,26 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.okhamzina.routinetaskmanager.R
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
@@ -35,6 +44,15 @@ import androidx.core.net.toUri
 enum class PermissionDeniedAction {
     RetryRequest,
     OpenSettings
+}
+
+data class ExactAlarmPromptConfig(
+    val skipExplanation: Boolean = false,
+    val onDoNotShowAgain: () -> Unit = {}
+)
+
+val LocalExactAlarmPromptConfig = staticCompositionLocalOf {
+    ExactAlarmPromptConfig()
 }
 
 @Composable
@@ -148,12 +166,21 @@ fun rememberNotificationPermissionRequest(
 fun rememberExactAlarmAccessRequest(
     onGranted: () -> Unit,
     onDenied: () -> Unit,
-    onDeniedWithAction: ((PermissionDeniedAction) -> Unit)? = null
+    onDeniedWithAction: ((PermissionDeniedAction) -> Unit)? = null,
+    skipExplanation: Boolean = false,
+    onDoNotShowAgain: () -> Unit = {}
 ): () -> Unit {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var showExplanation by remember { mutableStateOf(false) }
     var awaitingSettingsResult by remember { mutableStateOf(false) }
+    var doNotShowAgain by remember { mutableStateOf(false) }
+
+    fun persistDialogPreferenceIfNeeded() {
+        if (doNotShowAgain) {
+            onDoNotShowAgain()
+        }
+    }
 
     fun hasExactAlarmAccess(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
@@ -207,7 +234,10 @@ fun rememberExactAlarmAccessRequest(
     fun requestAccess() {
         if (hasExactAlarmAccess()) {
             onGranted()
+        } else if (skipExplanation) {
+            onDenied()
         } else {
+            doNotShowAgain = false
             showExplanation = true
         }
     }
@@ -216,18 +246,34 @@ fun rememberExactAlarmAccessRequest(
         AlertDialog(
             onDismissRequest = {
                 showExplanation = false
+                persistDialogPreferenceIfNeeded()
                 onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
             },
             title = {
                 Text(text = stringResource(R.string.exact_alarm_permission_title))
             },
             text = {
-                Text(text = stringResource(R.string.exact_alarm_permission_rationale))
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(text = stringResource(R.string.exact_alarm_permission_rationale))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = doNotShowAgain,
+                            onCheckedChange = { checked -> doNotShowAgain = checked }
+                        )
+                        Text(text = stringResource(R.string.action_do_not_show_again))
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showExplanation = false
+                        persistDialogPreferenceIfNeeded()
                         openExactAlarmSettings()
                     }
                 ) {
@@ -242,6 +288,7 @@ fun rememberExactAlarmAccessRequest(
                 TextButton(
                     onClick = {
                         showExplanation = false
+                        persistDialogPreferenceIfNeeded()
                         onDeniedWithAction?.invoke(PermissionDeniedAction.OpenSettings) ?: onDenied()
                     }
                 ) {

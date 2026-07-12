@@ -31,7 +31,7 @@ class WorkSessionManager(
             val startedAtMillis = sessionState.startedAtMillis
 
             if (!sessionState.isActive || startedAtMillis == null) {
-                flowOf(emptyList())
+                flowOf(sessionState.finishedSessionOccurrences)
             } else {
                 reminderSessionNotificationUseCase.observeSessionOccurrences(
                     startedAt = startedAtMillis.toLocalDateTime()
@@ -46,7 +46,11 @@ class WorkSessionManager(
             val startedAtMillis = sessionState.startedAtMillis
 
             if (!sessionState.isActive || startedAtMillis == null) {
-                flowOf(emptyList())
+                flowOf(
+                    sessionState.finishedSessionOccurrences.filter { occurrence ->
+                        occurrence.reminderId == reminderId
+                    }
+                )
             } else {
                 reminderSessionNotificationUseCase.observeSessionOccurrenceOfReminderById(
                     reminderId = reminderId,
@@ -87,14 +91,29 @@ class WorkSessionManager(
     }
 
     suspend fun endSession(): WorkSessionState {
+        val currentState = _state.value
+        val startedAt = currentState.startedAtMillis?.toLocalDateTime()
+        val endedAt = LocalDateTime.now()
+        val finishedSessionOccurrences = if (currentState.isActive && startedAt != null) {
+            reminderSessionNotificationUseCase.getElapsedSessionOccurrences(
+                startedAt = startedAt,
+                endedAt = endedAt
+            )
+        } else {
+            currentState.finishedSessionOccurrences
+        }
+
         reminderSessionNotificationUseCase.endSession()
 
-        val count = reminderSessionNotificationUseCase.countSessionReminders()
+        val count = reminderSessionNotificationUseCase.countSessionReminders(
+            startedAt = startedAt ?: endedAt
+        )
         val newState = WorkSessionState(
             isActive = false,
             startedAtMillis = null,
             sessionReminderCount = count,
-            scheduledNotificationCount = 0
+            scheduledNotificationCount = 0,
+            finishedSessionOccurrences = finishedSessionOccurrences
         )
 
         _state.value = newState
@@ -193,5 +212,6 @@ data class WorkSessionState(
     val startedAtMillis: Long? = null,
     val expiresAtMillis: Long? = null,
     val sessionReminderCount: Int = 0,
-    val scheduledNotificationCount: Int = 0
+    val scheduledNotificationCount: Int = 0,
+    val finishedSessionOccurrences: List<ReminderOccurrence> = emptyList()
 )

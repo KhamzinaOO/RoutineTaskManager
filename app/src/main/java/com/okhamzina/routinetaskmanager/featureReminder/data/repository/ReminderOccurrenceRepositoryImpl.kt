@@ -27,6 +27,19 @@ class ReminderOccurrenceRepositoryImpl(
         )
     }
 
+    override suspend fun upsertState(state: ReminderOccurrenceState) {
+        occurrenceDao.upsertState(
+            ReminderOccurrenceStateEntity(
+                occurrenceKey = state.occurrenceKey,
+                reminderId = state.reminderId,
+                scheduledAtMillis = state.scheduledAtMillis,
+                status = state.status.name,
+                actedAtMillis = state.actedAtMillis,
+                occurrenceKind = state.occurrenceKind.name
+            )
+        )
+    }
+
     override suspend fun getStateByKey(key: String): ReminderOccurrenceState? {
         return occurrenceDao.getStateByKey(key)?.toDomain()
     }

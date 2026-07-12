@@ -5,7 +5,7 @@ import com.okhamzina.routinetaskmanager.core.error.ErrorReporter
 import com.okhamzina.routinetaskmanager.core.error.runAppResultCatching
 import com.okhamzina.routinetaskmanager.core.notifications.android.AppNotificationChannels
 import com.okhamzina.routinetaskmanager.di.appModules
-import com.okhamzina.routinetaskmanager.featureReminder.application.notifications.RescheduleRemindersUseCase
+import com.okhamzina.routinetaskmanager.core.notifications.RescheduleAllNotificationsUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,15 +26,15 @@ class App : Application() {
         }
 
         getKoin().get<AppNotificationChannels>().createChannels()
-        rescheduleRegularReminderNotifications()
+        rescheduleNotifications()
     }
 
-    private fun rescheduleRegularReminderNotifications() {
+    private fun rescheduleNotifications() {
         applicationScope.launch {
             runAppResultCatching(
                 errorReporter = getKoin().get<ErrorReporter>()
             ) {
-                getKoin().get<RescheduleRemindersUseCase>()()
+                getKoin().get<RescheduleAllNotificationsUseCase>()()
             }
         }
     }

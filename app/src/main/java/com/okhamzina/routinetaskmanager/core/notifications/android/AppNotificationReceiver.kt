@@ -10,6 +10,7 @@ import com.okhamzina.routinetaskmanager.core.notifications.AppNotificationConsta
 import com.okhamzina.routinetaskmanager.core.notifications.NotificationTriggerRouter
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationTargetType
+import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationAction
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,6 +26,17 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
         context: Context,
         intent: Intent
     ) {
+        val notificationAction = when (intent.action) {
+            AppNotificationConstants.ACTION_COMPLETE_REMINDER -> NotificationAction.COMPLETE
+            AppNotificationConstants.ACTION_SKIP_REMINDER -> NotificationAction.SKIP
+            else -> null
+        }
+
+        if (notificationAction != null) {
+            handleNotificationAction(intent, notificationAction)
+            return
+        }
+
         if (intent.action != AppNotificationConstants.ACTION_SHOW_NOTIFICATION) {
             return
         }
@@ -75,12 +87,15 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
                 ?.occurrenceKind
                 ?: intentOccurrenceKind
                 ?: NotificationOccurrenceKind.REGULAR
+            val occurrenceKey = scheduledNotification?.occurrenceKey
+                ?: intent.getStringExtra(AppNotificationConstants.EXTRA_OCCURRENCE_KEY)
 
             val payload = notificationTriggerRouter.buildPayloadOrNull(
                 targetType = targetType,
                 targetId = targetId,
                 scheduledAtMillis = scheduledAtMillis,
-                occurrenceKind = occurrenceKind
+                occurrenceKind = occurrenceKind,
+                occurrenceKey = occurrenceKey
             )
 
             if (payload != null) {
@@ -101,6 +116,36 @@ class AppNotificationReceiver : BroadcastReceiver(), KoinComponent {
             if (payload == null) {
                 Log.w(ContentValues.TAG, "Notification payload is null: targetType=$targetType targetId=$targetId requestCode=$requestCode")
             }
+        }
+    }
+
+    private fun handleNotificationAction(
+        intent: Intent,
+        action: NotificationAction
+    ) {
+        val targetType = intent.getStringExtra(AppNotificationConstants.EXTRA_TARGET_TYPE)
+            ?.let { raw -> runCatching { NotificationTargetType.valueOf(raw) }.getOrNull() }
+            ?: return
+        val targetId = intent.getLongExtra(AppNotificationConstants.EXTRA_TARGET_ID, -1L)
+        val scheduledAtMillis = intent.getLongExtra(AppNotificationConstants.EXTRA_SCHEDULED_AT, -1L)
+        val occurrenceKey = intent.getStringExtra(AppNotificationConstants.EXTRA_OCCURRENCE_KEY)
+            ?: return
+        val occurrenceKind = intent.getStringExtra(AppNotificationConstants.EXTRA_OCCURRENCE_KIND)
+            ?.let { raw -> runCatching { NotificationOccurrenceKind.valueOf(raw) }.getOrNull() }
+            ?: NotificationOccurrenceKind.REGULAR
+
+        if (targetId == -1L || scheduledAtMillis == -1L) return
+
+        goAsync(dispatcherProvider) {
+            notificationTriggerRouter.onNotificationAction(
+                targetType = targetType,
+                targetId = targetId,
+                scheduledAtMillis = scheduledAtMillis,
+                occurrenceKind = occurrenceKind,
+                occurrenceKey = occurrenceKey,
+                action = action
+            )
+            appNotificationManager.cancelNotification(targetType, targetId)
         }
     }
 }

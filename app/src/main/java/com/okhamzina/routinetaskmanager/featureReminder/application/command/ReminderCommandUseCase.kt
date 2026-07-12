@@ -15,6 +15,8 @@ import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.Re
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.okhamzina.routinetaskmanager.featureReminder.application.session.WorkSessionManager
+import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
@@ -27,6 +29,7 @@ class ReminderCommandUseCase(
     private val reminderRepository: ReminderRepository,
     private val occurrenceRepository: ReminderOccurrenceRepository,
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
+    private val workSessionManager: WorkSessionManager,
     private val dispatcherProvider: DispatcherProvider
 ) {
 
@@ -115,6 +118,20 @@ class ReminderCommandUseCase(
         }
     }
 
+    private suspend fun rescheduleAfterOccurrenceChange(
+        occurrenceKind: NotificationOccurrenceKind
+    ): EmptyAppResult<AppError> {
+        return when (occurrenceKind) {
+            NotificationOccurrenceKind.REGULAR -> rescheduleRemindersUseCase()
+            NotificationOccurrenceKind.SESSION -> when (
+                val result = workSessionManager.rescheduleActiveSessionIfNeeded()
+            ) {
+                is AppResult.Error -> AppResult.Error(result.error)
+                is AppResult.Success -> AppResult.Success(Unit)
+            }
+        }
+    }
+
     suspend fun getReminderById(id : Long) : Reminder?{
         return withContext(dispatcherProvider.io) {
             reminderRepository.getReminderById(id)
@@ -132,7 +149,7 @@ class ReminderCommandUseCase(
     ): EmptyAppResult<AppError> {
         return withContext(dispatcherProvider.io){
             occurrenceRepository.upsertState(occurrence.copy(status = ReminderOccurrenceStatus.COMPLETED))
-            rescheduleRemindersUseCase()
+            rescheduleAfterOccurrenceChange(occurrence.occurrenceKind)
         }
     }
 
@@ -141,7 +158,7 @@ class ReminderCommandUseCase(
     ): EmptyAppResult<AppError> {
         return withContext(dispatcherProvider.io){
             occurrenceRepository.upsertState(occurrence.copy(status = ReminderOccurrenceStatus.SKIPPED))
-            rescheduleRemindersUseCase()
+            rescheduleAfterOccurrenceChange(occurrence.occurrenceKind)
         }
     }
 

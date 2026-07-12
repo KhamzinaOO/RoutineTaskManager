@@ -32,6 +32,8 @@
     <string name="action_search">Search</string>
     <string name="action_settings">Settings</string>
     <string name="action_skip">Skip</string>
+    <string name="action_complete">Complete</string>
+    <string name="action_do_not_show_again">Do not show again</string>
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
     <string name="state_unchecked">Unchecked</string>
@@ -159,6 +161,7 @@
     <string name="notification_permission_rationale">Work sessions use notifications to remind you at the selected times.</string>
     <string name="exact_alarm_permission_title">Allow exact reminders?</string>
     <string name="exact_alarm_permission_rationale">Exact alarm access lets selected reminders arrive at the exact minute.</string>
+    <string name="exact_alarm_inexact_mode_warning">Exact reminders are not enabled. Reminders will still work, but Android may deliver them later than the selected time.</string>
     <string name="notifications_required_for_session">Notifications are required to start a work session</string>
     <string name="notifications_disabled_enable_settings">Notifications are disabled. Enable them in settings to receive reminders</string>
     <string name="notifications_disabled_saved_without_alerts">Notifications are disabled. Reminder was saved without scheduled alerts</string>
@@ -198,7 +201,7 @@
     <string name="error_database">Failed to process data</string>
     <string name="error_permission_denied">Permission is required for this action</string>
     <string name="error_notification_permission_denied">Notifications are disabled. Enable them in settings to receive reminders</string>
-    <string name="error_exact_alarm_permission_denied">Exact reminders are disabled</string>
+    <string name="error_exact_alarm_permission_denied">Exact reminders are disabled. Reminders will use inexact delivery.</string>
     <string name="error_alarm_scheduling_failed">Failed to schedule reminders</string>
     <string name="next_reminder">Next reminder</string>
     <string name="skip">Skip</string>

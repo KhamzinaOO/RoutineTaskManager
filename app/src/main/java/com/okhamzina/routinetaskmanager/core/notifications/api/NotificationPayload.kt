@@ -6,5 +6,7 @@ data class NotificationPayload(
     val title : String,
     val text : String?,
     val scheduledAtMillis : Long,
-    val channelId: String
+    val channelId: String,
+    val occurrenceKey: String? = null,
+    val occurrenceKind: NotificationOccurrenceKind = NotificationOccurrenceKind.REGULAR
 )

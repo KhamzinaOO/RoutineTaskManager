@@ -140,7 +140,10 @@ class AndroidAppAlarmScheduler(
         pendingIntent: PendingIntent
     ): AppAlarmScheduleResult {
         if (!permissionChecker.canScheduleExactAlarms()) {
-            return AppAlarmScheduleResult.ExactAlarmAccessDenied
+            return scheduleInexact(
+                triggerAtMillis = triggerAtMillis,
+                pendingIntent = pendingIntent
+            )
         }
 
         return runCatching {
@@ -152,7 +155,10 @@ class AndroidAppAlarmScheduler(
             AppAlarmScheduleResult.Scheduled
         }.getOrElse { throwable ->
             if (throwable is SecurityException) {
-                AppAlarmScheduleResult.ExactAlarmAccessDenied
+                scheduleInexact(
+                    triggerAtMillis = triggerAtMillis,
+                    pendingIntent = pendingIntent
+                )
             } else {
                 AppAlarmScheduleResult.Failed(throwable)
             }

@@ -9,13 +9,18 @@ import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationPaylo
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationTriggerHandler
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationOccurrenceKind
 import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationTargetType
+import com.okhamzina.routinetaskmanager.core.notifications.api.NotificationAction
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.okhamzina.routinetaskmanager.core.notifications.toReminderChannelId
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
+import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceState
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
 import com.okhamzina.routinetaskmanager.featureReminder.application.session.WorkSessionManager
 
 class ReminderNotificationTriggerHandler(
     private val reminderRepository: ReminderRepository,
+    private val reminderOccurrenceRepository: ReminderOccurrenceRepository,
     private val scheduledNotificationRepository: ScheduledNotificationRepository,
     private val rescheduleRemindersUseCase: RescheduleRemindersUseCase,
     private val workSessionManager: WorkSessionManager,
@@ -25,7 +30,8 @@ class ReminderNotificationTriggerHandler(
     override suspend fun buildPayloadOrNull(
         targetId: Long,
         scheduledAtMillis: Long,
-        occurrenceKind: NotificationOccurrenceKind
+        occurrenceKind: NotificationOccurrenceKind,
+        occurrenceKey: String?
     ): NotificationPayload? {
         val reminder = reminderRepository.getReminderById(targetId)
             ?: return null
@@ -44,8 +50,36 @@ class ReminderNotificationTriggerHandler(
             title = reminder.name,
             text = reminder.instructionsText,
             scheduledAtMillis = scheduledAtMillis,
-            channelId = reminder.notificationMode.toReminderChannelId()
+            channelId = reminder.notificationMode.toReminderChannelId(),
+            occurrenceKey = occurrenceKey,
+            occurrenceKind = occurrenceKind
         )
+    }
+
+    suspend fun onNotificationAction(
+        targetId: Long,
+        scheduledAtMillis: Long,
+        occurrenceKind: NotificationOccurrenceKind,
+        occurrenceKey: String,
+        action: NotificationAction
+    ): EmptyAppResult<AppError> {
+        val status = when (action) {
+            NotificationAction.COMPLETE -> ReminderOccurrenceStatus.COMPLETED
+            NotificationAction.SKIP -> ReminderOccurrenceStatus.SKIPPED
+        }
+
+        reminderOccurrenceRepository.upsertState(
+            ReminderOccurrenceState(
+                occurrenceKey = occurrenceKey,
+                reminderId = targetId,
+                scheduledAtMillis = scheduledAtMillis,
+                status = status,
+                actedAtMillis = System.currentTimeMillis(),
+                occurrenceKind = occurrenceKind
+            )
+        )
+
+        return rescheduleByOccurrenceKind(occurrenceKind)
     }
 
     override suspend fun onNotificationShown(

@@ -9,7 +9,8 @@ class TaskNotificationTriggerHandler : NotificationTriggerHandler {
     override suspend fun buildPayloadOrNull(
         targetId: Long,
         scheduledAtMillis: Long,
-        occurrenceKind: NotificationOccurrenceKind
+        occurrenceKind: NotificationOccurrenceKind,
+        occurrenceKey: String?
     ): NotificationPayload? {
         return null
     }

@@ -167,7 +167,7 @@ class CreateEditReminderViewModel(
                         UiText.StringResource(R.string.error_exact_alarm_permission_denied)
                     )
                 )
-                sendEffect(CreateEditReminderEffect.NavigateBack)
+                rescheduleNotificationsAfterPermissionGrant()
             }
 
             CreateEditReminderIntent.NotificationPermissionDenied -> {

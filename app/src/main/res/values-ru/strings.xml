@@ -32,6 +32,8 @@
     <string name="action_search">Поиск</string>
     <string name="action_settings">Настройки</string>
     <string name="action_skip">Пропустить</string>
+    <string name="action_complete">Выполнено</string>
+    <string name="action_do_not_show_again">Больше не показывать</string>
     <string name="action_start">Запустить</string>
     <string name="action_stop">Остановить</string>
     <string name="state_unchecked">Не отмечено</string>
@@ -177,6 +179,7 @@
     <string name="notification_permission_rationale">Рабочие сессии используют уведомления, чтобы напоминать в выбранное время.</string>
     <string name="exact_alarm_permission_title">Разрешить точные напоминания?</string>
     <string name="exact_alarm_permission_rationale">Доступ к точным будильникам позволяет выбранным напоминаниям приходить строго в нужную минуту.</string>
+    <string name="exact_alarm_inexact_mode_warning">Точные напоминания не включены. Напоминания продолжат работать, но Android может показать их позже выбранного времени.</string>
     <string name="notifications_required_for_session">Для запуска рабочей сессии нужны уведомления</string>
     <string name="notifications_disabled_enable_settings">Уведомления выключены. Включите их в настройках, чтобы получать напоминания</string>
     <string name="notifications_disabled_saved_without_alerts">Уведомления выключены. Напоминание сохранено без запланированных уведомлений</string>
@@ -216,7 +219,7 @@
     <string name="error_database">Не удалось обработать данные</string>
     <string name="error_permission_denied">Для этого действия нужно разрешение</string>
     <string name="error_notification_permission_denied">Уведомления выключены. Включите их в настройках, чтобы получать напоминания</string>
-    <string name="error_exact_alarm_permission_denied">Точные напоминания выключены</string>
+    <string name="error_exact_alarm_permission_denied">Точные напоминания выключены. Напоминания будут работать в неточном режиме.</string>
     <string name="error_alarm_scheduling_failed">Не удалось запланировать напоминания</string>
     <string name="next_reminder">Следующее напоминание</string>
     <string name="skip">Пропустить</string>

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
@@ -15,6 +16,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -27,11 +29,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.okhamzina.routinetaskmanager.featureHome.HomeRoute
+import com.okhamzina.routinetaskmanager.core.notifications.ExactAlarmAccessViewModel
+import com.okhamzina.routinetaskmanager.core.presentation.ui.ExactAlarmPromptConfig
+import com.okhamzina.routinetaskmanager.core.presentation.ui.ExactAlarmWarningBanner
+import com.okhamzina.routinetaskmanager.core.presentation.ui.LocalExactAlarmPromptConfig
+import com.okhamzina.routinetaskmanager.core.presentation.ui.openExactAlarmSettings
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.all_reminders.AllRemindersRoute
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.create_edit_reminder.CreateEditReminderRoute
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminderInfo.ReminderInfoRoute
@@ -39,6 +51,7 @@ import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminder_ma
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerItem
 import com.okhamzina.routinetaskmanager.featureReminder.presentation.reminder_main.ui.RemindersDrawerScaffold
 import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 private val topRoutes = listOf(Home, Widgets, Reminders, Tasks)
 
@@ -86,6 +99,21 @@ fun AppChromeEffect(
 
 @Composable
 fun AppNavigation() {
+    val exactAlarmAccessViewModel: ExactAlarmAccessViewModel = koinViewModel()
+    val exactAlarmAccessState by exactAlarmAccessViewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                exactAlarmAccessViewModel.onAppResumed()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     val branches = rememberSaveable(
         saver = BottomBranches.Saver
     ) {
@@ -123,7 +151,11 @@ fun AppNavigation() {
 
     CompositionLocalProvider(
         LocalAppScaffoldState provides appScaffoldState,
-        LocalCurrentRoute provides currentRoute
+        LocalCurrentRoute provides currentRoute,
+        LocalExactAlarmPromptConfig provides ExactAlarmPromptConfig(
+            skipExplanation = exactAlarmAccessState.isWarningDismissedForever,
+            onDoNotShowAgain = exactAlarmAccessViewModel::dismissWarningForever
+        )
     ) {
         Scaffold(
             modifier = Modifier
@@ -154,7 +186,7 @@ fun AppNavigation() {
                 }
             }
         ) { paddingValues ->
-            Box(
+            Column(
                 Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
@@ -165,15 +197,26 @@ fun AppNavigation() {
                         indication = null
                     )
             ) {
+                if (exactAlarmAccessState.shouldShowWarning) {
+                    ExactAlarmWarningBanner(
+                        onOpenSettings = { openExactAlarmSettings(context) },
+                        onDismissForever = exactAlarmAccessViewModel::dismissWarningForever
+                    )
+                }
 
-                NavDisplay(
-                    backStack = branches.backStack,
-                    onBack = { branches.pop() },
-                    entryDecorators = listOf(
-                        rememberSaveableStateHolderNavEntryDecorator(),
-                        rememberViewModelStoreNavEntryDecorator()
-                    ),
-                    entryProvider = entryProvider {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                ) {
+                    NavDisplay(
+                        backStack = branches.backStack,
+                        onBack = { branches.pop() },
+                        entryDecorators = listOf(
+                            rememberSaveableStateHolderNavEntryDecorator(),
+                            rememberViewModelStoreNavEntryDecorator()
+                        ),
+                        entryProvider = entryProvider {
                         entry<Home> {
                             HomeRoute(
                                 showMessage = { message ->
@@ -326,8 +369,9 @@ fun AppNavigation() {
                                 }
                             )
                         }
-                    }
-                )
+                        }
+                    )
+                }
             }
         }
     }
