@@ -44,6 +44,15 @@ interface ScheduledNotificationRepository {
         occurrenceKind: NotificationOccurrenceKind
     )
 
+    suspend fun replaceByTargetTypeAndOccurrenceKind(
+        targetType: NotificationTargetType,
+        occurrenceKind: NotificationOccurrenceKind,
+        notifications: List<ScheduledNotification>
+    ) {
+        deleteByTargetTypeAndOccurrenceKind(targetType, occurrenceKind)
+        insertAll(notifications)
+    }
+
     suspend fun deleteByTarget(
         targetType: NotificationTargetType,
         targetId: Long

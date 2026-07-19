@@ -93,6 +93,18 @@ class ScheduledNotificationRepositoryImpl(
         )
     }
 
+    override suspend fun replaceByTargetTypeAndOccurrenceKind(
+        targetType: NotificationTargetType,
+        occurrenceKind: NotificationOccurrenceKind,
+        notifications: List<ScheduledNotification>
+    ) {
+        scheduledNotificationDao.replaceByTargetTypeAndOccurrenceKind(
+            targetType = targetType.name,
+            occurrenceKind = occurrenceKind.name,
+            entities = notifications.map { notification -> notification.toEntity() }
+        )
+    }
+
     override suspend fun deleteByTarget(
         targetType: NotificationTargetType,
         targetId: Long

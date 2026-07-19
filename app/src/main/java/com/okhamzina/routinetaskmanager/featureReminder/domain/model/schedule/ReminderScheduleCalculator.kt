@@ -21,23 +21,37 @@ class ReminderScheduleCalculator {
         reminders: List<Reminder>,
         range: ScheduleRange
     ): List<ReminderOccurrence> {
-        return reminders
-            .flatMap { reminder ->
-                buildOccurrencesForReminder(
-                    reminder = reminder,
-                    range = range
-                )
-            }
+        return generateOccurrences(reminders, range)
             .sortedBy { it.scheduledAt }
+            .toList()
+    }
+
+    fun generateOccurrences(
+        reminders: List<Reminder>,
+        range: ScheduleRange
+    ): Sequence<ReminderOccurrence> {
+        return reminders.asSequence().flatMap { reminder ->
+            generateOccurrencesForReminder(
+                reminder = reminder,
+                range = range
+            )
+        }
     }
 
     fun buildOccurrencesForReminder(
         reminder: Reminder,
         range: ScheduleRange
     ): List<ReminderOccurrence> {
+        return generateOccurrencesForReminder(reminder, range).toList()
+    }
+
+    private fun generateOccurrencesForReminder(
+        reminder: Reminder,
+        range: ScheduleRange
+    ): Sequence<ReminderOccurrence> {
         return when (val rule = reminder.repeatRule) {
             is ReminderRepeatRule.OnSchedulePeriod -> {
-                buildOnSchedulePeriodOccurrences(
+                generateOnSchedulePeriodOccurrences(
                     reminder = reminder,
                     rule = rule,
                     range = range
@@ -45,7 +59,7 @@ class ReminderScheduleCalculator {
             }
 
             is ReminderRepeatRule.OnScheduleCertain -> {
-                buildOnScheduleCertainOccurrences(
+                generateOnScheduleCertainOccurrences(
                     reminder = reminder,
                     rule = rule,
                     range = range
@@ -53,19 +67,17 @@ class ReminderScheduleCalculator {
             }
 
             is ReminderRepeatRule.DuringSessionPeriod -> {
-                emptyList()
+                emptySequence()
             }
         }
     }
 
-    private fun buildOnScheduleCertainOccurrences(
+    private fun generateOnScheduleCertainOccurrences(
         reminder: Reminder,
         rule: ReminderRepeatRule.OnScheduleCertain,
         range: ScheduleRange
-    ): List<ReminderOccurrence> {
-        val result = mutableListOf<ReminderOccurrence>()
-
-        forEachDateInRange(range) { date ->
+    ): Sequence<ReminderOccurrence> = sequence {
+        datesInRange(range).forEach { date ->
             val dayOfWeek = date.dayOfWeek
 
             val dayValue = when (rule.schedule.mode) {
@@ -88,7 +100,7 @@ class ReminderScheduleCalculator {
                 val scheduledAt = date.atTime(time)
 
                 if (scheduledAt in range) {
-                    result.add(
+                    yield(
                         reminder.toOccurrence(
                             scheduledAt = scheduledAt
                         )
@@ -96,18 +108,14 @@ class ReminderScheduleCalculator {
                 }
             }
         }
-
-        return result
     }
 
-    private fun buildOnSchedulePeriodOccurrences(
+    private fun generateOnSchedulePeriodOccurrences(
         reminder: Reminder,
         rule: ReminderRepeatRule.OnSchedulePeriod,
         range: ScheduleRange
-    ): List<ReminderOccurrence> {
-        val result = mutableListOf<ReminderOccurrence>()
-
-        forEachDateInRange(range) { date ->
+    ): Sequence<ReminderOccurrence> = sequence {
+        datesInRange(range).forEach { date ->
             val dayOfWeek = date.dayOfWeek
 
             val dayValue = when (rule.schedule.mode) {
@@ -127,8 +135,8 @@ class ReminderScheduleCalculator {
             }
 
             if (dayValue != null) {
-                result.addAll(
-                    buildPeriodOccurrencesForDate(
+                yieldAll(
+                    generatePeriodOccurrencesForDate(
                         reminder = reminder,
                         date = date,
                         dayRepeat = dayValue,
@@ -137,16 +145,14 @@ class ReminderScheduleCalculator {
                 )
             }
         }
-
-        return result
     }
 
-    private fun buildPeriodOccurrencesForDate(
+    private fun generatePeriodOccurrencesForDate(
         reminder: Reminder,
         date: LocalDate,
         dayRepeat: OnSchedulePeriodDayRepeat,
         range: ScheduleRange
-    ): List<ReminderOccurrence> {
+    ): Sequence<ReminderOccurrence> = sequence {
         val timeWindow = dayRepeat.timeWindow
 
         val startTime = if (timeWindow.allDayEnabled) {
@@ -162,47 +168,43 @@ class ReminderScheduleCalculator {
         }
 
         if (!timeWindow.allDayEnabled && !startTime.isBefore(endTime)) {
-            return emptyList()
+            return@sequence
         }
 
         val step = dayRepeat.interval.toDurationOrNull()
-            ?: return emptyList()
-
-        val result = mutableListOf<ReminderOccurrence>()
+            ?: return@sequence
 
         var current = date.atTime(startTime)
         val end = date.atTime(endTime)
+        var generatedCount = 0
 
-        while (!current.isAfter(end)) {
+        while (
+            !current.isAfter(end) &&
+            generatedCount < MAX_OCCURRENCES_PER_REMINDER_PER_DAY
+        ) {
             if (current in range) {
-                result.add(
+                yield(
                     reminder.toOccurrence(
                         scheduledAt = current
                     )
                 )
+                generatedCount++
             }
 
             current = current.plus(step)
-
-            if (result.size > MAX_OCCURRENCES_PER_REMINDER_IN_RANGE) {
-                break
-            }
         }
-
-        return result
     }
 
-    private fun forEachDateInRange(
-        range: ScheduleRange,
-        action: (LocalDate) -> Unit
-    ) {
-        if (!range.start.isBefore(range.endExclusive)) return
+    private fun datesInRange(
+        range: ScheduleRange
+    ): Sequence<LocalDate> = sequence {
+        if (!range.start.isBefore(range.endExclusive)) return@sequence
 
         var currentDate = range.start.toLocalDate()
         val lastDate = range.endExclusive.minusNanos(1).toLocalDate()
 
         while (!currentDate.isAfter(lastDate)) {
-            action(currentDate)
+            yield(currentDate)
             currentDate = currentDate.plusDays(1)
         }
     }
@@ -246,7 +248,7 @@ class ReminderScheduleCalculator {
     }
 
     private companion object {
-        const val MAX_OCCURRENCES_PER_REMINDER_IN_RANGE = 10_000
+        const val MAX_OCCURRENCES_PER_REMINDER_PER_DAY = 10_000
     }
 }
 

@@ -22,10 +22,12 @@ import com.okhamzina.routinetaskmanager.featureReminder.domain.model.RepeatSched
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.WeeklyRepeat
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.dayRange
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderRepository
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -169,6 +171,91 @@ class RescheduleRemindersUseCaseTest {
             alarmScheduler.scheduledRequestCodes,
             alarmScheduler.cancelled
         )
+    }
+
+    @Test
+    fun invoke_schedulesOnlyThirtyNearestOccurrencesInChronologicalOrder() = runBlocking {
+        val reminders = (0 until 40).map { index ->
+            reminder(
+                id = index.toLong() + 1L,
+                selectedDays = DayOfWeek.entries.toSet(),
+                time = LocalTime.of(12, index)
+            )
+        }
+        val alarmScheduler = FakeAlarmScheduler()
+        val useCase = RescheduleRemindersUseCase(
+            reminderOccurrenceRepository = FakeOccurrenceRepository(),
+            reminderRepository = FakeReminderRepository(reminders),
+            scheduleCalculator = calculator,
+            alarmScheduler = alarmScheduler,
+            scheduledNotificationRepository = FakeScheduledNotificationRepository(),
+            dispatcherProvider = TestDispatcherProvider
+        )
+
+        val result = useCase()
+
+        assertTrue(result is AppResult.Success)
+        assertEquals(30, alarmScheduler.scheduled.size)
+        assertEquals(alarmScheduler.scheduled.sorted(), alarmScheduler.scheduled)
+    }
+
+    @Test
+    fun invoke_restoresReplacedAlarmAndKeepsOldDatabaseStateWhenSchedulingFails() = runBlocking {
+        val reminders = listOf(
+            reminder(
+                id = 1L,
+                selectedDays = DayOfWeek.entries.toSet(),
+                time = LocalTime.NOON
+            ),
+            reminder(
+                id = 2L,
+                selectedDays = DayOfWeek.entries.toSet(),
+                time = LocalTime.of(13, 0)
+            )
+        )
+        val now = LocalDateTime.now()
+        val firstOccurrence = calculator.buildOccurrences(
+            reminders = reminders,
+            range = ScheduleRange(
+                start = now,
+                endExclusive = now.toLocalDate().plusDays(8).atStartOfDay()
+            )
+        ).first { occurrence -> occurrence.scheduledAt.isAfter(now) }
+        val oldNotification = ScheduledNotification(
+            id = 7,
+            requestCode = 4242,
+            targetType = NotificationTargetType.REMINDER,
+            targetId = firstOccurrence.reminderId,
+            scheduledAtMillis = firstOccurrence.scheduledAtMillis,
+            occurrenceKey = firstOccurrence.occurrenceKey,
+            occurrenceKind = NotificationOccurrenceKind.REGULAR,
+            createdAtMillis = 1L
+        )
+        val notificationRepository = FakeScheduledNotificationRepository(
+            initialNotifications = listOf(oldNotification)
+        )
+        val alarmScheduler = FakeAlarmScheduler { callIndex ->
+            if (callIndex == 2) {
+                AppAlarmScheduleResult.Failed(RuntimeException("Scheduling failed"))
+            } else {
+                AppAlarmScheduleResult.Scheduled
+            }
+        }
+        val useCase = RescheduleRemindersUseCase(
+            reminderOccurrenceRepository = FakeOccurrenceRepository(),
+            reminderRepository = FakeReminderRepository(reminders),
+            scheduleCalculator = calculator,
+            alarmScheduler = alarmScheduler,
+            scheduledNotificationRepository = notificationRepository,
+            dispatcherProvider = TestDispatcherProvider
+        )
+
+        val result = useCase()
+
+        assertTrue(result is AppResult.Error)
+        assertEquals(listOf(oldNotification), notificationRepository.getAll())
+        assertEquals(listOf(4242, 4242), alarmScheduler.scheduledRequestCodes)
+        assertFalse(4242 in alarmScheduler.cancelled)
     }
 
     private fun ReminderOccurrence.toState(
@@ -376,8 +463,10 @@ class RescheduleRemindersUseCaseTest {
         }
     }
 
-    private class FakeScheduledNotificationRepository : ScheduledNotificationRepository {
-        private val notifications = mutableListOf<ScheduledNotification>()
+    private class FakeScheduledNotificationRepository(
+        initialNotifications: List<ScheduledNotification> = emptyList()
+    ) : ScheduledNotificationRepository {
+        private val notifications = initialNotifications.toMutableList()
 
         override suspend fun insert(notification: ScheduledNotification) {
             notifications.removeAll { existing ->

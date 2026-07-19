@@ -15,6 +15,9 @@ import com.okhamzina.routinetaskmanager.core.utills.toEpochMillis
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotification
 import com.okhamzina.routinetaskmanager.core.notifications.domain.ScheduledNotificationRepository
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceStatus
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrence
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.ReminderOccurrenceState
+import com.okhamzina.routinetaskmanager.featureReminder.domain.model.Reminder
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.ReminderScheduleCalculator
 import com.okhamzina.routinetaskmanager.featureReminder.domain.model.schedule.ScheduleRange
 import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.ReminderOccurrenceRepository
@@ -22,7 +25,10 @@ import com.okhamzina.routinetaskmanager.featureReminder.domain.repository.Remind
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
 import java.time.LocalDateTime
+import java.util.PriorityQueue
 
 class RescheduleRemindersUseCase(
     private val reminderOccurrenceRepository: ReminderOccurrenceRepository,
@@ -40,15 +46,12 @@ class RescheduleRemindersUseCase(
                     targetType = NotificationTargetType.REMINDER,
                     occurrenceKind = NotificationOccurrenceKind.REGULAR
                 )
-
-                oldReminderNotifications.forEach { entity ->
-                    alarmScheduler.cancel(entity.requestCode)
+                val oldNotificationsByKey = oldReminderNotifications.associateBy { notification ->
+                    notification.occurrenceKey
                 }
-
-                scheduledNotificationRepository.deleteByTargetTypeAndOccurrenceKind(
-                    targetType = NotificationTargetType.REMINDER,
-                    occurrenceKind = NotificationOccurrenceKind.REGULAR
-                )
+                val oldNotificationsByRequestCode = oldReminderNotifications.associateBy { notification ->
+                    notification.requestCode
+                }
 
                 val usedRequestCodes = scheduledNotificationRepository
                     .getAll()
@@ -75,79 +78,177 @@ class RescheduleRemindersUseCase(
                     endMillis = range.endExclusive.toEpochMillis()
                 ).associateBy { it.occurrenceKey }
 
-                val nextOccurrences = scheduleCalculator
-                    .buildOccurrences(
+                val nextOccurrences = withContext(dispatcherProvider.default) {
+                    findNextOccurrences(
                         reminders = reminders,
-                        range = range
-                    ).map { occurrence ->
-                        val state = statesByKey[occurrence.occurrenceKey]
-
-                        if(state == null){
-                            occurrence
-                        }else{
-                            occurrence.copy(
-                                status = state.status
-                            )
-                        }
-                    }
-                    .filter { occurrence ->
-                        occurrence.scheduledAt.isAfter(now) && occurrence.status == ReminderOccurrenceStatus.PLANNED
-                    }
-                    .sortedBy { occurrence ->
-                        occurrence.scheduledAt
-                    }
-                    .take(MAX_SCHEDULED_REMINDER_NOTIFICATIONS)
-
-                val notifications = mutableListOf<ScheduledNotification>()
-
-                for (occurrence in nextOccurrences) {
-                    val scheduledAtMillis = occurrence.scheduledAtMillis
-                    val occurrenceKey = occurrence.occurrenceKey
-
-                    val requestCode = NotificationRequestCodeGenerator.next(
-                        key = occurrenceKey,
-                        usedCodes = usedRequestCodes
+                        range = range,
+                        statesByKey = statesByKey,
+                        now = now,
+                        limit = MAX_SCHEDULED_REMINDER_NOTIFICATIONS
                     )
-
-                    val scheduleResult = alarmScheduler.schedule(
-                        targetType = NotificationTargetType.REMINDER,
-                        targetId = occurrence.reminderId,
-                        scheduledAtMillis = scheduledAtMillis,
-                        requestCode = requestCode,
-                        precision = AlarmPrecision.EXACT,
-                        occurrenceKind = NotificationOccurrenceKind.REGULAR
-                    )
-
-                    when (scheduleResult) {
-                        AppAlarmScheduleResult.Scheduled -> {
-                            notifications += ScheduledNotification(
-                                requestCode = requestCode,
-                                targetType = NotificationTargetType.REMINDER,
-                                targetId = occurrence.reminderId,
-                                scheduledAtMillis = scheduledAtMillis,
-                                occurrenceKey = occurrenceKey,
-                                occurrenceKind = NotificationOccurrenceKind.REGULAR
-                            )
-                        }
-
-                        AppAlarmScheduleResult.TimeInPast -> Unit
-
-                        else -> {
-                            notifications.forEach { notification ->
-                                alarmScheduler.cancel(notification.requestCode)
-                            }
-                            return@withContext AppResult.Error(
-                                scheduleResult.toAppErrorOrNull()
-                                    ?: AppError.AlarmSchedulingFailed()
-                            )
-                        }
-                    }
                 }
 
-                scheduledNotificationRepository.insertAll(notifications)
-                AppResult.Success(Unit)
+                val scheduledNotifications = mutableListOf<ScheduledNotification>()
+                var databaseCommitted = false
+
+                try {
+                    for (occurrence in nextOccurrences) {
+                        val existingNotification = oldNotificationsByKey[occurrence.occurrenceKey]
+                        val requestCode = existingNotification?.requestCode
+                            ?: NotificationRequestCodeGenerator.next(
+                                key = occurrence.occurrenceKey,
+                                usedCodes = usedRequestCodes
+                            )
+
+                        val notification = ScheduledNotification(
+                            id = existingNotification?.id ?: 0,
+                            requestCode = requestCode,
+                            targetType = NotificationTargetType.REMINDER,
+                            targetId = occurrence.reminderId,
+                            scheduledAtMillis = occurrence.scheduledAtMillis,
+                            occurrenceKey = occurrence.occurrenceKey,
+                            occurrenceKind = NotificationOccurrenceKind.REGULAR,
+                            createdAtMillis = existingNotification?.createdAtMillis
+                                ?: System.currentTimeMillis()
+                        )
+
+                        when (val scheduleResult = schedule(notification)) {
+                            AppAlarmScheduleResult.Scheduled -> {
+                                scheduledNotifications += notification
+                            }
+
+                            AppAlarmScheduleResult.TimeInPast -> Unit
+
+                            else -> {
+                                rollbackScheduledNotifications(
+                                    appliedNotifications = scheduledNotifications,
+                                    oldNotificationsByRequestCode = oldNotificationsByRequestCode
+                                )
+                                return@withContext AppResult.Error(
+                                    scheduleResult.toAppErrorOrNull()
+                                        ?: AppError.AlarmSchedulingFailed()
+                                )
+                            }
+                        }
+                    }
+
+                    val scheduledRequestCodes = scheduledNotifications
+                        .mapTo(mutableSetOf()) { notification -> notification.requestCode }
+                    val obsoleteNotifications = oldReminderNotifications.filter { notification ->
+                        notification.requestCode !in scheduledRequestCodes
+                    }
+
+                    withContext(NonCancellable) {
+                        scheduledNotificationRepository.replaceByTargetTypeAndOccurrenceKind(
+                            targetType = NotificationTargetType.REMINDER,
+                            occurrenceKind = NotificationOccurrenceKind.REGULAR,
+                            notifications = scheduledNotifications
+                        )
+                        databaseCommitted = true
+
+                        obsoleteNotifications.forEach { notification ->
+                            alarmScheduler.cancel(notification.requestCode)
+                        }
+                    }
+
+                    AppResult.Success(Unit)
+                } catch (cancellation: CancellationException) {
+                    if (!databaseCommitted) {
+                        rollbackScheduledNotifications(
+                            appliedNotifications = scheduledNotifications,
+                            oldNotificationsByRequestCode = oldNotificationsByRequestCode
+                        )
+                    }
+                    throw cancellation
+                } catch (throwable: Throwable) {
+                    if (!databaseCommitted) {
+                        rollbackScheduledNotifications(
+                            appliedNotifications = scheduledNotifications,
+                            oldNotificationsByRequestCode = oldNotificationsByRequestCode
+                        )
+                    }
+                    throw throwable
+                }
             }
         }
+    }
+
+    private fun schedule(
+        notification: ScheduledNotification
+    ): AppAlarmScheduleResult {
+        return alarmScheduler.schedule(
+            targetType = notification.targetType,
+            targetId = notification.targetId,
+            scheduledAtMillis = notification.scheduledAtMillis,
+            requestCode = notification.requestCode,
+            precision = AlarmPrecision.EXACT,
+            occurrenceKind = notification.occurrenceKind
+        )
+    }
+
+    private suspend fun rollbackScheduledNotifications(
+        appliedNotifications: List<ScheduledNotification>,
+        oldNotificationsByRequestCode: Map<Int, ScheduledNotification>
+    ) {
+        withContext(dispatcherProvider.io + NonCancellable) {
+            appliedNotifications.asReversed().forEach { notification ->
+                val previousNotification = oldNotificationsByRequestCode[notification.requestCode]
+
+                if (previousNotification == null) {
+                    alarmScheduler.cancel(notification.requestCode)
+                } else {
+                    schedule(previousNotification)
+                }
+            }
+        }
+    }
+
+    private fun findNextOccurrences(
+        reminders: List<Reminder>,
+        range: ScheduleRange,
+        statesByKey: Map<String, ReminderOccurrenceState>,
+        now: LocalDateTime,
+        limit: Int
+    ): List<ReminderOccurrence> {
+        require(limit > 0) { "Occurrence limit must be positive" }
+
+        val nearestOccurrences = PriorityQueue<ReminderOccurrence>(
+            limit,
+            compareByDescending { occurrence -> occurrence.scheduledAtMillis }
+        )
+
+        scheduleCalculator.generateOccurrences(reminders, range).forEach { occurrence ->
+            val status = statesByKey[occurrence.occurrenceKey]?.status
+                ?: occurrence.status
+
+            if (
+                status != ReminderOccurrenceStatus.PLANNED ||
+                !occurrence.scheduledAt.isAfter(now)
+            ) {
+                return@forEach
+            }
+
+            val occurrenceWithState = if (status == occurrence.status) {
+                occurrence
+            } else {
+                occurrence.copy(status = status)
+            }
+
+            if (nearestOccurrences.size < limit) {
+                nearestOccurrences += occurrenceWithState
+            } else {
+                val latestKeptOccurrence = nearestOccurrences.peek()
+                if (
+                    latestKeptOccurrence != null &&
+                    occurrenceWithState.scheduledAtMillis < latestKeptOccurrence.scheduledAtMillis
+                ) {
+                    nearestOccurrences.poll()
+                    nearestOccurrences += occurrenceWithState
+                }
+            }
+        }
+
+        return nearestOccurrences.sortedBy { occurrence -> occurrence.scheduledAtMillis }
     }
 
     private companion object {
